@@ -754,7 +754,7 @@ async function extractTextPreview(file) {
     return new Promise(resolve => {
       const r = new FileReader();
       r.onload = e => {
-        const full = e.target.result || "";
+        const full = (e.target?.result as string) || "";
         resolve({ text: full.slice(0, 600), words: full.split(/\s+/).filter(w=>w.length>1).length, source:"client" });
       };
       r.onerror = () => resolve(null);
@@ -767,7 +767,7 @@ async function extractTextPreview(file) {
       const r = new FileReader();
       r.onload = e => {
         try {
-          const s = e.target.result || "";
+          const s = (e.target?.result as string) || "";
           // Extract visible text between BT...ET markers and parentheses
           const parens = (s.match(/\(([^)]{3,80})\)/g) || []).map(m => m.slice(1,-1)).filter(t => /[a-zA-ZÀ-ÿ]{3}/.test(t));
           const text = parens.join(" ").replace(/\\n/g," ").replace(/\s{2,}/g," ").slice(0,600);
@@ -821,7 +821,7 @@ function uploadStageLabel(progress) {
 
 // ─── SHARED UTILS ─────────────────────────────────────────────────────────────
 const fmtSize = b => { if(!b) return "—"; const m=b/1048576; return m>=1?m.toFixed(1)+" MB":Math.round(b/1024)+" KB"; };
-const fmtTime = iso => { const d=Math.floor((Date.now()-new Date(iso))/60000); if(d<1)return"À l'instant";if(d<60)return`${d} min`;if(d<1440)return`${Math.floor(d/60)}h`;if(d<2880)return"Hier";return new Date(iso).toLocaleDateString("fr-CA",{day:"numeric",month:"short"}); };
+const fmtTime = (iso: string) => { const d=Math.floor((Date.now()-new Date(iso).getTime())/60000); if(d<1)return"À l'instant";if(d<60)return`${d} min`;if(d<1440)return`${Math.floor(d/60)}h`;if(d<2880)return"Hier";return new Date(iso).toLocaleDateString("fr-CA",{day:"numeric",month:"short"}); };
 const genTitle = msg => { const w=msg.replace(/[*#_]/g,"").trim().split(" "); return w.slice(0,7).join(" ")+(w.length>7?"...":""); };
 // Aucune limite de taille — tous les fichiers acceptés sans restriction
 const validateFile = () => null;
@@ -1245,14 +1245,14 @@ const DATA_QUALITY = [
 
 // ─── ENHANCED UPLOAD ZONE (VectDocs-inspired) ──────────────────────────────
 function UploadZone({ color, lang, t, onAdd }) {
-  const inputRef = useRef();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag]   = useState(false);
   const [queue, setQueue] = useState([]);
   const EXT_PILLS = ["PDF","Word","Excel","PowerPoint","CSV","TXT","JSON","Images","ZIP","Email","Audio","Vidéo","et plus"];
 
   const processFiles = useCallback(async files => {
     const arr = Array.from(files);
-    const items = arr.map(f => ({
+    const items = arr.map((f: any) => ({
       id: Date.now() + Math.random(),
       name: f.name,
       rawFile: f,
@@ -1260,7 +1260,7 @@ function UploadZone({ color, lang, t, onAdd }) {
       ext: f.name.split(".").pop().toLowerCase(),
       progress: 0,
       stage: "Lecture...",
-      error: validateFile(f),
+      error: validateFile(),
       preview: null,
       detectedAgent: detectAgentFromFile(f.name),
       words: 0,
@@ -1274,7 +1274,7 @@ function UploadZone({ color, lang, t, onAdd }) {
     for (const item of items) {
       if (item.error) continue;
       // Async extraction in parallel
-      extractTextPreview(item.rawFile).then(result => {
+      extractTextPreview(item.rawFile).then((result: any) => {
         const detected = detectAgentFromFile(item.name, result?.text || "");
         const lang_d   = detectLanguage(result?.text || "");
         const words_d  = result?.words || 0;
@@ -1309,12 +1309,12 @@ function UploadZone({ color, lang, t, onAdd }) {
 
   // VectDocs-inspired folder picker (showDirectoryPicker API)
   const pickFolder = useCallback(async () => {
-    if (!window.showDirectoryPicker) {
+    if (!(window as any).showDirectoryPicker) {
       alert("Folder picker requires Chrome/Edge. Use the file button instead.");
       return;
     }
     try {
-      const dirHandle = await window.showDirectoryPicker();
+      const dirHandle = await (window as any).showDirectoryPicker();
       const files = [];
       for await (const [, handle] of dirHandle.entries()) {
         if (handle.kind === "file") files.push(await handle.getFile());
@@ -1516,7 +1516,7 @@ function Dashboard({ t, P, lang }) {
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
         <div style={{...card(P),padding:"16px 18px"}}>
           <div style={{fontSize:13,fontWeight:500,color:P.t1,marginBottom:14}}>{t.dash.activity}</div>
-          {acts.map((a,i)=>(<div key={i} style={{display:"flex",gap:8,paddingBottom:10,marginBottom:10,borderBottom:i<acts.length-1?`1px solid ${P.border}`:"none"}}><div style={{width:6,height:6,borderRadius:"50%",background:a.color,marginTop:4,flexShrink:0}}/><div style={{flex:1}}><div style={{fontSize:12,color:P.t1,lineHeight:1.4}}>{a.text}</div><div style={{fontSize:10,color:P.t3,marginTop:2}}>{typeof a.agent==="object"?a.agent.name:a.agent} · Il y a {a.time}</div></div></div>))}
+          {acts.map((a,i)=>(<div key={i} style={{display:"flex",gap:8,paddingBottom:10,marginBottom:10,borderBottom:i<acts.length-1?`1px solid ${P.border}`:"none"}}><div style={{width:6,height:6,borderRadius:"50%",background:a.color,marginTop:4,flexShrink:0}}/><div style={{flex:1}}><div style={{fontSize:12,color:P.t1,lineHeight:1.4}}>{a.text}</div><div style={{fontSize:10,color:P.t3,marginTop:2}}>{typeof a.agent==="object"?(a.agent as any).name:a.agent} · Il y a {a.time}</div></div></div>))}
         </div>
         <div style={{...card(P),padding:"16px 18px"}}>
           <div style={{fontSize:13,fontWeight:500,color:P.t1,marginBottom:14}}>{t.dash.calendar}</div>
@@ -1548,8 +1548,8 @@ function Documents({ t, P, lang }) {
       out = out.filter(d => d.name.toLowerCase().includes(q) || d.desc?.toLowerCase().includes(q) || d.agent?.toLowerCase().includes(q) || d.preview?.toLowerCase().includes(q));
     }
     return [...out].sort((a,b) => {
-      if (sort==="date-desc") return new Date(b.date)-new Date(a.date);
-      if (sort==="date-asc")  return new Date(a.date)-new Date(b.date);
+      if (sort==="date-desc") return new Date(b.date).getTime()-new Date(a.date).getTime();
+      if (sort==="date-asc")  return new Date(a.date).getTime()-new Date(b.date).getTime();
       if (sort==="name")      return a.name.localeCompare(b.name);
       if (sort==="size")      return parseFloat(b.size)-parseFloat(a.size);
       if (sort==="chunks")    return b.chunks-a.chunks;
@@ -1733,17 +1733,14 @@ function Chat({ t, P, lang, agentSettings, onStartConvWithAgent, openrouterKey }
   const [workflow, setWorkflow] = useState(null);
   const [wfSteps,  setWfSteps]  = useState([]);
   const [synthesis,setSynthesis]= useState(null);
-  const bottomRef = useRef();
-  const inputRef  = useRef();
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef  = useRef<HTMLTextAreaElement>(null);
 
   const agent = useMemo(() => agentById(agentId), [agentId]);
   const activeConv = useMemo(() => convs.find(c=>c.id===activeId), [convs, activeId]);
   const sysPrompt = useMemo(() => agentSettings[agentId]?.prompt || agent.defaultPrompt[lang], [agentSettings, agentId, agent, lang]);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({behavior:"smooth"}); }, [msgs, loading]);
-  useEffect(() => { if(msgs.length===0) setMsgs(orchestratorWelcome); }, [orchestratorWelcome]);
-
-  // ORCHESTRATOR IS THE ENTRY POINT — not a specialist
+  // ORCHESTRATOR IS THE ENTRY POINT — declared BEFORE useEffect that uses it
   const orchestratorWelcome = useMemo(() => [{
     role:"assistant", isOrchestrator:true, ts:Date.now(),
     content: lang==="fr"
@@ -1753,20 +1750,23 @@ function Chat({ t, P, lang, agentSettings, onStartConvWithAgent, openrouterKey }
 
   const welcome = useCallback(() => orchestratorWelcome, [orchestratorWelcome]);
 
-    const newConv = useCallback(() => {
+  useEffect(() => { bottomRef.current?.scrollIntoView({behavior:"smooth"}); }, [msgs, loading]);
+  useEffect(() => { if(msgs.length===0) setMsgs(orchestratorWelcome); }, [orchestratorWelcome]);
+
+  const newConv = useCallback(() => {
     setActiveId(null); setRoutedTo(null); setInput("");
     setWorkflow(null); setSynthesis(null); setWfSteps([]);
     setMsgs(welcome());
     inputRef.current?.focus();
   }, [welcome, setActiveId]);
 
-    const loadConv = useCallback(conv => { setActiveId(conv.id); setAgentId(conv.agentId||AGENTS_DEF[0].id); setMsgs(conv.messages); setRoutedTo(null); setInput(""); }, [setActiveId]);
-  const switchAgent = useCallback(id => { setAgentId(id); setRoutedTo(null); if(!activeId) setMsgs(welcome())); }, [activeId, welcome]);
-  const deleteConv = useCallback(id => { setConvs(prev=>prev.filter(c=>c.id!==id)); if(activeId===id){setActiveId(null);setMsgs(welcome());} }, [activeId, agent, welcome, setConvs, setActiveId]);
+  const loadConv = useCallback((conv: any) => { setActiveId(conv.id); setAgentId(conv.agentId||AGENTS_DEF[0].id); setMsgs(conv.messages); setRoutedTo(null); setInput(""); }, [setActiveId]);
+  const switchAgent = useCallback((id: string) => { setAgentId(id); setRoutedTo(null); }, []);
+  const deleteConv = useCallback((id: string) => { setConvs((prev: any[])=>prev.filter((co: any)=>co.id!==id)); if(activeId===id){setActiveId(null);setMsgs(welcome() as any);} }, [activeId, welcome, setConvs, setActiveId]);
 
-  useEffect(() => { if(!activeId && msgs.length===0) setMsgs(welcome()); }, []);
+  useEffect(() => { if(!activeId && msgs.length===0) setMsgs(welcome()); }, []); // eslint-disable-line
 
-  const copy = useCallback(async(text,i) => { try { await navigator.clipboard.writeText(text); setCopied(i); setTimeout(()=>setCopied(null),2000); } catch {} }, []);
+  const copy = useCallback(async(text: string, i: number) => { try { await navigator.clipboard.writeText(text); setCopied(i); setTimeout(()=>setCopied(null),2000); } catch {} }, []);
 
   const exportConv = useCallback(() => {
     const data = JSON.stringify({title:activeConv?.title||"conv",agent:agentId,messages:msgs},null,2);
@@ -2181,7 +2181,7 @@ IMPORTANT — Response format:
 - JavaScript must be complete and functional`
 };
 
-async function generateViz(dataText, lang, openrouterKey, agentSettings) {
+async function generateViz(dataText: string, lang: string, openrouterKey: string, agentSettings: any) {
   const system = SANDBOX_VIZ_PROMPT[lang] || SANDBOX_VIZ_PROMPT.fr;
   const msgs = [{ role:"user", content: dataText }];
   // Use best model available for code generation
@@ -2203,7 +2203,7 @@ async function generateViz(dataText, lang, openrouterKey, agentSettings) {
 
 // ─── SANDBOX COMPONENT ────────────────────────────────────────────────────────
 function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
-  const [input,     setInput]     = useState(() => localStorage.getItem("z12-sandbox-prefill")||"");
+  const [input,     setInput]     = useState<string>(() => localStorage.getItem("z12-sandbox-prefill")||"");
   useEffect(() => {
     const handler = () => {
       const prefill = localStorage.getItem("z12-sandbox-prefill");
@@ -2217,7 +2217,7 @@ function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
   const [history,   setHistory]   = useLocalStorage("z12-sandbox-history", []);
   const [activeHist,setActiveHist]= useState(null);
   const [error,     setError]     = useState("");
-  const iframeRef = useRef();
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const QUICK_VIZ = lang==="fr" ? [
     { label:"📊 Ratios financiers PME",        prompt:"Génère une visualisation des ratios financiers typiques d'une PME québécoise du secteur manufacturier : Ratio courant 1.8, Quick ratio 1.2, D/BAIIA 2.4, Marge BAIIA 18%, ROE 22%, Marge nette 8%. Compare avec les benchmarks sectoriels BDC." },
@@ -2232,14 +2232,14 @@ function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
     { label:"🏆 Available Grants",              prompt:"Create a comparison table of available grants for a Quebec AI tech SME: Federal SR&ED 35% (max $185K), Quebec CDAE 30% (max $90K), NRC IRAP 75% salaries (max $200K), IQ Essor loan $500K, CanExport 50% (max $50K). Include donut chart of total potential." },
   ];
 
-  const generate = async (prompt) => {
-    const q = prompt || input.trim();
+  const generate = async (prompt?: string) => {
+    const q = (prompt || input).trim();
     if (!q) return;
     setLoading(true); setError(""); setHtml("");
     try {
       const result = await generateViz(q, lang, openrouterKey, agentSettings);
       setHtml(result);
-      const entry = { id:Date.now(), prompt:q.slice(0,80)+(q.length>80?"...":""), html:result, ts:new Date().toISOString() };
+      const entry: any = { id:Date.now(), prompt:q.slice(0,80)+(q.length>80?"...":""), html:result, ts:new Date().toISOString() };
       setHistory(prev => [entry, ...prev].slice(0, 10));
       setActiveHist(entry.id);
     } catch(e) { setError(e.message); }
@@ -2296,7 +2296,7 @@ function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
             <div key={h.id} onClick={()=>{setHtml(h.html);setActiveHist(h.id);}}
               style={{padding:"8px 10px",borderRadius:8,cursor:"pointer",marginBottom:4,background:activeHist===h.id?`${P.accent}15`:P.card,border:`1px solid ${activeHist===h.id?P.accent+"50":P.border}`,transition:"all .15s"}}>
               <div style={{fontSize:11,color:activeHist===h.id?P.accent:P.t1,fontWeight:activeHist===h.id?500:400,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{h.prompt}</div>
-              <div style={{fontSize:9,color:P.t3,marginTop:2}}>{new Date(h.ts).toLocaleDateString("fr-CA",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</div>
+              <div style={{fontSize:9,color:P.t3,marginTop:2}}>{new Date(h.ts as string).toLocaleDateString("fr-CA",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</div>
             </div>
           ))}
         </div>
@@ -2619,7 +2619,7 @@ export default function Z12CFOSuite() {
   const viewProps = { t, P, lang, agentSettings, setAgentSettings, onStartConvWithAgent:handleStartConvWithAgent, openrouterKey };
 
   return (
-    <div style={{display:"flex",height:"100vh",background:P.bg,fontFamily:"'DM Sans',system-ui,sans-serif",overflow:"hidden","--bg-card":P.card,"--bg-border":P.border,"--bg-input":P.input,"--t1":P.t1,"--t2":P.t2,"--t3":P.t3}}>
+    <div style={{display:"flex",height:"100vh",background:P.bg,fontFamily:"'DM Sans',system-ui,sans-serif",overflow:"hidden","--bg-card":P.card,"--bg-border":P.border,"--bg-input":P.input,"--t1":P.t1,"--t2":P.t2,"--t3":P.t3} as React.CSSProperties}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}
