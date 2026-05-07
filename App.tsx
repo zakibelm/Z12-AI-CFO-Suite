@@ -827,7 +827,7 @@ const genTitle = msg => { const w=msg.replace(/[*#_]/g,"").trim().split(" "); re
 const validateFile = () => null;
 
 const T = {
-  fr: { nav:{dashboard:"Dashboard",chat:"Chat IA",documents:"Documents",pipeline:"Pipeline RAG",governance:"Gouvernance",agents:"Agents",settings:"Paramètres"}, lang:"FR", langToggle:"EN",
+  fr: { nav:{dashboard:"Dashboard",chat:"Chat IA",documents:"Documents",pipeline:"Pipeline RAG",governance:"Gouvernance",agents:"Agents",settings:"Paramètres",sandbox:"Sandbox IA"}, lang:"FR", langToggle:"EN",
     dash:{title:"Tableau de bord",updated:"Mis à jour",activity:"Activité récente",calendar:"Calendrier fiscal 2025"},
     docs:{title:"Gestion documentaire RAG",knowledge:"Sources de connaissance métier",client:"Documents client",upload:"Glissez vos fichiers ici",sub:"Cliquez pour parcourir · Dossier entier · Jusqu'à 500 MB/fichier · Stockage RAG illimité · Tous types",indexed:"✓ Indexé",staServerOnly:"Extraction côté serveur"},
     chat:{new:"Nouvelle conversation",send:"Envoyer",copy:"Copier",copied:"Copié !",export:"Exporter",retry:"Réessayer",routing:"Détection agent...",noConv:"Aucune conversation\nCommencez par envoyer un message",resume:"Conversation reprise",autoRouted:"Auto-routé vers"},
@@ -835,7 +835,7 @@ const T = {
     pipeline:{title:"Pipeline RAG — Observabilité",availability:"Disponibilité",latency:"Latence",errors:"Erreurs",sla:"SLA",lastRun:"Dernier run"},
     governance:{title:"Gouvernance & Conformité",policies:"Politiques actives",catalog:"Catalogue données",owner:"Responsable",lastReview:"Dernière revue",nextAudit:"Prochain audit",status:{compliant:"Conforme",review:"À réviser",noncompliant:"Non conforme"}},
   },
-  en: { nav:{dashboard:"Dashboard",chat:"AI Chat",documents:"Documents",pipeline:"RAG Pipeline",governance:"Governance",agents:"Agents",settings:"Settings"}, lang:"EN", langToggle:"FR",
+  en: { nav:{dashboard:"Dashboard",chat:"AI Chat",documents:"Documents",pipeline:"RAG Pipeline",governance:"Governance",agents:"Agents",settings:"Settings",sandbox:"AI Sandbox"}, lang:"EN", langToggle:"FR",
     dash:{title:"Dashboard",updated:"Updated",activity:"Recent activity",calendar:"Fiscal calendar 2025"},
     docs:{title:"RAG Document Management",knowledge:"Business knowledge sources",client:"Client documents",upload:"Drag your files here",sub:"Click to browse · Folder upload · Up to 500 MB/file · Unlimited RAG storage · All types",indexed:"✓ Indexed",staServerOnly:"Server-side extraction"},
     chat:{new:"New conversation",send:"Send",copy:"Copy",copied:"Copied!",export:"Export",retry:"Retry",routing:"Detecting agent...",noConv:"No conversations\nStart by sending a message",resume:"Conversation resumed",autoRouted:"Auto-routed to"},
@@ -1926,6 +1926,11 @@ function Chat({ t, P, lang, agentSettings, onStartConvWithAgent, openrouterKey }
                 <div style={{display:"flex",alignItems:"center",gap:6,marginTop:3,justifyContent:m.role==="user"?"flex-end":"flex-start"}}>
                   <span style={{fontSize:10,color:P.t3}}>{m.ts?fmtTime(new Date(m.ts).toISOString()):"—"}</span>
                   <button onClick={()=>copy(m.content,i)} style={{background:"transparent",border:"none",color:copied===i?P.accent:P.t3,fontSize:10,cursor:"pointer",padding:0}}>{copied===i?t.chat.copied:t.chat.copy}</button>
+                  {m.role==="assistant" && !m.isOrchestrator && (
+                    <button onClick={()=>{navigator.clipboard.writeText(m.content).then(()=>{localStorage.setItem("z12-sandbox-prefill",m.content);window.dispatchEvent(new CustomEvent("z12-open-sandbox"));});}}
+                      title={lang==="fr"?"Visualiser dans le Sandbox":"Visualize in Sandbox"}
+                      style={{background:"transparent",border:"none",color:P.t3,fontSize:10,cursor:"pointer",padding:0}}>📊</button>
+                  )}
                 </div>
               </div>
             </div>
@@ -2121,6 +2126,262 @@ function Agents({ t, P, lang, agentSettings, setAgentSettings, onStartConvWithAg
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+
+// ─── AI SANDBOX SYSTEM ────────────────────────────────────────────────────────
+// Generates interactive HTML visualizations (Chart.js + tables) from agent data.
+// Claude generates a complete self-contained HTML page rendered in a sandboxed iframe.
+// Downloads: Excel via SheetJS, PDF via window.print().
+
+const SANDBOX_VIZ_PROMPT = {
+  fr: `Tu es un expert en visualisation de données financières. Tu reçois des données ou une analyse financière d'un agent CPA et tu dois générer une page HTML COMPLÈTE et AUTO-SUFFISANTE avec :
+
+1. **Tableaux de données** : HTML tables bien formatées avec en-têtes, alternance de couleurs, totaux en gras
+2. **Graphiques interactifs** : Chart.js (chargé via CDN) — adapte le type selon les données :
+   - Barres : comparaisons, ratios, benchmarks
+   - Lignes : évolutions temporelles, prévisions trésorerie
+   - Secteurs/Donut : répartitions, structures de financement
+   - Combiné bar+ligne : BAIIA réel vs budget
+3. **Cartes KPI** : grandes métriques en évidence (chiffres colorés)
+4. **Design** : fond blanc, couleurs financières (#10B981 vert, #3B82F6 bleu, #F59E0B or, #EF4444 rouge), police système sans-serif, responsive
+5. **Bouton Excel** : bouton qui télécharge les données en .xlsx via SheetJS (CDN)
+6. **Bouton PDF** : bouton qui ouvre window.print() avec @media print optimisé
+
+IMPORTANT — Format de réponse :
+- Réponds UNIQUEMENT avec le code HTML, sans aucune explication avant ou après
+- Commence par <!DOCTYPE html> et termine par </html>
+- Chart.js : <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
+- SheetJS : <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
+- Toutes les données doivent être intégrées directement dans le HTML (pas d'appels API externes)
+- Le code JavaScript doit être complet et fonctionnel`,
+
+  en: `You are a financial data visualization expert. You receive data or a financial analysis from a CPA agent and must generate a COMPLETE, SELF-CONTAINED HTML page with:
+
+1. **Data tables**: Well-formatted HTML tables with headers, alternating colors, bold totals
+2. **Interactive charts**: Chart.js (loaded via CDN) — adapt type to data:
+   - Bar: comparisons, ratios, benchmarks
+   - Line: time series, treasury forecasts
+   - Pie/Donut: breakdowns, financing structures
+   - Combined bar+line: actual vs budget EBITDA
+3. **KPI cards**: Large key metrics highlighted with colored numbers
+4. **Design**: White background, financial colors (#10B981 green, #3B82F6 blue, #F59E0B gold, #EF4444 red), system sans-serif font, responsive
+5. **Excel button**: Downloads data as .xlsx via SheetJS (CDN)
+6. **PDF button**: Opens window.print() with optimized @media print
+
+IMPORTANT — Response format:
+- Respond ONLY with HTML code, no explanation before or after
+- Start with <!DOCTYPE html> and end with </html>
+- Chart.js: <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
+- SheetJS: <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
+- All data must be embedded directly in the HTML (no external API calls)
+- JavaScript must be complete and functional`
+};
+
+async function generateViz(dataText, lang, openrouterKey, agentSettings) {
+  const system = SANDBOX_VIZ_PROMPT[lang] || SANDBOX_VIZ_PROMPT.fr;
+  const msgs = [{ role:"user", content: dataText }];
+  // Use best model available for code generation
+  const model = openrouterKey
+    ? (agentSettings?.sandboxModel || "anthropic/claude-sonnet-4-5")
+    : null;
+  let raw = "";
+  try {
+    if (openrouterKey && model) {
+      raw = await callOpenRouter(model, system, msgs, openrouterKey, false);
+    } else {
+      raw = await callClaude(system, msgs);
+    }
+    // Extract HTML if wrapped in code blocks
+    const match = raw.match(/<!DOCTYPE html>[\s\S]*<\/html>/i);
+    return match ? match[0] : raw;
+  } catch(e) { return `<html><body style="font-family:sans-serif;padding:20px;color:#EF4444">Erreur: ${e.message}</body></html>`; }
+}
+
+// ─── SANDBOX COMPONENT ────────────────────────────────────────────────────────
+function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
+  const [input,     setInput]     = useState(() => localStorage.getItem("z12-sandbox-prefill")||"");
+  useEffect(() => {
+    const handler = () => {
+      const prefill = localStorage.getItem("z12-sandbox-prefill");
+      if (prefill) { setInput(prefill); localStorage.removeItem("z12-sandbox-prefill"); }
+    };
+    window.addEventListener("z12-open-sandbox", handler);
+    return () => window.removeEventListener("z12-open-sandbox", handler);
+  }, []);
+  const [loading,   setLoading]   = useState(false);
+  const [html,      setHtml]      = useState("");
+  const [history,   setHistory]   = useLocalStorage("z12-sandbox-history", []);
+  const [activeHist,setActiveHist]= useState(null);
+  const [error,     setError]     = useState("");
+  const iframeRef = useRef();
+
+  const QUICK_VIZ = lang==="fr" ? [
+    { label:"📊 Ratios financiers PME",        prompt:"Génère une visualisation des ratios financiers typiques d'une PME québécoise du secteur manufacturier : Ratio courant 1.8, Quick ratio 1.2, D/BAIIA 2.4, Marge BAIIA 18%, ROE 22%, Marge nette 8%. Compare avec les benchmarks sectoriels BDC." },
+    { label:"💧 Cash Flow 13 semaines",         prompt:"Visualise un forecast de trésorerie sur 13 semaines pour une PME : semaines 1-3 positif (+45K, +32K, +28K), semaine 4-5 négatif (-15K, -42K), semaines 6-8 recovery (+12K, +35K, +55K), semaines 9-13 stable (+28K, +31K, +29K, +33K, +38K). Solde initial 85K$. Marque la zone de tension en rouge." },
+    { label:"📈 Analyse investissement DCF",    prompt:"Visualise une analyse DCF : projections FCF sur 5 ans (280K, 320K, 375K, 430K, 495K$), taux d'actualisation 12%, valeur terminale 3.8M$, VAN totale 2.9M$. Montre aussi l'analyse de sensibilité WACC (10%, 12%, 14%) × taux de croissance terminal (2%, 3%, 4%)." },
+    { label:"🏆 Subventions disponibles",       prompt:"Crée un tableau de comparaison des subventions disponibles pour une PME tech IA Québec : SR&DE fédéral 35% (max 185K$), CDAE Québec 30% (max 90K$), IRAP CNRC 75% salaires (max 200K$), Essor IQ prêt 500K$, CanExport 50% (max 50K$). Inclus un graphique donut du potentiel total." },
+    { label:"⚖️ Conformité Loi 25",             prompt:"Visualise le statut de conformité Loi 25 d'une PME : Phase 1 (Conforme ✅), Phase 2 EFVP manquante (À compléter ⚠️), Phase 3 (Non applicable ✅). Score global 65/100. Avec tableau des actions prioritaires et délais." },
+  ] : [
+    { label:"📊 SME Financial Ratios",          prompt:"Generate a visualization of typical Quebec manufacturing SME financial ratios: Current ratio 1.8, Quick ratio 1.2, D/EBITDA 2.4, EBITDA margin 18%, ROE 22%, Net margin 8%. Compare with BDC sector benchmarks." },
+    { label:"💧 13-Week Cash Flow",             prompt:"Visualize a 13-week cash forecast for an SME: weeks 1-3 positive (+45K, +32K, +28K), week 4-5 negative (-15K, -42K), weeks 6-8 recovery (+12K, +35K, +55K), weeks 9-13 stable (+28K, +31K, +29K, +33K, +38K). Opening balance $85K. Highlight stress zone in red." },
+    { label:"📈 DCF Investment Analysis",       prompt:"Visualize a DCF analysis: 5-year FCF projections ($280K, $320K, $375K, $430K, $495K), 12% discount rate, terminal value $3.8M, total NPV $2.9M. Also show WACC sensitivity (10%, 12%, 14%) × terminal growth rate (2%, 3%, 4%)." },
+    { label:"🏆 Available Grants",              prompt:"Create a comparison table of available grants for a Quebec AI tech SME: Federal SR&ED 35% (max $185K), Quebec CDAE 30% (max $90K), NRC IRAP 75% salaries (max $200K), IQ Essor loan $500K, CanExport 50% (max $50K). Include donut chart of total potential." },
+  ];
+
+  const generate = async (prompt) => {
+    const q = prompt || input.trim();
+    if (!q) return;
+    setLoading(true); setError(""); setHtml("");
+    try {
+      const result = await generateViz(q, lang, openrouterKey, agentSettings);
+      setHtml(result);
+      const entry = { id:Date.now(), prompt:q.slice(0,80)+(q.length>80?"...":""), html:result, ts:new Date().toISOString() };
+      setHistory(prev => [entry, ...prev].slice(0, 10));
+      setActiveHist(entry.id);
+    } catch(e) { setError(e.message); }
+    setLoading(false);
+  };
+
+  const downloadPDF = () => {
+    if (!iframeRef.current) return;
+    iframeRef.current.contentWindow?.print();
+  };
+
+  const openFull = () => {
+    if (!html) return;
+    const blob = new Blob([html], {type:"text/html"});
+    const url  = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  };
+
+  return (
+    <div style={{display:"flex",flex:1,overflow:"hidden"}}>
+      {/* ── Left panel: history + input ──────────────────────────────── */}
+      <div style={{width:240,background:P.sb,borderRight:`1px solid ${P.border}`,display:"flex",flexDirection:"column",flexShrink:0}}>
+        <div style={{padding:"14px 14px 10px",borderBottom:`1px solid ${P.border}`}}>
+          <div style={{fontSize:14,fontWeight:600,color:P.t1,marginBottom:2}}>
+            📊 {lang==="fr"?"Sandbox IA":"AI Sandbox"}
+          </div>
+          <div style={{fontSize:11,color:P.t2}}>
+            {lang==="fr"?"Tableaux · Graphiques · Export":"Tables · Charts · Export"}
+          </div>
+        </div>
+
+        {/* Quick viz buttons */}
+        <div style={{padding:"10px 12px",borderBottom:`1px solid ${P.border}`}}>
+          <div style={{fontSize:10,fontWeight:500,color:P.t3,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:7}}>
+            {lang==="fr"?"Rapports rapides":"Quick reports"}
+          </div>
+          {QUICK_VIZ.map((q,i) => (
+            <button key={i} onClick={()=>generate(q.prompt)}
+              style={{width:"100%",background:"transparent",border:`1px solid ${P.border}`,borderRadius:8,padding:"6px 10px",color:P.t2,fontSize:11,cursor:"pointer",textAlign:"left",marginBottom:5,transition:"all .15s",display:"block"}}>
+              {q.label}
+            </button>
+          ))}
+        </div>
+
+        {/* History */}
+        <div style={{flex:1,overflowY:"auto",padding:"8px 10px"}}>
+          <div style={{fontSize:10,fontWeight:500,color:P.t3,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:6,padding:"0 2px"}}>
+            {lang==="fr"?"Historique":"History"}
+          </div>
+          {history.length === 0 && (
+            <div style={{fontSize:11,color:P.t3,padding:"10px 4px"}}>{lang==="fr"?"Aucune visualisation":"No visualizations yet"}</div>
+          )}
+          {history.map(h => (
+            <div key={h.id} onClick={()=>{setHtml(h.html);setActiveHist(h.id);}}
+              style={{padding:"8px 10px",borderRadius:8,cursor:"pointer",marginBottom:4,background:activeHist===h.id?`${P.accent}15`:P.card,border:`1px solid ${activeHist===h.id?P.accent+"50":P.border}`,transition:"all .15s"}}>
+              <div style={{fontSize:11,color:activeHist===h.id?P.accent:P.t1,fontWeight:activeHist===h.id?500:400,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{h.prompt}</div>
+              <div style={{fontSize:9,color:P.t3,marginTop:2}}>{new Date(h.ts).toLocaleDateString("fr-CA",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Clear history */}
+        {history.length > 0 && (
+          <div style={{padding:"8px 10px",borderTop:`1px solid ${P.border}`}}>
+            <button onClick={()=>{setHistory([]);setHtml("");setActiveHist(null);}} style={{width:"100%",background:"transparent",border:`1px solid ${P.border}`,borderRadius:7,padding:"5px 0",color:P.t3,fontSize:11,cursor:"pointer"}}>
+              ✕ {lang==="fr"?"Effacer l'historique":"Clear history"}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Right panel: input + preview ──────────────────────────────── */}
+      <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+        {/* Toolbar */}
+        <div style={{padding:"10px 14px",background:P.sb,borderBottom:`1px solid ${P.border}`,display:"flex",gap:8,alignItems:"flex-start"}}>
+          <textarea value={input} onChange={e=>setInput(e.target.value)}
+            onKeyDown={e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();generate();}}}
+            placeholder={lang==="fr"?"Collez vos données financières, résultat d'agent, ou décrivez la visualisation souhaitée... (Ctrl+Entrée pour générer)":"Paste your financial data, agent result, or describe the desired visualization... (Ctrl+Enter to generate)"}
+            rows={3}
+            style={{flex:1,background:P.input,border:`1px solid ${P.border}`,borderRadius:10,padding:"9px 12px",color:P.t1,fontSize:12,fontFamily:"inherit",lineHeight:1.5,resize:"none",outline:"none"}}/>
+          <div style={{display:"flex",flexDirection:"column",gap:6,flexShrink:0}}>
+            <button onClick={()=>generate()} disabled={loading||!input.trim()}
+              style={{background:loading||!input.trim()?P.border:"#10B981",border:"none",borderRadius:10,padding:"9px 16px",color:"#fff",fontSize:12,fontWeight:500,cursor:loading||!input.trim()?"not-allowed":"pointer",whiteSpace:"nowrap"}}>
+              {loading?(lang==="fr"?"Génération...":"Generating..."):(lang==="fr"?"📊 Générer":"📊 Generate")}
+            </button>
+            {html && (
+              <>
+                <button onClick={downloadPDF}
+                  style={{background:"transparent",border:`1px solid ${P.border}`,borderRadius:10,padding:"7px 10px",color:P.t2,fontSize:11,cursor:"pointer",whiteSpace:"nowrap"}}>
+                  📥 PDF
+                </button>
+                <button onClick={openFull}
+                  style={{background:"transparent",border:`1px solid ${P.border}`,borderRadius:10,padding:"7px 10px",color:P.t2,fontSize:11,cursor:"pointer",whiteSpace:"nowrap"}}>
+                  🔗 {lang==="fr"?"Ouvrir":"Open"}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Viz preview */}
+        <div style={{flex:1,overflow:"hidden",position:"relative",background:P.bg}}>
+          {!html && !loading && (
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",gap:12,padding:30}}>
+              <span style={{fontSize:48}}>📊</span>
+              <div style={{fontSize:15,fontWeight:500,color:P.t2,textAlign:"center"}}>
+                {lang==="fr"?"Choisissez un rapport rapide ou décrivez vos données":"Choose a quick report or describe your data"}
+              </div>
+              <div style={{fontSize:12,color:P.t3,textAlign:"center",maxWidth:380,lineHeight:1.6}}>
+                {lang==="fr"
+                  ? "Claude génère des tableaux interactifs et graphiques (barres, lignes, secteurs, combinés) avec export Excel et PDF."
+                  : "Claude generates interactive tables and charts (bar, line, pie, combined) with Excel and PDF export."}
+              </div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center",marginTop:8}}>
+                {["Chart.js","SheetJS (Excel)","PDF Print","Responsive"].map(t=>(
+                  <span key={t} style={{fontSize:11,padding:"4px 10px",borderRadius:20,background:`${P.accent}15`,color:P.accent,border:`1px solid ${P.accent}30`}}>{t}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          {loading && (
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",gap:14}}>
+              <div style={{display:"flex",gap:6}}>
+                {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:P.accent,animation:"pulse 1.2s ease-in-out infinite",animationDelay:`${i*.2}s`}}/>)}
+              </div>
+              <div style={{fontSize:13,color:P.t2}}>{lang==="fr"?"Claude génère votre visualisation...":"Claude is generating your visualization..."}</div>
+              <div style={{fontSize:11,color:P.t3}}>{lang==="fr"?"Tableaux + graphiques + boutons export":"Tables + charts + export buttons"}</div>
+            </div>
+          )}
+          {error && (
+            <div style={{padding:20,color:P.red,fontSize:13}}>{error}</div>
+          )}
+          {html && !loading && (
+            <iframe
+              ref={iframeRef}
+              srcDoc={html}
+              sandbox="allow-scripts allow-same-origin allow-popups allow-downloads"
+              style={{width:"100%",height:"100%",border:"none",background:"#fff"}}
+              title="Z12 Sandbox Visualization"
+            />
+          )}
+        </div>
       </div>
     </div>
   );
@@ -2374,7 +2635,8 @@ export default function Z12CFOSuite() {
         {view==="pipeline"   && <Pipeline   {...viewProps}/>}
         {view==="governance" && <Governance {...viewProps}/>}
         {view==="agents"     && <Agents     {...viewProps}/>}
-        {view==="settings"   && <Settings   {...viewProps} setOpenrouterKey={setOpenrouterKey}/>}
+        {view==="settings"   && <Settings   {...viewProps} setOpenrouterKey={setOpenrouterKey}/> }
+        {view==="sandbox"    && <Sandbox    {...viewProps}/>}
       </div>
     </div>
   );
