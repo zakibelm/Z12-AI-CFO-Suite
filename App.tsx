@@ -16,7 +16,8 @@
  * ── Héritage v3.0 ─────────────────────────────────────────────────────────────
  * ✅ useLocalStorage — persistance complète
  * ✅ Auto-routing 2 niveaux (regex rapide + fallback Claude API)
- * ✅ 7 agents dont OCRAgent
+ * ✅ 9 agents : 7 RAG + VeilleAgent + SubventionsAgent (web search temps réel)
+ * ✅ callClaudeWithWebSearch() — outil web_search Anthropic pour veille/subventions
  * ✅ Settings éditables par agent (modèle + prompt)
  * ✅ FR/EN + Dark/Light mode
  * ✅ Pipeline RAG view + Governance view
@@ -74,6 +75,78 @@ const AGENTS_DEF = [
     domain:{fr:"Extraction OCR · Factures scannées · Relevés · Documents manuscrits", en:"OCR extraction · Scanned invoices · Statements · Handwritten docs"},
     quickPrompts:{fr:["Extraire données d'une facture scannée","Lire un relevé bancaire scanné","Structurer un document manuscrit"], en:["Extract data from scanned invoice","Read scanned bank statement","Structure handwritten document"]},
     defaultPrompt:{fr:"Tu es OCRAgent, spécialiste en extraction et structuration de données depuis des documents scannés, photographiés ou manuscrits. Tu extrais les données clés (montants, dates, parties, numéros), les structures en JSON ou tableaux, et signales les zones illisibles.", en:"You are OCRAgent, a specialist in extracting and structuring data from scanned, photographed or handwritten documents."} },
+  { id:"VeilleAgent",     icon:"📡", color:"#14B8A6", short:{fr:"Veille",       en:"Watch"},
+    domain:{fr:"Veille métier temps réel · CRA · IFRS · Loi 25 · Finance · Comptabilité · Québec", en:"Real-time monitoring · CRA · IFRS · Law 25 · Finance · Accounting · Quebec"},
+    webSearch: true,
+    quickPrompts:{fr:["Dernières mises à jour CRA 2025","Nouvelles normes IFRS publiées","Actualités fiscales Québec ce mois","Changements Revenu Québec récents"], en:["Latest CRA updates 2025","New IFRS standards published","Quebec fiscal news this month","Recent Revenu Québec changes"]},
+    defaultPrompt:{fr:`Tu es VeilleAgent, un agent de veille stratégique et professionnelle pour les PME québécoises en finance et comptabilité.
+
+Tu as accès à la recherche web en temps réel. Pour chaque question, tu dois :
+1. Rechercher les informations les plus récentes sur le sujet demandé
+2. Prioriser les sources officielles : ARC (canada.ca), Revenu Québec, CPA Canada, IFRS Foundation, FASB, gouvernement du Canada, Assemblée nationale du Québec
+3. Identifier les changements récents (nouvelles lois, nouvelles normes, nouvelles circulaires, bulletins d'interprétation)
+4. Résumer les impacts pratiques pour les PME québécoises
+5. Indiquer la date de publication et la source pour chaque information
+
+Domaines couverts : fiscalité canadienne et québécoise, normes comptables (IFRS/ASPE/NCECF), réglementation financière, droit des affaires, conformité (Loi 25, CASL, PIPEDA), actualités économiques pertinentes pour les PME.
+
+Toujours indiquer : date de l'information, source officielle, impact pratique. Signale si une information est en vigueur, en projet de loi ou en consultation publique.
+Réponds dans la langue de l'utilisateur (français ou anglais).`,
+    en:`You are VeilleAgent, a strategic and professional monitoring agent for Quebec SMEs in finance and accounting.
+
+You have real-time web search access. For each question, you must:
+1. Search for the most recent information on the requested topic
+2. Prioritize official sources: CRA (canada.ca), Revenu Québec, CPA Canada, IFRS Foundation, Government of Canada, Quebec National Assembly
+3. Identify recent changes (new laws, new standards, new circulars, interpretation bulletins)
+4. Summarize practical impacts for Quebec SMEs
+5. Indicate publication date and source for each piece of information
+
+Coverage: Canadian and Quebec taxation, accounting standards (IFRS/ASPE/NCECF), financial regulation, business law, compliance (Law 25, CASL, PIPEDA), relevant economic news for SMEs.
+
+Always indicate: information date, official source, practical impact. Flag if information is in force, in bill form, or in public consultation.
+Respond in the user's language.`} },
+  { id:"SubventionsAgent", icon:"💰", color:"#A855F7", short:{fr:"Subventions",  en:"Grants"},
+    domain:{fr:"Subventions gouvernementales & non-gouvernementales · Fédéral · Québec · Municipal · Fondations", en:"Government & non-government grants · Federal · Quebec · Municipal · Foundations"},
+    webSearch: true,
+    quickPrompts:{fr:["Subventions disponibles PME tech Québec","Programmes IRAP et SR&ED 2025","Aides financières Investissement Québec","Subventions non gouvernementales innovation"], en:["Available grants Quebec tech SME","IRAP and SR&ED programs 2025","Investissement Québec financial aid","Non-government innovation grants"]},
+    defaultPrompt:{fr:`Tu es SubventionsAgent, un expert en recherche et identification de subventions, aides financières et programmes de financement pour les PME québécoises et canadiennes.
+
+Tu as accès à la recherche web en temps réel. Pour chaque demande, tu dois :
+1. Rechercher activement les programmes de subventions disponibles correspondant au profil de l'entreprise
+2. Couvrir les trois niveaux gouvernementaux : fédéral (Canada), provincial (Québec), municipal
+3. Inclure les organismes non gouvernementaux : fondations, accélérateurs, fonds d'impact, associations sectorielles
+4. Pour chaque subvention trouvée, préciser :
+   - Nom officiel du programme et organisme responsable
+   - Montant disponible ou pourcentage de financement
+   - Critères d'admissibilité (secteur, taille, revenus, stade, région)
+   - Date limite de dépôt ou caractère continu
+   - Lien officiel vers le programme
+   - Type : remboursable / non-remboursable / prêt / crédit d'impôt
+5. Trier par pertinence et montant potentiel
+6. Signaler les opportunités urgentes (dates limites proches)
+
+Programmes phares à toujours vérifier : SR&ED (CRA), IRAP (NRC), CanExport, PME en action, Essor (Investissement Québec), PARI, programmes CLD/MRC, fonds sectoriels (numérique, vert, manufacturier, agroalimentaire).
+
+Réponds dans la langue de l'utilisateur (français ou anglais).`,
+    en:`You are SubventionsAgent, an expert in researching and identifying grants, financial aid, and funding programs for Quebec and Canadian SMEs.
+
+You have real-time web search access. For each request, you must:
+1. Actively search for available grant programs matching the company profile
+2. Cover all three government levels: federal (Canada), provincial (Quebec), municipal
+3. Include non-governmental organizations: foundations, accelerators, impact funds, sector associations
+4. For each grant found, specify:
+   - Official program name and responsible organization
+   - Available amount or funding percentage
+   - Eligibility criteria (sector, size, revenue, stage, region)
+   - Submission deadline or ongoing nature
+   - Official program link
+   - Type: repayable / non-repayable / loan / tax credit
+5. Sort by relevance and potential amount
+6. Flag urgent opportunities (upcoming deadlines)
+
+Key programs to always check: SR&ED (CRA), IRAP (NRC), CanExport, PME en action, Essor (Investissement Québec), PARI, CLD/MRC programs, sector funds (digital, green, manufacturing, agri-food).
+
+Respond in the user's language.`} },
 ];
 
 const agentById  = id => AGENTS_DEF.find(a => a.id === id) || AGENTS_DEF[0];
@@ -152,6 +225,8 @@ function detectAgentFromFile(filename, previewText = "") {
   if (/ratio|analyse.financiere|benchmark|baiia|ebitda|marge|solvabilite|etats.financiers/.test(s)) return "FinancialAgent";
   if (/investissement|roi|tir|van|dcf|portefeuille|acquisition/.test(s)) return "InvestmentAgent";
   if (/scan|ocr|photo|facture.num|releve.num|manuscrit/.test(s)) return "OCRAgent";
+  if (/veille|actualite|mise.a.jour|bulletin|circulaire|nouveaute/.test(s)) return "VeilleAgent";
+  if (/subvention|aide.financiere|programme|grant|bourse|sred|irap/.test(s)) return "SubventionsAgent";
   return "FinancialAgent";
 }
 
@@ -203,6 +278,7 @@ const T = {
 };
 
 // ─── API ──────────────────────────────────────────────────────────────────────
+// Standard call — RAG agents (no web search)
 async function callClaude(system, messages) {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method:"POST", headers:{"Content-Type":"application/json"},
@@ -211,6 +287,32 @@ async function callClaude(system, messages) {
   if (!res.ok) throw new Error(`API ${res.status}`);
   const d = await res.json();
   return d.content?.[0]?.text || "Erreur inattendue.";
+}
+
+// Web-search-enabled call — VeilleAgent + SubventionsAgent
+// Uses Anthropic web_search tool for real-time information
+async function callClaudeWithWebSearch(system, messages) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      model:"claude-sonnet-4-20250514", max_tokens:2000, system,
+      tools:[{ type:"web_search_20250305", name:"web_search" }],
+      messages: messages.map(m=>({role:m.role,content:m.content}))
+    })
+  });
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  const d = await res.json();
+  // Collect all text blocks (may be multiple after tool use)
+  const textBlocks = (d.content||[]).filter(b=>b.type==="text").map(b=>b.text);
+  return textBlocks.join("\n\n") || "Erreur inattendue.";
+}
+
+// Route to correct API based on agent type
+const WEB_SEARCH_AGENTS = new Set(["VeilleAgent","SubventionsAgent"]);
+async function callAgent(agentId, system, messages) {
+  return WEB_SEARCH_AGENTS.has(agentId)
+    ? callClaudeWithWebSearch(system, messages)
+    : callClaude(system, messages);
 }
 
 function fastRoute(msg) {
@@ -222,6 +324,8 @@ function fastRoute(msg) {
   if (/ratio|analyse.financiere|benchmark|baiia|ebitda|marge|solvabilite/.test(m)) return "FinancialAgent";
   if (/investissement|roi|tir|van|dcf|portefeuille|acquisition/.test(m)) return "InvestmentAgent";
   if (/scan|ocr|photo|facture.scan|releve.scan|manuscrit/.test(m)) return "OCRAgent";
+  if (/veille|actualite|mise.a.jour|nouveaute|changement.recent|derniere.loi|nouvelle.norme|bulletin|circulaire|nouvelles.fiscales/.test(m)) return "VeilleAgent";
+  if (/subvention|aide.financiere|programme.financement|grant|bourse|sred|irap|pari|investissement.quebec|cld|mrc|financement.gouvern|non.gouvern|fondation|accelerateur/.test(m)) return "SubventionsAgent";
   return null;
 }
 
@@ -482,7 +586,7 @@ function Sidebar({ view, setView, darkMode, setDarkMode, lang, setLang, t, P }) 
 // ─── DASHBOARD ────────────────────────────────────────────────────────────────
 function Dashboard({ t, P, lang }) {
   const kpis = [{label:lang==="fr"?"Revenus Q1 2025":"Revenue Q1 2025",value:"$847 320",change:"+12.4%",up:true,icon:"💹"},{label:lang==="fr"?"Obligations fiscales":"Tax obligations",value:"$124 580",change:"Éch. 30 avr.",up:false,icon:"🏛️"},{label:lang==="fr"?"Cash flow net":"Net cash flow",value:"$203 445",change:"+8.2%",up:true,icon:"💧"},{label:lang==="fr"?"Score conformité":"Compliance score",value:"94/100",change:"Excellent",up:true,icon:"🛡️"}];
-  const acts = [{time:"2h",agent:"TaxAgent",text:lang==="fr"?"Analyse T2 — déduction amortissement paragraphe 13":"T2 analysis — paragraph 13 amortization deduction",color:P.accent},{time:"5h",agent:"CashFlowAgent",text:lang==="fr"?"Prévision 13 sem. — risque liquidité semaine 8":"13-week forecast — week 8 liquidity risk",color:P.violet},{time:"1j",agent:"AuditAgent",text:lang==="fr"?"Contrôles internes Q4 — 3 points d'attention":"Q4 internal controls — 3 attention points",color:P.blue},{time:"2j",agent:"InvestmentAgent",text:lang==="fr"?"DCF Laval — TRI 18.4% · GO":"Laval DCF — IRR 18.4% · GO",color:P.pink},{time:"3j",agent:"ComplianceAgent",text:lang==="fr"?"Revue Loi 25 — 2 actions correctives":"Law 25 review — 2 corrective actions",color:P.gold},{time:"4j",agent:"OCRAgent",text:lang==="fr"?"Facture scannée — 14 champs extraits":"Scanned invoice — 14 fields extracted",color:P.orange}];
+  const acts = [{time:"2h",agent:"TaxAgent",text:lang==="fr"?"Analyse T2 — déduction amortissement paragraphe 13":"T2 analysis — paragraph 13 amortization deduction",color:P.accent},{time:"5h",agent:"CashFlowAgent",text:lang==="fr"?"Prévision 13 sem. — risque liquidité semaine 8":"13-week forecast — week 8 liquidity risk",color:P.violet},{time:"1j",agent:"VeilleAgent",text:lang==="fr"?"Veille ARC — nouvelles directives crédit d'impôt RS&DE publiées":"CRA Watch — new SR&ED tax credit guidelines published",color:"#14B8A6"},{time:"1j",agent:"SubventionsAgent",text:lang==="fr"?"3 nouvelles subventions PME tech Québec identifiées — PARI + Essor + CLD":"3 new Quebec tech SME grants identified — PARI + Essor + CLD",color:"#A855F7"},{time:"2j",agent:"AuditAgent",text:lang==="fr"?"Contrôles internes Q4 — 3 points d'attention":"Q4 internal controls — 3 attention points",color:P.blue},{time:"3j",agent:"InvestmentAgent",text:lang==="fr"?"DCF Laval — TRI 18.4% · GO":"Laval DCF — IRR 18.4% · GO",color:P.pink}];
   const cal = [{d:"28 fév.",l:lang==="fr"?"T4 — Feuillets employés":"T4 — Employee slips",u:false},{d:"30 avr.",l:lang==="fr"?"T1 particuliers":"T1 personal returns",u:true},{d:"15 juin",l:lang==="fr"?"Acompte provisionnel Q2":"Q2 instalment",u:false},{d:"30 juin",l:lang==="fr"?"T2 — 6 mois après fin exercice":"T2 — 6 months after year-end",u:false}];
   return (
     <div style={{padding:26,overflowY:"auto",flex:1}}>
@@ -749,7 +853,7 @@ function Chat({ t, P, lang, agentSettings, onStartConvWithAgent }) {
     const rPrompt = agentSettings[resolved]?.prompt || rDef.defaultPrompt[lang];
     setLoading(true);
     let reply = "";
-    try { reply = await callClaude(rPrompt, draft.map(m=>({role:m.role,content:m.content}))); }
+    try { reply = await callAgent(resolved, rPrompt, draft.map(m=>({role:m.role,content:m.content}))); }
     catch(e) { reply = `❌ ${lang==="fr"?"Erreur":"Error"}: ${e.message}`; }
     const final = [...draft, {role:"assistant",content:reply,agent:resolved,ts:Date.now()}];
     setMsgs(final); setLoading(false);
@@ -792,6 +896,7 @@ function Chat({ t, P, lang, agentSettings, onStartConvWithAgent }) {
             {AGENTS_DEF.map(a=><button key={a.id} onClick={()=>switchAgent(a.id)} style={{background:agentId===a.id?`${a.color}20`:"transparent",border:`1px solid ${agentId===a.id?a.color+"60":P.border}`,borderRadius:8,padding:"4px 9px",cursor:"pointer",color:agentId===a.id?a.color:P.t3,fontSize:11,fontWeight:agentId===a.id?500:400,whiteSpace:"nowrap",flexShrink:0}}>{a.icon} {a.short[lang]}</button>)}
           </div>
           {activeConv && <button onClick={exportConv} style={{background:"transparent",border:`1px solid ${P.border}`,borderRadius:6,padding:"4px 8px",color:P.t2,cursor:"pointer",fontSize:11,flexShrink:0}}>⬇ {t.chat.export}</button>}
+          {WEB_SEARCH_AGENTS.has(agentId) && <span style={{fontSize:10,padding:"3px 10px",borderRadius:20,background:"#14B8A615",color:"#14B8A6",border:"1px solid #14B8A640",fontWeight:600,flexShrink:0,animation:"pulse 2s ease-in-out infinite"}}>🌐 {lang==="fr"?"Web Search actif":"Web Search active"}</span>}
         </div>
 
         {(activeConv||routedTo) && (
@@ -947,7 +1052,7 @@ function Agents({ t, P, lang, agentSettings, setAgentSettings, onStartConvWithAg
   return (
     <div style={{padding:26,overflowY:"auto",flex:1}}>
       <h1 style={{fontSize:20,fontWeight:600,color:P.t1,fontFamily:"'Playfair Display',Georgia,serif",marginBottom:4}}>{t.agents.title}</h1>
-      <p style={{fontSize:13,color:P.t2,marginBottom:20}}>{lang==="fr"?"7 agents · EVV 9/10 · Sources métier + docs client · Prompts éditables · Auto-routing":"7 agents · EVV 9/10 · Knowledge + client docs · Editable prompts · Auto-routing"}</p>
+      <p style={{fontSize:13,color:P.t2,marginBottom:20}}>{lang==="fr"?"9 agents · 7 RAG + 2 Web Search temps réel · EVV 9/10 · Prompts éditables · Auto-routing":"9 agents · 7 RAG + 2 Real-time Web Search · EVV 9/10 · Editable prompts · Auto-routing"}</p>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(285px,1fr))",gap:12}}>
         {AGENTS_DEF.map(a=>{
           const kC=KNOWLEDGE_DOCS_INIT.filter(d=>d.agent===a.id).length;
@@ -965,6 +1070,7 @@ function Agents({ t, P, lang, agentSettings, setAgentSettings, onStartConvWithAg
               <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:12}}>
                 <span style={{fontSize:10,padding:"3px 8px",borderRadius:20,background:`${P.blue}15`,color:P.blue,border:`1px solid ${P.blue}30`}}>📚 {kC} {lang==="fr"?"src métier":"knowledge"}</span>
                 <span style={{fontSize:10,padding:"3px 8px",borderRadius:20,background:`${P.gold}15`,color:P.gold,border:`1px solid ${P.gold}30`}}>🏢 {cC} {lang==="fr"?"doc client":"client doc"}</span>
+                {a.webSearch && <span style={{fontSize:10,padding:"3px 8px",borderRadius:20,background:`${a.color}15`,color:a.color,border:`1px solid ${a.color}40`,fontWeight:600}}>🌐 Web Search temps réel</span>}
               </div>
               <div style={{display:"flex",gap:6}}>
                 <button onClick={()=>onStartConvWithAgent(a.id)} style={{flex:1,background:`${a.color}15`,border:`1px solid ${a.color}40`,borderRadius:8,padding:"7px 0",color:a.color,fontSize:12,fontWeight:500,cursor:"pointer"}}>💬 {t.agents.startConv}</button>
