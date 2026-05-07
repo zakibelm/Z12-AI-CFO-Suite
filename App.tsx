@@ -39,12 +39,54 @@ function useLocalStorage(key, initial) {
   return [val, set];
 }
 
+
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
+// OpenRouter model catalog — used in Settings page
+const OPENROUTER_MODELS = [
+  // ── Anthropic ──────────────────────────────────────────────────────────────
+  { id:"anthropic/claude-sonnet-4-5",        label:"Claude Sonnet 4.5",         provider:"Anthropic", tier:"premium",   cost:"$$"   },
+  { id:"anthropic/claude-3.5-sonnet",        label:"Claude 3.5 Sonnet",         provider:"Anthropic", tier:"premium",   cost:"$$"   },
+  { id:"anthropic/claude-3-opus",            label:"Claude 3 Opus",             provider:"Anthropic", tier:"premium",   cost:"$$$$" },
+  { id:"anthropic/claude-3-haiku",           label:"Claude 3 Haiku",            provider:"Anthropic", tier:"fast",      cost:"$"    },
+  // ── OpenAI ────────────────────────────────────────────────────────────────
+  { id:"openai/gpt-4o",                      label:"GPT-4o",                    provider:"OpenAI",    tier:"premium",   cost:"$$$"  },
+  { id:"openai/gpt-4o-mini",                 label:"GPT-4o Mini",               provider:"OpenAI",    tier:"fast",      cost:"$"    },
+  { id:"openai/gpt-4-turbo",                 label:"GPT-4 Turbo",               provider:"OpenAI",    tier:"premium",   cost:"$$$"  },
+  { id:"openai/o3-mini",                     label:"o3 Mini (Reasoning)",        provider:"OpenAI",    tier:"reasoning", cost:"$$"   },
+  { id:"openai/o1",                          label:"o1 (Reasoning)",             provider:"OpenAI",    tier:"reasoning", cost:"$$$$" },
+  // ── Google ────────────────────────────────────────────────────────────────
+  { id:"google/gemini-2.5-pro-preview",      label:"Gemini 2.5 Pro",            provider:"Google",    tier:"premium",   cost:"$$"   },
+  { id:"google/gemini-2.0-flash-001",        label:"Gemini 2.0 Flash",          provider:"Google",    tier:"fast",      cost:"$"    },
+  { id:"google/gemini-2.0-flash-exp:free",   label:"Gemini 2.0 Flash (Free)",   provider:"Google",    tier:"free",      cost:"FREE" },
+  { id:"google/gemini-flash-1.5-8b",         label:"Gemini Flash 1.5 8B",       provider:"Google",    tier:"fast",      cost:"$"    },
+  // ── Meta ──────────────────────────────────────────────────────────────────
+  { id:"meta-llama/llama-3.3-70b-instruct",  label:"Llama 3.3 70B",             provider:"Meta",      tier:"fast",      cost:"$"    },
+  { id:"meta-llama/llama-3.1-8b-instruct:free", label:"Llama 3.1 8B (Free)",   provider:"Meta",      tier:"free",      cost:"FREE" },
+  // ── Mistral ───────────────────────────────────────────────────────────────
+  { id:"mistralai/mistral-large-2411",       label:"Mistral Large 2411",        provider:"Mistral",   tier:"premium",   cost:"$$"   },
+  { id:"mistralai/mistral-small-3.1-24b-instruct:free", label:"Mistral Small 3.1 (Free)", provider:"Mistral", tier:"free", cost:"FREE" },
+  // ── DeepSeek ──────────────────────────────────────────────────────────────
+  { id:"deepseek/deepseek-chat-v3-0324",     label:"DeepSeek V3",               provider:"DeepSeek",  tier:"fast",      cost:"$"    },
+  { id:"deepseek/deepseek-r1",               label:"DeepSeek R1 (Reasoning)",   provider:"DeepSeek",  tier:"reasoning", cost:"$"    },
+  { id:"deepseek/deepseek-r1-zero:free",     label:"DeepSeek R1 Zero (Free)",   provider:"DeepSeek",  tier:"free",      cost:"FREE" },
+  // ── Cohere ────────────────────────────────────────────────────────────────
+  { id:"cohere/command-r-plus-08-2024",      label:"Command R+ (Aug 2024)",     provider:"Cohere",    tier:"premium",   cost:"$$"   },
+  // ── xAI ───────────────────────────────────────────────────────────────────
+  { id:"x-ai/grok-3-beta",                   label:"Grok 3 Beta",               provider:"xAI",       tier:"premium",   cost:"$$$"  },
+  { id:"x-ai/grok-2-1212",                   label:"Grok 2",                    provider:"xAI",       tier:"premium",   cost:"$$"   },
+  // ── Qwen ──────────────────────────────────────────────────────────────────
+  { id:"qwen/qwen-2.5-72b-instruct",         label:"Qwen 2.5 72B",              provider:"Alibaba",   tier:"fast",      cost:"$"    },
+  { id:"qwen/qwq-32b:free",                  label:"QwQ 32B Reasoning (Free)",  provider:"Alibaba",   tier:"free",      cost:"FREE" },
+];
+
+// Legacy — used as fallback when no OpenRouter key
 const MODELS = [
   { id:"claude-sonnet-4-20250514", label:"Claude Sonnet 4" },
   { id:"gpt-4o",                   label:"GPT-4o" },
   { id:"gpt-4o-mini",              label:"GPT-4o Mini" },
 ];
+
+const DEFAULT_AGENT_MODEL = "anthropic/claude-sonnet-4-5";
 
 const AGENTS_DEF = [
   { id:"TaxAgent",        icon:"📄", color:"#10B981", short:{fr:"Fiscal",     en:"Tax"},
@@ -259,7 +301,7 @@ const genTitle = msg => { const w=msg.replace(/[*#_]/g,"").trim().split(" "); re
 const validateFile = () => null;
 
 const T = {
-  fr: { nav:{dashboard:"Dashboard",chat:"Chat IA",documents:"Documents",pipeline:"Pipeline RAG",governance:"Gouvernance",agents:"Agents"}, lang:"FR", langToggle:"EN",
+  fr: { nav:{dashboard:"Dashboard",chat:"Chat IA",documents:"Documents",pipeline:"Pipeline RAG",governance:"Gouvernance",agents:"Agents",settings:"Paramètres"}, lang:"FR", langToggle:"EN",
     dash:{title:"Tableau de bord",updated:"Mis à jour",activity:"Activité récente",calendar:"Calendrier fiscal 2025"},
     docs:{title:"Gestion documentaire RAG",knowledge:"Sources de connaissance métier",client:"Documents client",upload:"Glissez vos fichiers ici",sub:"Cliquez pour parcourir · Dossier entier · Jusqu'à 500 MB/fichier · Stockage RAG illimité · Tous types",indexed:"✓ Indexé",staServerOnly:"Extraction côté serveur"},
     chat:{new:"Nouvelle conversation",send:"Envoyer",copy:"Copier",copied:"Copié !",export:"Exporter",retry:"Réessayer",routing:"Détection agent...",noConv:"Aucune conversation\nCommencez par envoyer un message",resume:"Conversation reprise",autoRouted:"Auto-routé vers"},
@@ -267,7 +309,7 @@ const T = {
     pipeline:{title:"Pipeline RAG — Observabilité",availability:"Disponibilité",latency:"Latence",errors:"Erreurs",sla:"SLA",lastRun:"Dernier run"},
     governance:{title:"Gouvernance & Conformité",policies:"Politiques actives",catalog:"Catalogue données",owner:"Responsable",lastReview:"Dernière revue",nextAudit:"Prochain audit",status:{compliant:"Conforme",review:"À réviser",noncompliant:"Non conforme"}},
   },
-  en: { nav:{dashboard:"Dashboard",chat:"AI Chat",documents:"Documents",pipeline:"RAG Pipeline",governance:"Governance",agents:"Agents"}, lang:"EN", langToggle:"FR",
+  en: { nav:{dashboard:"Dashboard",chat:"AI Chat",documents:"Documents",pipeline:"RAG Pipeline",governance:"Governance",agents:"Agents",settings:"Settings"}, lang:"EN", langToggle:"FR",
     dash:{title:"Dashboard",updated:"Updated",activity:"Recent activity",calendar:"Fiscal calendar 2025"},
     docs:{title:"RAG Document Management",knowledge:"Business knowledge sources",client:"Client documents",upload:"Drag your files here",sub:"Click to browse · Folder upload · Up to 500 MB/file · Unlimited RAG storage · All types",indexed:"✓ Indexed",staServerOnly:"Server-side extraction"},
     chat:{new:"New conversation",send:"Send",copy:"Copy",copied:"Copied!",export:"Export",retry:"Retry",routing:"Detecting agent...",noConv:"No conversations\nStart by sending a message",resume:"Conversation resumed",autoRouted:"Auto-routed to"},
@@ -307,10 +349,43 @@ async function callClaudeWithWebSearch(system, messages) {
   return textBlocks.join("\n\n") || "Erreur inattendue.";
 }
 
-// Route to correct API based on agent type
+// Route to correct API based on agent type and available key
 const WEB_SEARCH_AGENTS = new Set(["VeilleAgent","SubventionsAgent"]);
-async function callAgent(agentId, system, messages) {
-  return WEB_SEARCH_AGENTS.has(agentId)
+
+async function callOpenRouter(model, system, messages, apiKey, useWebSearch = false) {
+  const body = {
+    model,
+    messages: [{ role:"system", content:system }, ...messages.map(m=>({role:m.role,content:m.content}))],
+    max_tokens: useWebSearch ? 2000 : 1400,
+    ...(useWebSearch ? { plugins:[{ id:"web", max_results:5 }] } : {}),
+  };
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":`Bearer ${apiKey}`,
+      "HTTP-Referer":"https://z12cfo.zakiai.com",
+      "X-Title":"Z12 AI CFO Suite",
+    },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err?.error?.message || `OpenRouter ${res.status}`);
+  }
+  const d = await res.json();
+  return d.choices?.[0]?.message?.content || "Erreur inattendue.";
+}
+
+async function callAgent(agentId, system, messages, openrouterKey, agentModel) {
+  const useWeb = WEB_SEARCH_AGENTS.has(agentId);
+  // Priority: OpenRouter key → Anthropic direct
+  if (openrouterKey) {
+    const model = agentModel || DEFAULT_AGENT_MODEL;
+    return callOpenRouter(model, system, messages, openrouterKey, useWeb);
+  }
+  // Fallback: Anthropic API direct (no web search for free tier)
+  return useWeb
     ? callClaudeWithWebSearch(system, messages)
     : callClaude(system, messages);
 }
@@ -558,7 +633,7 @@ function UploadZone({ color, lang, t, onAdd }) {
 
 // ─── SIDEBAR ──────────────────────────────────────────────────────────────────
 function Sidebar({ view, setView, darkMode, setDarkMode, lang, setLang, t, P }) {
-  const nav = [{id:"dashboard",icon:"⬛",key:"dashboard"},{id:"chat",icon:"💬",key:"chat"},{id:"documents",icon:"📁",key:"documents"},{id:"pipeline",icon:"🔄",key:"pipeline"},{id:"governance",icon:"🛡️",key:"governance"},{id:"agents",icon:"🤖",key:"agents"}];
+  const nav = [{id:"dashboard",icon:"⬛",key:"dashboard"},{id:"chat",icon:"💬",key:"chat"},{id:"documents",icon:"📁",key:"documents"},{id:"pipeline",icon:"🔄",key:"pipeline"},{id:"governance",icon:"🛡️",key:"governance"},{id:"agents",icon:"🤖",key:"agents"},{id:"settings",icon:"⚙️",key:"settings"}];
   return (
     <div style={{width:200,background:P.sb,borderRight:`1px solid ${P.border}`,display:"flex",flexDirection:"column",flexShrink:0}}>
       <div style={{padding:"18px 20px 16px"}}>
@@ -801,7 +876,7 @@ function Documents({ t, P, lang }) {
 }
 
 // ─── CHAT ─────────────────────────────────────────────────────────────────────
-function Chat({ t, P, lang, agentSettings, onStartConvWithAgent }) {
+function Chat({ t, P, lang, agentSettings, onStartConvWithAgent, openrouterKey }) {
   const [convs, setConvs]       = useLocalStorage("z12-conversations", []);
   const [activeId, setActiveId] = useLocalStorage("z12-active-conv", null);
   const [agentId, setAgentId]   = useState(AGENTS_DEF[0].id);
@@ -853,7 +928,7 @@ function Chat({ t, P, lang, agentSettings, onStartConvWithAgent }) {
     const rPrompt = agentSettings[resolved]?.prompt || rDef.defaultPrompt[lang];
     setLoading(true);
     let reply = "";
-    try { reply = await callAgent(resolved, rPrompt, draft.map(m=>({role:m.role,content:m.content}))); }
+    try { reply = await callAgent(resolved, rPrompt, draft.map(m=>({role:m.role,content:m.content})), openrouterKey, agentSettings[resolved]?.model); }
     catch(e) { reply = `❌ ${lang==="fr"?"Erreur":"Error"}: ${e.message}`; }
     const final = [...draft, {role:"assistant",content:reply,agent:resolved,ts:Date.now()}];
     setMsgs(final); setLoading(false);
@@ -1098,12 +1173,225 @@ function Agents({ t, P, lang, agentSettings, setAgentSettings, onStartConvWithAg
   );
 }
 
-// ─── ROOT ─────────────────────────────────────────────────────────────────────
+// ─── SETTINGS PAGE ────────────────────────────────────────────────────────────
+function Settings({ t, P, lang, agentSettings, setAgentSettings, openrouterKey, setOpenrouterKey }) {
+  const [keyInput, setKeyInput]   = useState(openrouterKey || "");
+  const [keyVisible, setKeyVis]   = useState(false);
+  const [testStatus, setTest]     = useState(null); // null | "testing" | "ok" | "error"
+  const [saved, setSaved]         = useState(false);
+  const [expandedAgent, setExpanded] = useState(null);
+
+  // Per-agent draft state
+  const [drafts, setDrafts] = useState(() =>
+    Object.fromEntries(AGENTS_DEF.map(a => [a.id, {
+      model:  agentSettings[a.id]?.model  || DEFAULT_AGENT_MODEL,
+      prompt: agentSettings[a.id]?.prompt || a.defaultPrompt[lang],
+    }]))
+  );
+
+  const setDraft = useCallback((agentId, field, value) => {
+    setDrafts(prev => ({ ...prev, [agentId]: { ...prev[agentId], [field]: value } }));
+  }, []);
+
+  const resetAgent = useCallback((agentId) => {
+    const a = AGENTS_DEF.find(x => x.id === agentId);
+    setDrafts(prev => ({ ...prev, [agentId]: { model:DEFAULT_AGENT_MODEL, prompt:a.defaultPrompt[lang] } }));
+  }, [lang]);
+
+  const saveAll = useCallback(() => {
+    setOpenrouterKey(keyInput.trim());
+    const newSettings = {};
+    AGENTS_DEF.forEach(a => { newSettings[a.id] = { ...drafts[a.id] }; });
+    setAgentSettings(newSettings);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  }, [keyInput, drafts, setOpenrouterKey, setAgentSettings]);
+
+  const testKey = useCallback(async () => {
+    if (!keyInput.trim()) return;
+    setTest("testing");
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/models", {
+        headers:{ "Authorization":`Bearer ${keyInput.trim()}` }
+      });
+      setTest(res.ok ? "ok" : "error");
+    } catch { setTest("error"); }
+    setTimeout(() => setTest(null), 4000);
+  }, [keyInput]);
+
+  const tierColor = tier => ({premium:"#10B981",fast:"#3B82F6",reasoning:"#8B5CF6",free:"#F59E0B"}[tier]||P.t3);
+  const tierLabel = tier => ({premium:"Premium",fast:"Rapide",reasoning:"Raisonnement",free:"Gratuit"}[tier]||tier);
+  const providerIcon = p => ({Anthropic:"🔴",OpenAI:"🟢",Google:"🔵",Meta:"🟣",Mistral:"🟠",DeepSeek:"🟡",Cohere:"⚪",xAI:"⚫",Alibaba:"🟤"}[p]||"●");
+  const providers = [...new Set(OPENROUTER_MODELS.map(m=>m.provider))];
+
+  return (
+    <div style={{padding:26,overflowY:"auto",flex:1}}>
+      <h1 style={{fontSize:20,fontWeight:600,color:P.t1,fontFamily:"'Playfair Display',Georgia,serif",marginBottom:4}}>
+        {lang==="fr"?"Paramètres":"Settings"}
+      </h1>
+      <p style={{fontSize:13,color:P.t2,marginBottom:22}}>
+        {lang==="fr"?"Clé OpenRouter · Modèle IA par agent · Prompt système · 9 agents configurables":"OpenRouter key · AI model per agent · System prompt · 9 configurable agents"}
+      </p>
+
+      {/* ── OpenRouter API Key ─────────────────────────────────────────────── */}
+      <div style={{...card(P),padding:"20px 22px",marginBottom:20,border:`1px solid ${openrouterKey?P.accent+"60":P.border}`}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+          <span style={{fontSize:22}}>🔑</span>
+          <div>
+            <div style={{fontSize:15,fontWeight:600,color:P.t1}}>Clé API OpenRouter</div>
+            <div style={{fontSize:12,color:P.t2,marginTop:1}}>
+              {lang==="fr"?"Accès à 300+ modèles IA — Claude, GPT-4, Gemini, Llama, Mistral, DeepSeek, Grok...":"Access to 300+ AI models — Claude, GPT-4, Gemini, Llama, Mistral, DeepSeek, Grok..."}
+            </div>
+          </div>
+          {openrouterKey && <span style={{marginLeft:"auto",fontSize:11,padding:"4px 12px",borderRadius:20,background:`${P.accent}20`,color:P.accent,border:`1px solid ${P.accent}50`,fontWeight:600}}>✓ {lang==="fr"?"Configurée":"Configured"}</span>}
+        </div>
+
+        <div style={{display:"flex",gap:8,marginBottom:10}}>
+          <div style={{flex:1,position:"relative"}}>
+            <input
+              type={keyVisible?"text":"password"}
+              value={keyInput}
+              onChange={e=>setKeyInput(e.target.value)}
+              placeholder="sk-or-v1-..."
+              style={{width:"100%",background:P.input,border:`1px solid ${P.border}`,borderRadius:9,padding:"9px 40px 9px 12px",color:P.t1,fontSize:13,fontFamily:"'DM Mono',monospace",outline:"none"}}
+            />
+            <button onClick={()=>setKeyVis(v=>!v)} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",color:P.t3,cursor:"pointer",fontSize:14}}>
+              {keyVisible?"🙈":"👁️"}
+            </button>
+          </div>
+          <button onClick={testKey} disabled={!keyInput.trim()||testStatus==="testing"} style={{background:P.border,border:`1px solid ${P.border}`,borderRadius:9,padding:"9px 16px",color:P.t2,fontSize:12,cursor:"pointer",flexShrink:0,fontWeight:500,transition:"all .15s"}}>
+            {testStatus==="testing"?"..."
+             :testStatus==="ok"   ?<span style={{color:P.accent}}>✓ {lang==="fr"?"Valide":"Valid"}</span>
+             :testStatus==="error"?<span style={{color:P.red}}>✗ {lang==="fr"?"Invalide":"Invalid"}</span>
+             :lang==="fr"?"Tester":"Test"}
+          </button>
+        </div>
+
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <div style={{fontSize:11,color:P.t3}}>
+            {lang==="fr"?"Obtenez votre clé gratuite sur":"Get your free key at"}{" "}
+            <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer" style={{color:P.accent,textDecoration:"none",fontWeight:500}}>openrouter.ai/keys</a>
+          </div>
+          <div style={{marginLeft:"auto",fontSize:11,color:P.t3}}>
+            {lang==="fr"?"Sans clé : API Anthropic directe":"No key: direct Anthropic API"}
+          </div>
+        </div>
+
+        {/* OpenRouter model catalog preview */}
+        <div style={{marginTop:14,padding:"10px 12px",background:`${P.border}40`,borderRadius:8}}>
+          <div style={{fontSize:11,fontWeight:500,color:P.t2,marginBottom:8}}>{lang==="fr"?"Fournisseurs disponibles :":"Available providers:"}</div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+            {providers.map(p=>(
+              <span key={p} style={{fontSize:11,padding:"3px 9px",borderRadius:20,background:P.card,border:`1px solid ${P.border}`,color:P.t2}}>
+                {providerIcon(p)} {p}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Agent configurations ────────────────────────────────────────────── */}
+      <div style={{fontSize:11,fontWeight:500,color:P.t3,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:12}}>
+        {lang==="fr"?"Configuration des agents (9)":"Agent configuration (9)"}
+      </div>
+
+      <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:24}}>
+        {AGENTS_DEF.map(a => {
+          const isExp = expandedAgent === a.id;
+          const draft = drafts[a.id] || { model:DEFAULT_AGENT_MODEL, prompt:a.defaultPrompt[lang] };
+          const modelInfo = OPENROUTER_MODELS.find(m=>m.id===draft.model);
+          const isModified = draft.model !== DEFAULT_AGENT_MODEL || draft.prompt !== a.defaultPrompt[lang];
+
+          return (
+            <div key={a.id} style={{...card(P),border:`1px solid ${isExp?a.color:P.border}`,overflow:"hidden",transition:"border-color .2s"}}>
+              {/* Agent header row */}
+              <div onClick={()=>setExpanded(isExp?null:a.id)}
+                style={{padding:"14px 18px",cursor:"pointer",display:"flex",alignItems:"center",gap:12,background:isExp?`${a.color}06`:"transparent",transition:"background .15s"}}>
+                <div style={{width:36,height:36,borderRadius:9,background:`${a.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{a.icon}</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{fontSize:14,fontWeight:600,color:a.color}}>{a.id}</span>
+                    {a.webSearch && <span style={{fontSize:10,padding:"2px 7px",borderRadius:20,background:`${a.color}15`,color:a.color,border:`1px solid ${a.color}40`,fontWeight:600}}>🌐 Web Search</span>}
+                    {isModified && <span style={{fontSize:10,padding:"2px 7px",borderRadius:20,background:`${P.gold}15`,color:P.gold,border:`1px solid ${P.gold}40`}}>✎ {lang==="fr"?"Modifié":"Modified"}</span>}
+                  </div>
+                  <div style={{fontSize:11,color:P.t3,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                    {modelInfo ? `${providerIcon(modelInfo.provider)} ${modelInfo.label}` : draft.model}
+                  </div>
+                </div>
+                <span style={{color:P.t3,fontSize:12,flexShrink:0}}>{isExp?"▲":"▼"}</span>
+              </div>
+
+              {/* Expanded config panel */}
+              {isExp && (
+                <div style={{padding:"0 18px 18px",borderTop:`1px solid ${P.border}`}}>
+
+                  {/* Model selector */}
+                  <div style={{marginTop:14,marginBottom:14}}>
+                    <div style={{fontSize:11,fontWeight:500,color:P.t3,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:8}}>
+                      {lang==="fr"?"Modèle IA":"AI Model"} {!openrouterKey && <span style={{color:P.gold}}>— {lang==="fr"?"Clé OpenRouter requise pour changer":"OpenRouter key required to change"}</span>}
+                    </div>
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:6}}>
+                      {OPENROUTER_MODELS.map(m=>(
+                        <div key={m.id} onClick={()=>setDraft(a.id,"model",m.id)}
+                          style={{padding:"8px 10px",borderRadius:8,border:`1px solid ${draft.model===m.id?a.color:P.border}`,background:draft.model===m.id?`${a.color}12`:P.input,cursor:"pointer",transition:"all .15s"}}>
+                          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:3}}>
+                            <span style={{fontSize:12,fontWeight:draft.model===m.id?600:400,color:draft.model===m.id?a.color:P.t1}}>{providerIcon(m.provider)} {m.label}</span>
+                            <span style={{fontSize:10,padding:"1px 6px",borderRadius:10,background:`${tierColor(m.tier)}18`,color:tierColor(m.tier),fontWeight:500}}>{m.cost}</span>
+                          </div>
+                          <div style={{display:"flex",gap:5}}>
+                            <span style={{fontSize:9,color:P.t3}}>{m.provider}</span>
+                            <span style={{fontSize:9,padding:"1px 5px",borderRadius:8,background:`${tierColor(m.tier)}15`,color:tierColor(m.tier)}}>{tierLabel(m.tier)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* System prompt editor */}
+                  <div>
+                    <div style={{fontSize:11,fontWeight:500,color:P.t3,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:8}}>
+                      {lang==="fr"?"Prompt système":"System prompt"}
+                    </div>
+                    <textarea
+                      value={draft.prompt}
+                      onChange={e=>setDraft(a.id,"prompt",e.target.value)}
+                      rows={7}
+                      style={{width:"100%",background:P.input,border:`1px solid ${P.border}`,borderRadius:9,padding:"10px 12px",color:P.t1,fontSize:12,fontFamily:"'DM Mono',monospace",lineHeight:1.6,resize:"vertical",outline:"none"}}
+                    />
+                    <div style={{display:"flex",justifyContent:"flex-end",marginTop:6}}>
+                      <button onClick={()=>resetAgent(a.id)} style={{background:"transparent",border:`1px solid ${P.border}`,borderRadius:7,padding:"5px 12px",color:P.t3,fontSize:11,cursor:"pointer"}}>
+                        ↺ {lang==="fr"?"Réinitialiser":"Reset to default"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Save button ─────────────────────────────────────────────────────── */}
+      <div style={{position:"sticky",bottom:0,background:P.bg,paddingTop:12,paddingBottom:4,display:"flex",gap:10,alignItems:"center"}}>
+        <button onClick={saveAll} style={{flex:1,background:saved?P.accent:"#10B981",border:"none",borderRadius:10,padding:"12px 0",color:"#fff",fontSize:14,fontWeight:600,cursor:"pointer",transition:"background .3s"}}>
+          {saved?(lang==="fr"?"✓ Sauvegardé !":"✓ Saved!"):(lang==="fr"?"Sauvegarder tous les paramètres":"Save all settings")}
+        </button>
+        <button onClick={()=>{setKeyInput("");setDrafts(Object.fromEntries(AGENTS_DEF.map(a=>[a.id,{model:DEFAULT_AGENT_MODEL,prompt:a.defaultPrompt[lang]}])));}}
+          style={{background:"transparent",border:`1px solid ${P.border}`,borderRadius:10,padding:"12px 18px",color:P.t3,fontSize:13,cursor:"pointer"}}>
+          {lang==="fr"?"Tout réinitialiser":"Reset all"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
 export default function Z12CFOSuite() {
   const [view,     setView]     = useLocalStorage("z12-view",     "dashboard");
   const [darkMode, setDarkMode] = useLocalStorage("z12-dark",     true);
   const [lang,     setLang]     = useLocalStorage("z12-lang",     "fr");
   const [agentSettings, setAgentSettings] = useLocalStorage("z12-agent-settings", {});
+  const [openrouterKey, setOpenrouterKey] = useLocalStorage("z12-openrouter-key", "");
 
   const handleStartConvWithAgent = useCallback(agentId => {
     sessionStorage.setItem("z12-start-agent", agentId);
@@ -1113,7 +1401,7 @@ export default function Z12CFOSuite() {
   const P = useMemo(() => darkMode ? DARK : LIGHT, [darkMode]);
   const t = useMemo(() => T[lang],                 [lang]);
 
-  const viewProps = { t, P, lang, agentSettings, setAgentSettings, onStartConvWithAgent:handleStartConvWithAgent };
+  const viewProps = { t, P, lang, agentSettings, setAgentSettings, onStartConvWithAgent:handleStartConvWithAgent, openrouterKey };
 
   return (
     <div style={{display:"flex",height:"100vh",background:P.bg,fontFamily:"'DM Sans',system-ui,sans-serif",overflow:"hidden","--bg-card":P.card,"--bg-border":P.border,"--bg-input":P.input,"--t1":P.t1,"--t2":P.t2,"--t3":P.t3}}>
@@ -1132,6 +1420,7 @@ export default function Z12CFOSuite() {
         {view==="pipeline"   && <Pipeline   {...viewProps}/>}
         {view==="governance" && <Governance {...viewProps}/>}
         {view==="agents"     && <Agents     {...viewProps}/>}
+        {view==="settings"   && <Settings   {...viewProps} setOpenrouterKey={setOpenrouterKey}/>}
       </div>
     </div>
   );
