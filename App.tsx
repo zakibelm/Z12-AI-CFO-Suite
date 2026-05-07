@@ -1418,27 +1418,84 @@ function UploadZone({ color, lang, t, onAdd }) {
 }
 
 // ─── SIDEBAR ──────────────────────────────────────────────────────────────────
-function Sidebar({ view, setView, darkMode, setDarkMode, lang, setLang, t, P }) {
-  const nav = [{id:"dashboard",icon:"⬛",key:"dashboard"},{id:"chat",icon:"💬",key:"chat"},{id:"documents",icon:"📁",key:"documents"},{id:"pipeline",icon:"🔄",key:"pipeline"},{id:"governance",icon:"🛡️",key:"governance"},{id:"agents",icon:"🤖",key:"agents"},{id:"settings",icon:"⚙️",key:"settings"}];
+function Sidebar({ view, setView, darkMode, setDarkMode, lang, setLang, t, P, open, setOpen }) {
+  const nav = [
+    {id:"dashboard",icon:"⬛",key:"dashboard"},
+    {id:"chat",     icon:"💬",key:"chat"},
+    {id:"documents",icon:"📁",key:"documents"},
+    {id:"pipeline", icon:"🔄",key:"pipeline"},
+    {id:"governance",icon:"🛡️",key:"governance"},
+    {id:"agents",   icon:"🤖",key:"agents"},
+    {id:"settings", icon:"⚙️",key:"settings"},
+  ];
+
+  const W = open ? 210 : 52;
+
   return (
-    <div style={{width:200,background:P.sb,borderRight:`1px solid ${P.border}`,display:"flex",flexDirection:"column",flexShrink:0}}>
-      <div style={{padding:"18px 20px 16px"}}>
-        <div style={{fontSize:14,fontWeight:700,color:P.accent,letterSpacing:"0.12em"}}>Z12</div>
-        <div style={{fontSize:10,color:P.t3,marginTop:2}}>AI CFO Suite · ZAKI OS</div>
+    <div style={{width:W,minWidth:W,background:P.sb,borderRight:`1px solid ${P.border}`,display:"flex",flexDirection:"column",flexShrink:0,transition:"width .22s cubic-bezier(.4,0,.2,1), min-width .22s cubic-bezier(.4,0,.2,1)",overflow:"hidden"}}>
+
+      {/* ── Header: logo + hamburger ── */}
+      <div style={{padding:"14px 10px 12px",display:"flex",alignItems:"center",justifyContent:open?"space-between":"center",borderBottom:`1px solid ${P.border}`,flexShrink:0}}>
+        {open && (
+          <div style={{paddingLeft:6}}>
+            <div style={{fontSize:14,fontWeight:700,color:P.accent,letterSpacing:"0.12em",lineHeight:1}}>Z12</div>
+            <div style={{fontSize:9,color:P.t3,marginTop:2,whiteSpace:"nowrap"}}>AI CFO Suite</div>
+          </div>
+        )}
+        <button
+          onClick={()=>setOpen(o=>!o)}
+          title={open?"Réduire le menu":"Agrandir le menu"}
+          style={{width:30,height:30,borderRadius:8,border:`1px solid ${P.border}`,background:"transparent",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,flexShrink:0,color:P.t2,transition:"background .15s"}}
+        >
+          {/* Hamburger → X animation */}
+          <span style={{display:"block",width:14,height:1.5,background:P.t2,borderRadius:2,transition:"all .22s",transform:open?"rotate(45deg) translate(2px,4px)":"none"}}/>
+          <span style={{display:"block",width:14,height:1.5,background:P.t2,borderRadius:2,transition:"all .22s",opacity:open?0:1}}/>
+          <span style={{display:"block",width:14,height:1.5,background:P.t2,borderRadius:2,transition:"all .22s",transform:open?"rotate(-45deg) translate(2px,-4px)":"none"}}/>
+        </button>
       </div>
-      <div style={{flex:1}}>
+
+      {/* ── Nav items ── */}
+      <div style={{flex:1,paddingTop:6,overflowY:"auto",overflowX:"hidden"}}>
         {nav.map(n=>(
-          <button key={n.id} onClick={()=>setView(n.id)} style={{width:"100%",background:view===n.id?`${P.accent}18`:"transparent",border:"none",borderLeft:`2px solid ${view===n.id?P.accent:"transparent"}`,color:view===n.id?P.accent:P.t2,padding:"10px 20px",textAlign:"left",cursor:"pointer",display:"flex",alignItems:"center",gap:10,fontSize:13,fontWeight:view===n.id?500:400,transition:"all .15s"}}>
-            <span style={{fontSize:13}}>{n.icon}</span>{t.nav[n.key]}
+          <button
+            key={n.id}
+            onClick={()=>setView(n.id)}
+            title={!open ? t.nav[n.key] : undefined}
+            style={{
+              width:"100%",background:view===n.id?`${P.accent}18`:"transparent",
+              border:"none",borderLeft:`2px solid ${view===n.id?P.accent:"transparent"}`,
+              color:view===n.id?P.accent:P.t2,
+              padding:open?"9px 16px":"9px 0",
+              textAlign:"left",cursor:"pointer",
+              display:"flex",alignItems:"center",
+              justifyContent:open?"flex-start":"center",
+              gap:open?10:0,
+              fontSize:13,fontWeight:view===n.id?500:400,
+              transition:"all .15s",whiteSpace:"nowrap",
+            }}
+          >
+            <span style={{fontSize:15,flexShrink:0}}>{n.icon}</span>
+            {open && <span style={{opacity:1,transition:"opacity .15s"}}>{t.nav[n.key]}</span>}
           </button>
         ))}
       </div>
-      <div style={{padding:"12px 14px",borderTop:`1px solid ${P.border}`,display:"flex",flexDirection:"column",gap:8}}>
-        <div style={{display:"flex",gap:6}}>
-          <button onClick={()=>setLang(l=>l==="fr"?"en":"fr")} style={{flex:1,background:`${P.accent}15`,border:`1px solid ${P.accent}35`,borderRadius:8,padding:"6px 0",color:P.accent,fontSize:12,fontWeight:600,cursor:"pointer"}}>{t.langToggle}</button>
-          <button onClick={()=>setDarkMode(d=>!d)} style={{flex:1,background:P.border,border:`1px solid ${P.border}`,borderRadius:8,padding:"6px 0",color:P.t2,fontSize:14,cursor:"pointer"}}>{darkMode?"☀️":"🌙"}</button>
-        </div>
-        <div style={{fontSize:9,color:P.t3,textAlign:"center"}}>v3.1 · VectDocs ✦ integrated</div>
+
+      {/* ── Footer controls ── */}
+      <div style={{padding:open?"10px 12px":"10px 6px",borderTop:`1px solid ${P.border}`,display:"flex",flexDirection:"column",gap:6,flexShrink:0}}>
+        {open ? (
+          <>
+            <div style={{display:"flex",gap:5}}>
+              <button onClick={()=>setLang(l=>l==="fr"?"en":"fr")} style={{flex:1,background:`${P.accent}15`,border:`1px solid ${P.accent}35`,borderRadius:7,padding:"5px 0",color:P.accent,fontSize:11,fontWeight:600,cursor:"pointer"}}>{t.langToggle}</button>
+              <button onClick={()=>setDarkMode(d=>!d)} style={{flex:1,background:P.border,border:`1px solid ${P.border}`,borderRadius:7,padding:"5px 0",color:P.t2,fontSize:13,cursor:"pointer"}}>{darkMode?"☀️":"🌙"}</button>
+            </div>
+            <div style={{fontSize:8,color:P.t3,textAlign:"center"}}>v3.2 · ZAKI OS</div>
+          </>
+        ) : (
+          <div style={{display:"flex",flexDirection:"column",gap:5,alignItems:"center"}}>
+            <button onClick={()=>setLang(l=>l==="fr"?"en":"fr")} title={t.langToggle} style={{width:32,height:24,background:`${P.accent}15`,border:`1px solid ${P.accent}35`,borderRadius:6,color:P.accent,fontSize:9,fontWeight:700,cursor:"pointer"}}>{t.langToggle}</button>
+            <button onClick={()=>setDarkMode(d=>!d)} title={darkMode?"Light mode":"Dark mode"} style={{width:32,height:24,background:P.border,border:`1px solid ${P.border}`,borderRadius:6,color:P.t2,fontSize:12,cursor:"pointer"}}>{darkMode?"☀️":"🌙"}</button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2230,9 +2287,10 @@ function Settings({ t, P, lang, agentSettings, setAgentSettings, openrouterKey, 
 
 
 export default function Z12CFOSuite() {
-  const [view,     setView]     = useLocalStorage("z12-view",     "dashboard");
-  const [darkMode, setDarkMode] = useLocalStorage("z12-dark",     true);
-  const [lang,     setLang]     = useLocalStorage("z12-lang",     "fr");
+  const [view,        setView]       = useLocalStorage("z12-view",     "dashboard");
+  const [darkMode,    setDarkMode]   = useLocalStorage("z12-dark",     true);
+  const [lang,        setLang]       = useLocalStorage("z12-lang",     "fr");
+  const [sidebarOpen, setSidebarOpen]= useLocalStorage("z12-sidebar",  true);
   const [agentSettings, setAgentSettings] = useLocalStorage("z12-agent-settings", {});
   const [openrouterKey, setOpenrouterKey] = useLocalStorage("z12-openrouter-key", "");
 
@@ -2255,7 +2313,7 @@ export default function Z12CFOSuite() {
         textarea:focus,select:focus,input:focus{border-color:${P.accent}!important;outline:none}
         @keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
       `}</style>
-      <Sidebar view={view} setView={setView} darkMode={darkMode} setDarkMode={setDarkMode} lang={lang} setLang={setLang} t={t} P={P}/>
+      <Sidebar view={view} setView={setView} darkMode={darkMode} setDarkMode={setDarkMode} lang={lang} setLang={setLang} t={t} P={P} open={sidebarOpen} setOpen={setSidebarOpen}/>
       <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
         {view==="dashboard"  && <Dashboard  {...viewProps}/>}
         {view==="chat"       && <Chat       {...viewProps}/>}
