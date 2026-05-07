@@ -1,171 +1,193 @@
-# Z12 AI CFO Suite — v3.1
+# 🎯 Z12 AI CFO Suite — v3.2
 
-> **ZAKI OS Platform** · Financial intelligence for Quebec SMEs · May 2026
+> **ZAKI OS Platform** · Bureau CPA Virtuel · Intelligence Financière IA pour PME Québécoises · Mai 2026
 
-![Z12 AI CFO Suite](https://img.shields.io/badge/ZAKI_OS-Z12_AI_CFO_Suite-10B981?style=for-the-badge)
-![Version](https://img.shields.io/badge/version-3.1.0-blue?style=for-the-badge)
-![Stack](https://img.shields.io/badge/React_18_+_TypeScript-3B82F6?style=for-the-badge)
-
----
-
-## Overview
-
-Z12 AI CFO Suite is a production-ready AI-powered financial intelligence platform for Quebec and Canadian SMEs. It provides 7 specialized agents backed by a unified RAG system (Supabase pgvector), all accessible through a clean bilingual (FR/EN) interface.
+[![Version](https://img.shields.io/badge/version-3.2.0-10B981?style=for-the-badge)](https://github.com/zakibelm/Z12-AI-CFO-Suite)
+[![Stack](https://img.shields.io/badge/React_18_+_TypeScript-3B82F6?style=for-the-badge)]()
+[![Agents](https://img.shields.io/badge/9_Agents_CPA-6366F1?style=for-the-badge)]()
+[![RAG](https://img.shields.io/badge/RAG_Illimité-F59E0B?style=for-the-badge)]()
 
 ---
 
-## Features
+## 🏢 Description
 
-### 7 Specialized AI Agents
-| Agent | Domain | LLM |
-|---|---|---|
-| TaxAgent | T1/T2 · TPS/TVQ · CRA · Revenu Québec | Claude Sonnet |
-| AuditAgent | IFRS · ASPE · CPA Canada | Claude Sonnet |
-| CashFlowAgent | Treasury · 13-week / 12-month forecasts | Claude Sonnet |
-| ComplianceAgent | Loi 25 · CASL · PIPEDA | Claude Sonnet |
-| FinancialAgent | Ratios · Benchmarks · Quebec SME | Claude Sonnet |
-| InvestmentAgent | DCF / IRR / NPV · OSC/AMF | Claude Sonnet |
-| OCRAgent | Scanned invoices · Handwritten docs | Claude Sonnet |
+Z12 AI CFO Suite est un **bureau CPA virtuel complet** propulsé par l'IA, conçu pour les PME québécoises et canadiennes. Une équipe de 9 spécialistes nommés — coordonnés par un orchestrateur intelligent — couvre tous les domaines financiers et fiscaux canadiens.
 
-### Document Management (VectDocs-inspired)
-- **Business knowledge sources** — CRA guides, IFRS standards, TVQ regulations, law texts
-- **Client documents** — Financial statements, budgets, tax returns, contracts
-- **Client-side text extraction** — Instant preview before server indexing (TXT/CSV/JSON/PDF)
-- **Smart agent auto-detection** — Detects correct agent from filename + content keywords
-- **Language detection** — FR/EN flag on each document
-- **Chunk estimation** — Estimates chunk count before server processing
-- **Folder batch upload** — `showDirectoryPicker()` API (Chrome/Edge)
-- **Search + Sort + Preview panel** — Search across name/agent/content, expandable rows
-- **Unlimited RAG storage** — No cap on indexed documents; up to 500 MB per file
-- **All file types** — PDF, Word, Excel, PowerPoint, CSV, TXT, JSON, images, ZIP, email, audio, video
+---
+
+## 👥 L'équipe CPA virtuelle
+
+| 👤 Spécialiste | Titre | Domaine | Capacités |
+|---|---|---|---|
+| **Sophie Mercier** | Fiscaliste · CPA, M.Fisc. | Fiscalité canadienne | T1/T2, TPS/TVQ, RS&DE, DPA, planification |
+| **Alexandre Bouchard** | Auditeur · CPA-CA | Audit & normes | NCA 200-810, IFRS, ASPE, NCECF |
+| **Natalie Chen** | Dir. Trésorerie · CTP | Trésorerie & BFR | DSO/DPO/DIO, CCC, rolling forecast, covenants |
+| **Isabelle Roy** | Conseillère · DPO, LL.M. | Conformité & vie privée | Loi 25, CASL, PIPEDA, EFVP |
+| **Marc Tremblay** | Analyste · CFA | Analyse financière | Ratios, benchmarks, évaluation PME |
+| **Sarah Blackwell** | Analyste · CFA, MBA | Investissement & M&A | DCF, LBO, TRI/VAN/MOIC, QoE |
+| **Jean-François Lebel** | Spécialiste OCR | Extraction documentaire | Factures, T4/RL-1, relevés, validation TPS/TVQ |
+| **Émilie Côté** | Analyste veille | Veille réglementaire | ARC, IFRS, AMF, Loi 25 · 🌐 **Web Search temps réel** |
+| **Patrick Gagnon** | Expert subventions | Financement public | SR&DE, IRAP, IQ, CDAE, CLD · 🌐 **Web Search temps réel** |
+
+---
+
+## 🎯 Orchestrateur intelligent
+
+L'orchestrateur est le cerveau de la plateforme. Il analyse chaque requête et détermine le workflow optimal :
+
+```
+SINGLE     → 1 spécialiste direct         "Date limite T2?"
+PARALLEL   → Promise.all() simultané      "Analysez notre acquisition" → Sarah + Sophie + Marc
+SEQUENTIAL → Output N → contexte N+1      "Veille → Subventions → Fiscal"
+HYBRID     → Phases parallèles + séquentiel  "JF + Alex → Isabelle"
+```
+
+**Règles d'assignation intelligentes :**
+- JF Lebel en PREMIER si document scanné → extraction avant analyse
+- Émilie si mises à jour réglementaires → recherche web temps réel
+- Patrick TOUJOURS si nouveau projet/investissement
+- Acquisition → Sarah + Sophie + Marc en parallèle
+- Synthèse automatique si multi-agents
+
+---
+
+## ⚡ Features
 
 ### Chat IA
-- Auto-routing (2-level: fast regex → Claude API fallback, zero tokens for obvious cases)
-- Persistent conversation history (localStorage)
-- Resume any past conversation with full context
-- Quick prompts per agent
-- Copy message to clipboard
-- Export conversation as JSON
-- FR/EN bilingual prompts
+- ✅ Orchestrateur comme point d'entrée unique (jamais un spécialiste directement)
+- ✅ Auto-routing 2 niveaux : regex rapide → API Claude fallback
+- ✅ Workflows parallèles, séquentiels et hybrides
+- ✅ Surbrillance agents actifs (glow pulsant pendant l'exécution)
+- ✅ Synthèse orchestrateur multi-agents
+- ✅ Historique conversations persisté
+- ✅ Export JSON conversations
 
-### Pipeline RAG — Observability
-- Bronze → Silver → Gold pipeline stages
-- Real-time metrics: availability, latency, error rate, SLA
-- Data quality tracking
+### Documents RAG
+- ✅ Stockage RAG **illimité** — jusqu'à 500 MB par fichier, tous types
+- ✅ Extraction texte client-side instantanée (TXT/CSV/JSON/PDF)
+- ✅ Auto-détection agent depuis nom + contenu (VectDocs-inspired)
+- ✅ Détection langue 🇫🇷/🇬🇧 + estimation chunks
+- ✅ Folder batch upload (`showDirectoryPicker()`)
+- ✅ Search + Sort + Preview panel + Delete
 
-### Governance
-- Active compliance policies: Loi 25, CASL, PIPEDA, IFRS, CRA
-- Data catalog with owners, retention, sensitivity
-- Audit schedule tracking
+### Paramètres
+- ✅ Clé OpenRouter unique → 27 modèles, 9 fournisseurs
+- ✅ Sélecteur de modèle par agent (grille visuelle)
+- ✅ Éditeur prompt système par agent + Reset
+- ✅ Test connexion API live
 
 ### UX
-- Dark / Light mode (persisted)
-- FR / EN language toggle (persisted)
-- Per-agent editable prompts + model via UI (persisted)
-- `useLocalStorage` — all state persists across sessions
-- `useMemo` / `useCallback` — zero unnecessary re-renders
+- ✅ Sidebar rétractable ☰/✕ avec animation
+- ✅ Dark/Light mode
+- ✅ FR/EN bilingue natif
+- ✅ Tout persisté en localStorage
 
 ---
 
-## Stack
-
-| Layer | Technology |
-|---|---|
-| Frontend | React 18 + TypeScript + Vite |
-| Styling | Inline styles (theme-aware dark/light) |
-| State | React hooks + useLocalStorage |
-| LLM Gateway | OpenRouter (Claude Sonnet, GPT-4o, etc.) |
-| Vector DB | Supabase pgvector (1024 dims) |
-| Embeddings | HF `intfloat/multilingual-e5-large` (free) |
-| Orchestration | n8n webhooks (server-side) |
-| Storage | AWS S3 ca-central-1 (Loi 25 compliant) |
-| Deploy | VPS 147.93.40.124 + Vercel (frontend) |
-
----
-
-## Getting Started
-
-```bash
-# Install dependencies
-npm install
-
-# Set your Anthropic API key (for chat)
-echo "VITE_ANTHROPIC_API_KEY=your_key_here" > .env.local
-
-# Run dev server
-npm run dev
-
-# Build for production
-npm run build
-```
-
-Open [http://localhost:3000](http://localhost:3000)
-
----
-
-## Project Structure
+## 🏗️ Architecture
 
 ```
-Z12-AI-CFO-Suite/
-├── App.tsx          — Main application (all components)
-├── index.tsx        — React entry point
-├── index.html       — HTML shell
-├── package.json
-├── vite.config.ts
-├── tsconfig.json
-└── .gitignore
-```
-
----
-
-## Architecture
-
-```
-Frontend (React/Vercel)
-    ↓ REST + WebSocket
-Backend (FastAPI / VPS)
+Frontend React (Vercel)
     ↓
-Agent Orchestrator (7 agents)
+Orchestrateur (analyzeWorkflow → plan JSON)
+    ↓ single / parallel / sequential / hybrid
+Spécialistes (9 agents) → callAgent()
+    ├── callOpenRouter() — si clé disponible (27 modèles)
+    └── callClaude() / callClaudeWithWebSearch() — fallback direct
     ↓
 RAG Service
-    ├── HF multilingual-e5-large (embeddings, FREE)
-    ├── Supabase pgvector (1024 dims, UNLIMITED)
-    └── search_chunks() SQL function
+    ├── HF multilingual-e5-large (embeddings, FREE, 1024 dims)
+    ├── Supabase pgvector (stockage illimité)
+    └── search_chunks() cosine similarity, seuil 0.6
     ↓
-OpenRouter (LLM Gateway)
-    ├── claude-sonnet-4 (analyses — all 7 agents)
-    ├── gpt-4o (EVV validation judge)
-    └── gemini-2.0-flash:free (routing/classification)
+Backend FastAPI (VPS 147.93.40.124)
+    ├── Document processing (PyPDF2, python-docx)
+    ├── Chunking 500 tokens
+    └── AWS S3 ca-central-1 (Loi 25 — hébergement Canada)
 ```
 
-### EVV Pattern (Execute → Verify → Validate)
-All financial analyses go through EVV with a **9/10 quality threshold** — the highest in the ZAKI OS ecosystem, reflecting the critical nature of financial data.
+### EVV Pattern — seuil 9/10
+Toutes les analyses financières passent par EVV (Execute → Verify → Validate) avec le seuil qualité le plus élevé de l'écosystème ZAKI OS.
 
 ---
 
-## Compliance
+## 📦 Stack technique
 
-- **Loi 25 (Québec)** — Data hosted in Canada (S3 ca-central-1), explicit consent, right to erasure
-- **CASL** — Double opt-in, unsubscribe mechanism, consent logs
-- **PIPEDA** — Federal personal information protection
-- **IFRS Disclosure** — Financial statement disclosure obligations
-
----
-
-## ZAKI OS Ecosystem
-
-```
-Z-CORE (Orchestrator · 121 agents)
-└── Z12-CFO-Agent ← this platform
-    ├── TaxAgent
-    ├── AuditAgent
-    ├── CashFlowAgent
-    ├── ComplianceAgent
-    ├── FinancialAgent
-    ├── InvestmentAgent
-    └── OCRAgent
-```
+| Couche | Technologie |
+|---|---|
+| Frontend | React 18 + TypeScript + Vite |
+| LLM Gateway | OpenRouter (27 modèles) + Anthropic direct (fallback) |
+| Web Search | Anthropic `web_search_20250305` (Veille + Subventions) |
+| RAG Vector DB | Supabase pgvector (1024 dims) |
+| Embeddings | HF `intfloat/multilingual-e5-large` (GRATUIT) |
+| Backend | FastAPI Python 3.11+ |
+| Storage | AWS S3 `ca-central-1` (Loi 25 compliant) |
+| Deploy | VPS Hostinger + Vercel |
 
 ---
 
-*Confidential — Zaki Belkhiter · ZAKI OS Platform · 2026*
+## 🚀 Installation
+
+```bash
+# Clone
+git clone https://github.com/zakibelm/Z12-AI-CFO-Suite.git
+cd Z12-AI-CFO-Suite
+
+# Install
+npm install
+
+# Configure (optionnel — fallback sur Anthropic direct sans clé)
+echo "VITE_OPENROUTER_KEY=sk-or-v1-..." > .env.local
+
+# Dev
+npm run dev          # → http://localhost:3000
+
+# Production
+npm run build        # → dist/
+```
+
+---
+
+## 📋 Commits
+
+```
+6b673fc feat: orchestrator greets user + active agent glow highlight
+fe66616 feat: collapsible sidebar with hamburger icon ☰→✕
+cddd178 feat: intelligent orchestrator — parallel/sequential/hybrid workflow
+4c7f67a feat: rename agents with fictional person names — virtual CPA firm
+0a398b5 feat: expert-level system prompts for all 9 agents
+01d3c75 feat: Settings page — OpenRouter key + model selector + system prompt
+7e86e8f feat: add VeilleAgent + SubventionsAgent (web search real-time)
+9cff486 feat: Z12 AI CFO Suite v3.2 — Production ready
+```
+
+---
+
+## 🔒 Conformité
+
+- **Loi 25 (Québec)** — Hébergement ca-central-1, CPO nommé, audit trail, droit à l'effacement
+- **CASL** — Double opt-in, désabonnement, logs consentement
+- **PIPEDA** — Privacy by Design, notification violations DORS/2018-64
+- **IFRS Disclosure** — Obligations de divulgation états financiers
+
+---
+
+## 🗺️ Position ZAKI OS
+
+```
+Z-CORE (Orchestrateur central · 121 agents)
+└── Z12-CFO-Director
+    ├── Sophie Mercier    (TaxAgent)
+    ├── Alexandre Bouchard (AuditAgent)
+    ├── Natalie Chen      (CashFlowAgent)
+    ├── Isabelle Roy      (ComplianceAgent)
+    ├── Marc Tremblay     (FinancialAgent)
+    ├── Sarah Blackwell   (InvestmentAgent)
+    ├── Jean-François Lebel (OCRAgent)
+    ├── Émilie Côté       (VeilleAgent — 🌐)
+    └── Patrick Gagnon    (SubventionsAgent — 🌐)
+```
+
+---
+
+*Confidentiel — Zaki Belkhiter · ZAKI OS Platform · 2026*
