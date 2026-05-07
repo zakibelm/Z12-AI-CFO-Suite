@@ -1729,7 +1729,10 @@ function Chat({ t, P, lang, agentSettings, onStartConvWithAgent, openrouterKey }
   const [routing, setRouting]   = useState(false);
   const [showHist, setShowHist] = useState(true);
   const [routedTo, setRoutedTo] = useState(null);
-  const [copied, setCopied]     = useState(null);
+  const [copied,   setCopied]   = useState(null);
+  const [workflow, setWorkflow] = useState(null);
+  const [wfSteps,  setWfSteps]  = useState([]);
+  const [synthesis,setSynthesis]= useState(null);
   const bottomRef = useRef();
   const inputRef  = useRef();
 
@@ -1738,15 +1741,30 @@ function Chat({ t, P, lang, agentSettings, onStartConvWithAgent, openrouterKey }
   const sysPrompt = useMemo(() => agentSettings[agentId]?.prompt || agent.defaultPrompt[lang], [agentSettings, agentId, agent, lang]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({behavior:"smooth"}); }, [msgs, loading]);
+  useEffect(() => { if(msgs.length===0) setMsgs(orchestratorWelcome); }, [orchestratorWelcome]);
 
-  const welcome = useCallback((a) => [{role:"assistant",content:`${a.icon} **${a.personName?.[lang]||a.id}**\n*${a.personTitle?.[lang]||""}*\n\n${lang==="fr"?"Bonjour ! Je suis à votre disposition pour analyser vos documents en croisant sources de connaissance métier et documents client. Comment puis-je vous aider ?":"Hello! I'm ready to analyze your documents by cross-referencing knowledge sources and client documents. How can I help?"}`}], [lang]);
+  // ORCHESTRATOR IS THE ENTRY POINT — not a specialist
+  const orchestratorWelcome = useMemo(() => [{
+    role:"assistant", isOrchestrator:true, ts:Date.now(),
+    content: lang==="fr"
+      ? "🎯 **Orchestrateur — Bureau CPA Virtuel**\n\nBonjour ! Je coordonne une équipe de **9 spécialistes CPA** à votre service :\n\n👩\u200d💼 **Sophie** · Fiscaliste  |  👨\u200d💼 **Alexandre** · Auditeur  |  👩\u200d💻 **Natalie** · Trésorerie\n👩\u200d⚖️ **Isabelle** · Conformité  |  👨\u200d📊 **Marc** · Analyse financière  |  👩\u200d💹 **Sarah** · Investissement\n🧑\u200d🔬 **Jean-François** · OCR  |  👩\u200d💻 **Émilie** · Veille  |  👨\u200d💼 **Patrick** · Subventions\n\nDécrivez votre demande — j'analyse et j'assigne les spécialistes appropriés, en parallèle ou en séquence selon la complexité."
+      : "🎯 **Orchestrator — Virtual CPA Firm**\n\nHello! I coordinate a team of **9 CPA specialists** at your service:\n\n👩\u200d💼 **Sophie** · Tax  |  👨\u200d💼 **Alexandre** · Audit  |  👩\u200d💻 **Natalie** · Treasury\n👩\u200d⚖️ **Isabelle** · Compliance  |  👨\u200d📊 **Marc** · Financial analysis  |  👩\u200d💹 **Sarah** · Investment\n🧑\u200d🔬 **Jean-François** · OCR  |  👩\u200d💻 **Émilie** · Watch  |  👨\u200d💼 **Patrick** · Grants\n\nDescribe your request — I'll analyze and assign the most appropriate specialist(s), in parallel or sequence based on complexity."
+  }], [lang]);
 
-  const newConv = useCallback(() => { setActiveId(null); setRoutedTo(null); setInput(""); setMsgs(welcome(agent)); inputRef.current?.focus(); }, [agent, welcome, setActiveId]);
-  const loadConv = useCallback(conv => { setActiveId(conv.id); setAgentId(conv.agentId||AGENTS_DEF[0].id); setMsgs(conv.messages); setRoutedTo(null); setInput(""); }, [setActiveId]);
-  const switchAgent = useCallback(id => { setAgentId(id); setRoutedTo(null); if(!activeId) setMsgs(welcome(agentById(id))); }, [activeId, welcome]);
-  const deleteConv = useCallback(id => { setConvs(prev=>prev.filter(c=>c.id!==id)); if(activeId===id){setActiveId(null);setMsgs(welcome(agent));} }, [activeId, agent, welcome, setConvs, setActiveId]);
+  const welcome = useCallback(() => orchestratorWelcome, [orchestratorWelcome]);
 
-  useEffect(() => { if(!activeId && msgs.length===0) setMsgs(welcome(agent)); }, []);
+    const newConv = useCallback(() => {
+    setActiveId(null); setRoutedTo(null); setInput("");
+    setWorkflow(null); setSynthesis(null); setWfSteps([]);
+    setMsgs(welcome());
+    inputRef.current?.focus();
+  }, [welcome, setActiveId]);
+
+    const loadConv = useCallback(conv => { setActiveId(conv.id); setAgentId(conv.agentId||AGENTS_DEF[0].id); setMsgs(conv.messages); setRoutedTo(null); setInput(""); }, [setActiveId]);
+  const switchAgent = useCallback(id => { setAgentId(id); setRoutedTo(null); if(!activeId) setMsgs(welcome())); }, [activeId, welcome]);
+  const deleteConv = useCallback(id => { setConvs(prev=>prev.filter(c=>c.id!==id)); if(activeId===id){setActiveId(null);setMsgs(welcome());} }, [activeId, agent, welcome, setConvs, setActiveId]);
+
+  useEffect(() => { if(!activeId && msgs.length===0) setMsgs(welcome()); }, []);
 
   const copy = useCallback(async(text,i) => { try { await navigator.clipboard.writeText(text); setCopied(i); setTimeout(()=>setCopied(null),2000); } catch {} }, []);
 
@@ -1759,32 +1777,28 @@ function Chat({ t, P, lang, agentSettings, onStartConvWithAgent, openrouterKey }
   const send = useCallback(async () => {
     if (!input.trim() || loading) return;
     const userMsg = {role:"user",content:input,ts:Date.now()};
-    const draft = [...msgs, userMsg];
-    setMsgs(draft); setInput(""); setRoutedTo(null); setWorkflow(null); setSynthesis(null); setWfSteps([]);
+    const draft   = [...msgs, userMsg];
+    setMsgs(draft); setInput(""); setRoutedTo(null);
+    setWorkflow(null); setSynthesis(null); setWfSteps([]);
 
-    // ── Orchestrateur : analyse la demande ────────────────────────────────
+    // STEP 1 — Orchestrator analyzes, decides workflow
     setRouting(true);
     const plan = await analyzeWorkflow(input, draft, lang, openrouterKey);
     setRouting(false);
     setWorkflow(plan);
 
-    // Affiche le plan à l'utilisateur via un message système
-    if (plan.user_message) {
-      setWfSteps((plan.phases ? plan.phases.flatMap(p=>p.agents) : (plan.agents||[])).map(id=>({agentId:id,status:"pending"})));
-    }
-    const primaryAgent = plan.agents?.[0] || plan.phases?.[0]?.agents?.[0] || agentId;
-    if (primaryAgent !== agentId) { setAgentId(primaryAgent); setRoutedTo(primaryAgent); }
-    const allAgents = plan.phases ? plan.phases.flatMap(p=>p.agents) : (plan.agents||[primaryAgent]);
-    setWfSteps(allAgents.map(id=>({agentId:id,status:"pending"})));
+    const allIds  = plan.phases ? plan.phases.flatMap(p=>p.agents) : (plan.agents||[]);
+    const primary = allIds[0] || agentId;
+    setWfSteps(allIds.map(id => ({agentId:id, status:"pending"})));
+    if (primary !== agentId) { setAgentId(primary); setRoutedTo(primary); }
 
-    // ── Exécution du workflow ─────────────────────────────────────────────
+    // STEP 2 — Execute workflow, steps light up as they work
     setLoading(true);
-    let finalReply = "";
-    let results = [];
+    let finalReply = ""; let results = [];
     try {
       results = await executeWorkflow(
         plan, input, draft, agentSettings, openrouterKey, lang,
-        (id, status) => setWfSteps(prev=>prev.map(s=>s.agentId===id?{...s,status}:s))
+        (id, status) => setWfSteps(prev => prev.map(s => s.agentId===id ? {...s,status} : s))
       );
       if (results.length > 1 && plan.synthesis_needed !== false) {
         const synth = await synthesizeResults(results, input, plan, lang, openrouterKey, agentSettings);
@@ -1793,17 +1807,19 @@ function Chat({ t, P, lang, agentSettings, onStartConvWithAgent, openrouterKey }
       } else {
         finalReply = results[0]?.reply || (lang==="fr"?"Aucune réponse.":"No response.");
       }
-    } catch(e) {
-      finalReply = `❌ ${lang==="fr"?"Erreur":"Error"}: ${e.message}`;
-    }
+    } catch(e) { finalReply = `❌ ${lang==="fr"?"Erreur":"Error"}: ${e.message}`; }
 
-    const aiMsg = {role:"assistant",content:finalReply,agent:primaryAgent,ts:Date.now(),wfResults:results.length>1?results:null};
+    const aiMsg = {role:"assistant",content:finalReply,agent:primary,ts:Date.now(),wfResults:results.length>1?results:null};
     const final = [...draft, aiMsg];
     setMsgs(final); setLoading(false);
 
     const now = new Date().toISOString();
-    if (activeId) { setConvs(prev=>prev.map(co=>co.id===activeId?{...co,messages:final,updatedAt:now,agentId:primaryAgent}:co)); }
-    else { const nc={id:"cv_"+Date.now(),title:genTitle(input),agentId:primaryAgent,messages:final,createdAt:now,updatedAt:now}; setConvs(prev=>[nc,...prev]); setActiveId(nc.id); }
+    if (activeId) {
+      setConvs(prev=>prev.map(co=>co.id===activeId?{...co,messages:final,updatedAt:now,agentId:primary}:co));
+    } else {
+      const nc={id:"cv_"+Date.now(),title:genTitle(input),agentId:primary,messages:final,createdAt:now,updatedAt:now};
+      setConvs(prev=>[nc,...prev]); setActiveId(nc.id);
+    }
   }, [input, loading, msgs, agentId, lang, agentSettings, activeId, openrouterKey, setConvs, setActiveId]);
 
   const renderText = s => s.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br/>");
@@ -1837,7 +1853,35 @@ function Chat({ t, P, lang, agentSettings, onStartConvWithAgent, openrouterKey }
         <div style={{padding:"9px 14px",borderBottom:`1px solid ${P.border}`,background:P.sb,display:"flex",alignItems:"center",gap:7,flexWrap:"wrap"}}>
           <button onClick={()=>setShowHist(v=>!v)} style={{background:"transparent",border:`1px solid ${P.border}`,borderRadius:6,padding:"4px 8px",color:P.t2,cursor:"pointer",fontSize:12,flexShrink:0}}>{showHist?"◀":"▶"}</button>
           <div style={{display:"flex",gap:5,overflowX:"auto",flex:1}}>
-            {AGENTS_DEF.map(a=><button key={a.id} onClick={()=>switchAgent(a.id)} style={{background:agentId===a.id?`${a.color}20`:"transparent",border:`1px solid ${agentId===a.id?a.color+"60":P.border}`,borderRadius:8,padding:"4px 9px",cursor:"pointer",color:agentId===a.id?a.color:P.t3,fontSize:11,fontWeight:agentId===a.id?500:400,whiteSpace:"nowrap",flexShrink:0}}>{a.icon} {a.short[lang]}</button>)}
+            {AGENTS_DEF.map(a => {
+              const step    = wfSteps.find(s => s.agentId===a.id);
+              const working = step?.status==="working";
+              const done    = step?.status==="done";
+              const pending = step?.status==="pending";
+              return (
+                <button key={a.id} onClick={()=>switchAgent(a.id)}
+                  style={{
+                    position:"relative",
+                    background:working?`${a.color}35`:agentId===a.id?`${a.color}20`:"transparent",
+                    border:`2px solid ${working?a.color:done?a.color+"80":agentId===a.id?a.color+"55":P.border}`,
+                    borderRadius:8, padding:"4px 9px", cursor:"pointer",
+                    color:working||done?a.color:agentId===a.id?a.color:P.t3,
+                    fontSize:11, fontWeight:working||agentId===a.id?600:400,
+                    whiteSpace:"nowrap", flexShrink:0,
+                    boxShadow:working?`0 0 0 3px ${a.color}30, 0 0 14px ${a.color}50`:done?`0 0 5px ${a.color}35`:"none",
+                    animation:working?"agentGlow 1.4s ease-in-out infinite":"none",
+                    transition:"all .25s",
+                  }}>
+                  {a.icon} {a.short?.[lang]||a.id.replace("Agent","")}
+                  {(pending||working||done)&&(
+                    <span style={{position:"absolute",top:-3,right:-3,width:7,height:7,borderRadius:"50%",
+                      background:working?"#F59E0B":done?"#10B981":"#6366F155",
+                      border:"1.5px solid #0F1929",
+                      animation:working?"pulse 1s ease-in-out infinite":"none"}}/>
+                  )}
+                </button>
+              );
+            })}
           </div>
           {activeConv && <button onClick={exportConv} style={{background:"transparent",border:`1px solid ${P.border}`,borderRadius:6,padding:"4px 8px",color:P.t2,cursor:"pointer",fontSize:11,flexShrink:0}}>⬇ {t.chat.export}</button>}
           {WEB_SEARCH_AGENTS.has(agentId) && <span style={{fontSize:10,padding:"3px 10px",borderRadius:20,background:"#14B8A615",color:"#14B8A6",border:"1px solid #14B8A640",fontWeight:600,flexShrink:0,animation:"pulse 2s ease-in-out infinite"}}>🌐 {lang==="fr"?"Web Search actif":"Web Search active"}</span>}
@@ -1854,7 +1898,11 @@ function Chat({ t, P, lang, agentSettings, onStartConvWithAgent, openrouterKey }
         <div style={{flex:1,overflowY:"auto",padding:"14px 18px",display:"flex",flexDirection:"column",gap:10}}>
           {msgs.map((m,i)=>{const ma=agentById(m.agent||agentId);return(
             <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",alignItems:"flex-start",gap:8}}>
-              {m.role==="assistant" && <div style={{width:28,height:28,borderRadius:"50%",background:`${ma.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0,marginTop:2}}>{ma.icon}</div>}
+              {m.role==="assistant" && (
+                m.isOrchestrator
+                  ? <div style={{width:32,height:32,borderRadius:"50%",background:"#6366F1",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0,marginTop:2,boxShadow:"0 0 10px #6366F155"}}>🎯</div>
+                  : <div style={{width:28,height:28,borderRadius:"50%",background:`${ma.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0,marginTop:2}}>{ma.icon}</div>
+              )}
               <div style={{maxWidth:"82%"}}>
                 {/* Multi-agent contributions (collapsed by default) */}
                 {m.wfResults && m.wfResults.length > 1 && (
@@ -1869,7 +1917,12 @@ function Chat({ t, P, lang, agentSettings, onStartConvWithAgent, openrouterKey }
                     </div>
                   </div>
                 )}
-                <div style={{background:m.role==="user"?`${agent.color}22`:P.card,border:`1px solid ${m.role==="user"?agent.color+"50":P.border}`,borderRadius:m.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",padding:"10px 14px",fontSize:13,lineHeight:1.65,color:P.t1}} dangerouslySetInnerHTML={{__html:renderText(m.content)}}/>
+                <div style={{
+                  background:m.role==="user"?`${agent.color}22`:m.isOrchestrator?"#6366F10D":P.card,
+                  border:`1px solid ${m.role==="user"?agent.color+"50":m.isOrchestrator?"#6366F145":P.border}`,
+                  borderRadius:m.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",
+                  padding:"10px 14px",fontSize:13,lineHeight:1.65,color:P.t1,
+                }} dangerouslySetInnerHTML={{__html:renderText(m.content)}}/>
                 <div style={{display:"flex",alignItems:"center",gap:6,marginTop:3,justifyContent:m.role==="user"?"flex-end":"flex-start"}}>
                   <span style={{fontSize:10,color:P.t3}}>{m.ts?fmtTime(new Date(m.ts).toISOString()):"—"}</span>
                   <button onClick={()=>copy(m.content,i)} style={{background:"transparent",border:"none",color:copied===i?P.accent:P.t3,fontSize:10,cursor:"pointer",padding:0}}>{copied===i?t.chat.copied:t.chat.copy}</button>
@@ -2311,7 +2364,7 @@ export default function Z12CFOSuite() {
         *{box-sizing:border-box;margin:0;padding:0}
         ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:${P.border};border-radius:2px}
         textarea:focus,select:focus,input:focus{border-color:${P.accent}!important;outline:none}
-        @keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+        @keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}} @keyframes agentGlow{0%,100%{transform:scale(1)}50%{transform:scale(1.05);filter:brightness(1.15)}}
       `}</style>
       <Sidebar view={view} setView={setView} darkMode={darkMode} setDarkMode={setDarkMode} lang={lang} setLang={setLang} t={t} P={P} open={sidebarOpen} setOpen={setSidebarOpen}/>
       <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
