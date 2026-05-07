@@ -878,6 +878,266 @@ async function callClaudeWithWebSearch(system, messages) {
 // Route to correct API based on agent type and available key
 const WEB_SEARCH_AGENTS = new Set(["VeilleAgent","SubventionsAgent"]);
 
+
+// ─── ORCHESTRATOR SYSTEM ──────────────────────────────────────────────────────
+// The orchestrator is the brain of the virtual CPA firm.
+// It analyzes each request, determines the optimal workflow (single/parallel/sequential),
+// assigns the right specialists, coordinates execution, and synthesizes results.
+
+const ORCHESTRATOR_PROMPT = {
+  fr: `Tu es l'Orchestrateur du Bureau CPA Virtuel — le directeur coordinateur qui dirige une équipe de 9 spécialistes CPA.
+
+## Ton rôle
+Analyser chaque demande de l'utilisateur et décider de la meilleure stratégie de traitement :
+- Quel(s) spécialiste(s) mobiliser
+- Dans quel ordre (séquentiel) ou simultanément (parallèle)
+- Avec quelle priorité
+
+## Ton équipe
+1. **Sophie Mercier** (TaxAgent) — Fiscaliste CPA, M.Fisc. — T1/T2, TPS/TVQ, RS&DE, planification fiscale
+2. **Alexandre Bouchard** (AuditAgent) — Auditeur CPA-CA senior — IFRS, ASPE, NCA, contrôles internes
+3. **Natalie Chen** (CashFlowAgent) — Directrice trésorerie CTP — BFR, rolling forecast, covenants
+4. **Isabelle Roy** (ComplianceAgent) — Conseillère DPO, LL.M. — Loi 25, CASL, PIPEDA, EFVP
+5. **Marc Tremblay** (FinancialAgent) — Analyste CFA — ratios, benchmarks, évaluation entreprise
+6. **Sarah Blackwell** (InvestmentAgent) — Analyste CFA/MBA — M&A, DCF, LBO, due diligence QoE
+7. **Jean-François Lebel** (OCRAgent) — Spécialiste extraction — factures scannées, formulaires CRA/RQ
+8. **Émilie Côté** (VeilleAgent) — Analyste veille — ARC, IFRS, AMF, Loi 25 (recherche web temps réel)
+9. **Patrick Gagnon** (SubventionsAgent) — Expert subventions — SR&DE, IRAP, Investissement Québec (web)
+
+## Types de workflows
+
+### SINGLE — Requête simple, domaine unique
+Exemples : "Quelle est la date limite T2?", "Calcule mon BAIIA", "Extrait cette facture"
+→ 1 spécialiste, réponse directe
+
+### PARALLEL — Requête multi-domaines, analyses indépendantes
+Exemples : "Analysez notre acquisition sous tous les angles", "Préparez notre rapport annuel"
+→ 2-4 spécialistes travaillent SIMULTANÉMENT, synthèse finale
+→ Quand chaque analyse est indépendante et n'a pas besoin des autres
+
+### SEQUENTIAL — Requête où chaque étape alimente la suivante
+Exemples : "Évaluez si ce projet est viable fiscalement ET financièrement ET trouver des subventions"
+→ Étape 1 → son output devient le contexte de l'étape 2 → etc.
+→ Quand l'analyse d'un spécialiste dépend des conclusions du précédent
+
+### HYBRID — Mélange parallèle puis séquentiel
+Exemples : "Nouveau projet tech : quelles subventions, quelle structure fiscale, et validez que c'est conforme"
+→ Phase 1 PARALLEL : Sophie (fiscal) + Isabelle (conformité)
+→ Phase 2 SEQUENTIAL : Patrick (subventions, avec contexte fiscal)
+
+## Règles de priorité
+- **URGENT** (🔴) : délais réglementaires <30 jours, risques légaux, cotisations imminentes
+- **ÉLEVÉE** (🟠) : décisions d'affaires importantes, opportunités financières, audit en cours
+- **NORMALE** (🟡) : analyse stratégique, planification, optimisation
+- **FAIBLE** (🟢) : veille, information générale, questions de fond
+
+## Règles d'assignation intelligente
+- Toujours mobiliser OCR en PREMIER si un document scanné est mentionné (Jean-François extrait, les autres analysent)
+- Toujours mobiliser Veille si la demande concerne des mises à jour récentes ou l'actualité réglementaire
+- Toujours mobiliser Subventions si un nouveau projet/investissement est mentionné
+- Pour une acquisition : Sarah (investissement) + Sophie (fiscal) + Marc (financier) en parallèle
+- Pour un audit : Alexandre seul OU Alexandre + Isabelle (conformité) si risques données
+- Pour une restructuration : Sophie + Marc + Sarah en séquentiel (fiscal → financier → investissement)
+- Pour un nouveau projet tech : Émilie (veille) + Patrick (subventions) en parallèle → Sophie (fiscal) séquentiel
+
+## Format de réponse OBLIGATOIRE
+Tu dois répondre UNIQUEMENT avec un objet JSON valide, sans texte avant ni après, sans markdown :
+{
+  "type": "single|parallel|sequential|hybrid",
+  "priority": "urgent|high|normal|low",
+  "agents": ["AgentId1", "AgentId2"],
+  "phases": [
+    {"type":"parallel","agents":["AgentId1","AgentId2"]},
+    {"type":"sequential","agents":["AgentId3"]}
+  ],
+  "reason": "Explication en 1 phrase de pourquoi ce workflow",
+  "user_message": "Message personnalisé à afficher à l'utilisateur (prénom des spécialistes mobilisés, ce qu'ils vont faire)",
+  "estimated_seconds": 15,
+  "synthesis_needed": true
+}
+
+Note : "phases" n'est utilisé que pour le type "hybrid". Pour single/parallel/sequential, utilise "agents".`,
+
+  en: `You are the Virtual CPA Firm Orchestrator — the coordinating director managing a team of 9 CPA specialists.
+
+## Your Role
+Analyze each user request and decide the optimal processing strategy:
+- Which specialist(s) to mobilize
+- In what order (sequential) or simultaneously (parallel)
+- With what priority
+
+## Your Team
+1. **Sophie Mercier** (TaxAgent) — CPA Tax Specialist — T1/T2, GST/QST, SR&ED, tax planning
+2. **Alexandre Bouchard** (AuditAgent) — Senior CPA-CA Auditor — IFRS, ASPE, CAS, internal controls
+3. **Natalie Chen** (CashFlowAgent) — CTP Treasury Director — working capital, rolling forecast, covenants
+4. **Isabelle Roy** (ComplianceAgent) — DPO Advisor — Law 25, CASL, PIPEDA, DPIA
+5. **Marc Tremblay** (FinancialAgent) — CFA Analyst — ratios, benchmarks, business valuation
+6. **Sarah Blackwell** (InvestmentAgent) — CFA/MBA Analyst — M&A, DCF, LBO, QoE due diligence
+7. **Jean-François Lebel** (OCRAgent) — Extraction Specialist — scanned invoices, CRA/RQ forms
+8. **Émilie Côté** (VeilleAgent) — Watch Analyst — CRA, IFRS, AMF, Law 25 (real-time web search)
+9. **Patrick Gagnon** (SubventionsAgent) — Grants Expert — SR&ED, IRAP, Investissement Québec (web)
+
+## Workflow Types
+
+### SINGLE — Simple request, single domain → 1 specialist
+### PARALLEL — Multi-domain, independent analyses → 2-4 simultaneous → synthesis
+### SEQUENTIAL — Each step feeds the next → chain of specialists
+### HYBRID — Parallel phases followed by sequential steps
+
+## Priority Rules
+- **URGENT** (🔴): regulatory deadlines <30 days, legal risks
+- **HIGH** (🟠): important business decisions, active audits
+- **NORMAL** (🟡): strategic analysis, planning, optimization
+- **LOW** (🟢): monitoring, general information
+
+## Smart Assignment Rules
+- Always OCR first if scanned document mentioned (JF extracts, others analyze)
+- Always Veille if recent regulatory updates requested
+- Always Subventions if new project/investment mentioned
+- Acquisition: Sarah + Sophie + Marc parallel
+- New tech project: Émilie + Patrick parallel → Sophie sequential
+
+## MANDATORY Response Format
+Respond ONLY with valid JSON, no text before or after:
+{
+  "type": "single|parallel|sequential|hybrid",
+  "priority": "urgent|high|normal|low",
+  "agents": ["AgentId1", "AgentId2"],
+  "phases": [{"type":"parallel","agents":["AgentId1"]},{"type":"sequential","agents":["AgentId2"]}],
+  "reason": "1-sentence explanation",
+  "user_message": "Message to user (specialist names, what they will do)",
+  "estimated_seconds": 15,
+  "synthesis_needed": true
+}`
+};
+
+// Analyze request and return workflow plan
+async function analyzeWorkflow(query, historyMsgs, lang, openrouterKey) {
+  const system = ORCHESTRATOR_PROMPT[lang] || ORCHESTRATOR_PROMPT.fr;
+  const msgs = [
+    ...historyMsgs.slice(-4).filter(m=>m.role!=="system"),
+    { role:"user", content: `Analyse cette demande et retourne le plan de workflow JSON :\n\n"${query}"` }
+  ];
+  try {
+    let raw;
+    if (openrouterKey) {
+      raw = await callOpenRouter(DEFAULT_AGENT_MODEL, system, msgs, openrouterKey, false);
+    } else {
+      raw = await callClaude(system, msgs);
+    }
+    // Extract JSON from response
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const plan = JSON.parse(jsonMatch[0]);
+      // Validate agents exist
+      if (plan.agents) plan.agents = plan.agents.filter(id => AGENTS_DEF.find(a=>a.id===id));
+      return plan;
+    }
+  } catch(e) { console.warn("Orchestrator parse error:", e); }
+  // Fallback: fast route
+  const fast = fastRoute(query);
+  return { type:"single", priority:"normal", agents:[fast||"FinancialAgent"],
+    reason:"Routing automatique", user_message:"", estimated_seconds:10, synthesis_needed:false };
+}
+
+// Execute a workflow plan — returns array of {agentId, name, reply, status}
+async function executeWorkflow(plan, query, historyMsgs, agentSettings, openrouterKey, lang, onProgress) {
+  const baseMessages = historyMsgs.slice(-6).filter(m=>m.role!=="system");
+  const userMsg = { role:"user", content:query };
+
+  const runOne = async (agentId, contextExtra="") => {
+    const def = agentById(agentId);
+    const prompt = agentSettings[agentId]?.prompt || def.defaultPrompt[lang];
+    const model  = agentSettings[agentId]?.model;
+    const msgs = [...baseMessages, userMsg];
+    if (contextExtra) msgs.push({ role:"user", content: contextExtra });
+    onProgress?.(agentId, "working");
+    try {
+      const reply = await callAgent(agentId, prompt, msgs, openrouterKey, model);
+      onProgress?.(agentId, "done");
+      return { agentId, name:agentName(agentId, lang), title:agentTitle(agentId, lang), reply, status:"done" };
+    } catch(e) {
+      onProgress?.(agentId, "error");
+      return { agentId, name:agentName(agentId, lang), title:agentTitle(agentId, lang), reply:`Erreur : ${e.message}`, status:"error" };
+    }
+  };
+
+  if (plan.type === "single") {
+    const result = await runOne(plan.agents[0]);
+    return [result];
+  }
+
+  if (plan.type === "parallel") {
+    return await Promise.all(plan.agents.map(id => runOne(id)));
+  }
+
+  if (plan.type === "sequential") {
+    const results = [];
+    let context = "";
+    for (const agentId of plan.agents) {
+      const result = await runOne(agentId, context);
+      results.push(result);
+      const n = agentName(agentId, lang);
+      context = lang==="fr"
+        ? `\n\n[Analyse préalable de ${n} :]:\n${result.reply}\n\n[Suite de la demande originale :]`
+        : `\n\n[Prior analysis by ${n}:]:\n${result.reply}\n\n[Continuation of original request:]`;
+    }
+    return results;
+  }
+
+  if (plan.type === "hybrid" && plan.phases) {
+    const results = [];
+    let prevContext = "";
+    for (const phase of plan.phases) {
+      if (phase.type === "parallel") {
+        const phaseResults = await Promise.all(phase.agents.map(id => runOne(id, prevContext)));
+        results.push(...phaseResults);
+        prevContext = phaseResults.map(r => `[${r.name}]: ${r.reply}`).join("\n\n");
+      } else {
+        for (const agentId of phase.agents) {
+          const result = await runOne(agentId, prevContext);
+          results.push(result);
+          prevContext = `[${result.name}]: ${result.reply}`;
+        }
+      }
+    }
+    return results;
+  }
+
+  return [await runOne(plan.agents?.[0] || "FinancialAgent")];
+}
+
+// Synthesize multiple agent results into a unified response
+async function synthesizeResults(results, query, plan, lang, openrouterKey, agentSettings) {
+  if (results.length <= 1) return null;
+  const synthPrompt = lang === "fr"
+    ? `Tu es l'Orchestrateur du Bureau CPA Virtuel. Plusieurs spécialistes ont analysé la demande suivante en parallèle ou en séquence. Tu dois maintenant synthétiser leurs analyses en une réponse unifiée, structurée et directement actionnable pour le client.
+
+INSTRUCTIONS :
+- Commence par un résumé exécutif de 3-5 points clés
+- Intègre les recommandations complémentaires de chaque spécialiste sans répétition
+- Mets en évidence les points de convergence et les tensions éventuelles entre analyses
+- Termine par un plan d'action priorisé (URGENT / ÉLEVÉ / NORMAL) avec responsable suggéré
+- Sois direct, pratique et orienté décision — pas de théorie
+- Indique quel spécialiste a produit chaque analyse (prénom seulement)`
+    : `You are the Virtual CPA Firm Orchestrator. Multiple specialists have analyzed the following request in parallel or sequentially. Synthesize their analyses into a unified, structured, directly actionable response.
+
+INSTRUCTIONS:
+- Start with a 3-5 point executive summary
+- Integrate complementary recommendations without repetition
+- Highlight convergence points and potential tensions
+- End with a prioritized action plan (URGENT / HIGH / NORMAL) with suggested owner
+- Be direct, practical, decision-oriented — no theory
+- Indicate which specialist produced each analysis (first name only)`;
+
+  const combined = results.map(r => `### ${r.name} — ${r.title}\n${r.reply}`).join("\n\n---\n\n");
+  const msgs = [{ role:"user", content:`Demande originale :\n"${query}"\n\n${combined}` }];
+  try {
+    if (openrouterKey) return await callOpenRouter(DEFAULT_AGENT_MODEL, synthPrompt, msgs, openrouterKey, false);
+    return await callClaude(synthPrompt, msgs);
+  } catch { return null; }
+}
+
 async function callOpenRouter(model, system, messages, apiKey, useWebSearch = false) {
   const body = {
     model,
@@ -1443,25 +1703,51 @@ function Chat({ t, P, lang, agentSettings, onStartConvWithAgent, openrouterKey }
     if (!input.trim() || loading) return;
     const userMsg = {role:"user",content:input,ts:Date.now()};
     const draft = [...msgs, userMsg];
-    setMsgs(draft); setInput(""); setRoutedTo(null);
+    setMsgs(draft); setInput(""); setRoutedTo(null); setWorkflow(null); setSynthesis(null); setWfSteps([]);
+
+    // ── Orchestrateur : analyse la demande ────────────────────────────────
     setRouting(true);
-    let resolved = agentId;
-    const fast = fastRoute(input);
-    if (fast && fast !== agentId) { resolved=fast; setAgentId(fast); setRoutedTo(fast); }
-    else if (!fast) { const via = await routeViaAPI(input); if(via!==agentId){resolved=via;setAgentId(via);setRoutedTo(via);} }
+    const plan = await analyzeWorkflow(input, draft, lang, openrouterKey);
     setRouting(false);
-    const rDef = agentById(resolved);
-    const rPrompt = agentSettings[resolved]?.prompt || rDef.defaultPrompt[lang];
+    setWorkflow(plan);
+
+    // Affiche le plan à l'utilisateur via un message système
+    if (plan.user_message) {
+      setWfSteps((plan.phases ? plan.phases.flatMap(p=>p.agents) : (plan.agents||[])).map(id=>({agentId:id,status:"pending"})));
+    }
+    const primaryAgent = plan.agents?.[0] || plan.phases?.[0]?.agents?.[0] || agentId;
+    if (primaryAgent !== agentId) { setAgentId(primaryAgent); setRoutedTo(primaryAgent); }
+    const allAgents = plan.phases ? plan.phases.flatMap(p=>p.agents) : (plan.agents||[primaryAgent]);
+    setWfSteps(allAgents.map(id=>({agentId:id,status:"pending"})));
+
+    // ── Exécution du workflow ─────────────────────────────────────────────
     setLoading(true);
-    let reply = "";
-    try { reply = await callAgent(resolved, rPrompt, draft.map(m=>({role:m.role,content:m.content})), openrouterKey, agentSettings[resolved]?.model); }
-    catch(e) { reply = `❌ ${lang==="fr"?"Erreur":"Error"}: ${e.message}`; }
-    const final = [...draft, {role:"assistant",content:reply,agent:resolved,ts:Date.now()}];
+    let finalReply = "";
+    let results = [];
+    try {
+      results = await executeWorkflow(
+        plan, input, draft, agentSettings, openrouterKey, lang,
+        (id, status) => setWfSteps(prev=>prev.map(s=>s.agentId===id?{...s,status}:s))
+      );
+      if (results.length > 1 && plan.synthesis_needed !== false) {
+        const synth = await synthesizeResults(results, input, plan, lang, openrouterKey, agentSettings);
+        setSynthesis(synth);
+        finalReply = synth || results.map(r=>`### ${r.name}\n${r.reply}`).join("\n\n---\n\n");
+      } else {
+        finalReply = results[0]?.reply || (lang==="fr"?"Aucune réponse.":"No response.");
+      }
+    } catch(e) {
+      finalReply = `❌ ${lang==="fr"?"Erreur":"Error"}: ${e.message}`;
+    }
+
+    const aiMsg = {role:"assistant",content:finalReply,agent:primaryAgent,ts:Date.now(),wfResults:results.length>1?results:null};
+    const final = [...draft, aiMsg];
     setMsgs(final); setLoading(false);
+
     const now = new Date().toISOString();
-    if (activeId) { setConvs(prev=>prev.map(c=>c.id===activeId?{...c,messages:final,updatedAt:now,agentId:resolved}:c)); }
-    else { const nc={id:"cv_"+Date.now(),title:genTitle(input),agentId:resolved,messages:final,createdAt:now,updatedAt:now}; setConvs(prev=>[nc,...prev]); setActiveId(nc.id); }
-  }, [input, loading, msgs, agentId, lang, agentSettings, activeId, setConvs, setActiveId]);
+    if (activeId) { setConvs(prev=>prev.map(co=>co.id===activeId?{...co,messages:final,updatedAt:now,agentId:primaryAgent}:co)); }
+    else { const nc={id:"cv_"+Date.now(),title:genTitle(input),agentId:primaryAgent,messages:final,createdAt:now,updatedAt:now}; setConvs(prev=>[nc,...prev]); setActiveId(nc.id); }
+  }, [input, loading, msgs, agentId, lang, agentSettings, activeId, openrouterKey, setConvs, setActiveId]);
 
   const renderText = s => s.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br/>");
 
@@ -1512,7 +1798,20 @@ function Chat({ t, P, lang, agentSettings, onStartConvWithAgent, openrouterKey }
           {msgs.map((m,i)=>{const ma=agentById(m.agent||agentId);return(
             <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",alignItems:"flex-start",gap:8}}>
               {m.role==="assistant" && <div style={{width:28,height:28,borderRadius:"50%",background:`${ma.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0,marginTop:2}}>{ma.icon}</div>}
-              <div style={{maxWidth:"80%"}}>
+              <div style={{maxWidth:"82%"}}>
+                {/* Multi-agent contributions (collapsed by default) */}
+                {m.wfResults && m.wfResults.length > 1 && (
+                  <div style={{marginBottom:8}}>
+                    <div style={{fontSize:10,color:P.t3,marginBottom:5,display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
+                      <span>🎯 {lang==="fr"?"Analyses de :":"Analyses by:"}</span>
+                      {m.wfResults.map((r,ri)=>(
+                        <span key={ri} style={{padding:"2px 8px",borderRadius:20,background:`${agentById(r.agentId).color}15`,color:agentById(r.agentId).color,fontWeight:500,fontSize:10}}>
+                          {agentById(r.agentId).icon} {r.name?.split(" ")[0]}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div style={{background:m.role==="user"?`${agent.color}22`:P.card,border:`1px solid ${m.role==="user"?agent.color+"50":P.border}`,borderRadius:m.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",padding:"10px 14px",fontSize:13,lineHeight:1.65,color:P.t1}} dangerouslySetInnerHTML={{__html:renderText(m.content)}}/>
                 <div style={{display:"flex",alignItems:"center",gap:6,marginTop:3,justifyContent:m.role==="user"?"flex-end":"flex-start"}}>
                   <span style={{fontSize:10,color:P.t3}}>{m.ts?fmtTime(new Date(m.ts).toISOString()):"—"}</span>
@@ -1532,6 +1831,21 @@ function Chat({ t, P, lang, agentSettings, onStartConvWithAgent, openrouterKey }
           <div ref={bottomRef}/>
         </div>
 
+        {/* Orchestrator workflow triggers */}
+        {msgs.length<=1 && (
+          <div style={{padding:"6px 16px 0",borderTop:`1px solid ${P.border}`,display:"flex",gap:5,overflowX:"auto"}}>
+            {[
+              {fr:"🎯 Analyse complète de l'entreprise",  en:"🎯 Full company analysis",  trigger:true},
+              {fr:"📦 Évaluer une acquisition cible",     en:"📦 Evaluate an acquisition", trigger:true},
+              {fr:"🚀 Lancer un nouveau projet tech",     en:"🚀 Launch a new tech project",trigger:true},
+            ].map((q,i)=>(
+              <button key={i} onClick={()=>{setInput(q[lang]);inputRef.current?.focus();}}
+                style={{background:"#6366F115",border:"1px solid #6366F130",borderRadius:20,padding:"4px 11px",color:"#818CF8",fontSize:10,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,fontWeight:500}}>
+                {q[lang]}
+              </button>
+            ))}
+          </div>
+        )}
         {msgs.length<=1 && agent.quickPrompts[lang] && (
           <div style={{padding:"8px 16px",borderTop:`1px solid ${P.border}`,display:"flex",gap:6,overflowX:"auto"}}>
             {agent.quickPrompts[lang].map((q,i)=><button key={i} onClick={()=>{setInput(q);inputRef.current?.focus();}} style={{background:`${agent.color}10`,border:`1px solid ${agent.color}30`,borderRadius:20,padding:"5px 12px",color:agent.color,fontSize:11,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,fontWeight:500}}>{q}</button>)}
