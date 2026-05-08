@@ -49,12 +49,12 @@ input,textarea{font-family:inherit;color:inherit;background:none;border:none;out
 .mono{font-family:"Geist Mono",ui-monospace,monospace;font-feature-settings:"ss02";letter-spacing:-0.01em}
 
 /* Layout */
-.app{display:grid;grid-template-columns:248px 1fr 380px;height:100vh;overflow:hidden}
-.app.compact{grid-template-columns:64px 1fr 380px}
-.app.no-right{grid-template-columns:248px 1fr}
+.app{display:grid;grid-template-columns:248px minmax(0,1fr);height:100vh;overflow:hidden}
+.app.compact{grid-template-columns:64px minmax(0,1fr)}
+.app.no-right{grid-template-columns:248px minmax(0,1fr)}
 
 /* ===== Sidebar — Roster ===== */
-.roster{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.roster{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden;min-width:0}
 .brand{display:flex;align-items:center;gap:10px;padding:18px 18px 14px;border-bottom:1px solid var(--line)}
 .brand-mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),oklch(0.62 0.13 175));display:grid;place-items:center;color:#0a0a0a;font-weight:700;font-size:13px;letter-spacing:-0.04em}
 .brand-name{font-weight:600;letter-spacing:-0.02em;font-size:14px}
@@ -103,7 +103,7 @@ input,textarea{font-family:inherit;color:inherit;background:none;border:none;out
 .user-org{font-size:10.5px;color:var(--ink-3)}
 
 /* ===== Center — Studio ===== */
-.studio{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.studio{display:flex;flex-direction:column;overflow:hidden;background:var(--bg);min-width:0}
 .studio-head{display:flex;align-items:center;justify-content:space-between;padding:12px 22px;border-bottom:1px solid var(--line);min-height:54px;gap:14px}
 .studio-head-l{display:flex;align-items:center;gap:14px;min-width:0}
 .icon-btn{width:32px;height:32px;border-radius:6px;display:grid;place-items:center;color:var(--ink-2);transition:.12s}
@@ -116,7 +116,7 @@ input,textarea{font-family:inherit;color:inherit;background:none;border:none;out
 .lang-toggle button.on{background:var(--surface-2);color:var(--ink);box-shadow:0 1px 0 var(--line-2) inset}
 
 /* Conversation */
-.thread{flex:1;overflow-y:auto;padding:30px 0 200px;scroll-behavior:smooth}
+.thread{flex:1;overflow-y:auto;padding:24px 0 0;scroll-behavior:smooth;min-height:0}
 .thread::-webkit-scrollbar{width:8px}
 .thread::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
 .thread-inner{max-width:780px;margin:0 auto;padding:0 30px}
@@ -198,10 +198,10 @@ input,textarea{font-family:inherit;color:inherit;background:none;border:none;out
 .action-owner{font-family:"Geist Mono",monospace;font-size:10px;color:var(--ink-3);white-space:nowrap}
 
 /* Composer */
-.composer-wrap{position:absolute;left:248px;right:380px;bottom:0;padding:0 30px 22px;background:linear-gradient(180deg,transparent 0%,var(--bg) 28%);pointer-events:none}
-.app.compact .composer-wrap{left:64px}
-.app.no-right .composer-wrap{right:0}
-.composer{max-width:780px;margin:0 auto;background:var(--surface);border:1px solid var(--line-2);border-radius:14px;padding:12px 14px 10px;pointer-events:auto;box-shadow:0 8px 32px rgba(0,0,0,.35)}
+.composer-wrap{flex-shrink:0;padding:0 30px 20px;background:var(--bg);border-top:1px solid var(--line)}
+/* compact composer handled by flex */
+/* no-right composer handled by flex */
+.composer{max-width:780px;margin:8px auto 0;background:var(--surface);border:1px solid var(--line-2);border-radius:14px;padding:12px 14px 10px;box-shadow:0 8px 32px rgba(0,0,0,.35)}
 .composer:focus-within{border-color:var(--accent-line);box-shadow:0 8px 32px rgba(0,0,0,.4),0 0 0 3px var(--accent-soft)}
 .composer-input{width:100%;background:transparent;color:var(--ink);font-size:13.5px;line-height:1.55;resize:none;min-height:22px;max-height:140px;font-family:inherit;border:none;padding:4px 0}
 .composer-input::placeholder{color:var(--ink-3)}
@@ -214,12 +214,12 @@ input,textarea{font-family:inherit;color:inherit;background:none;border:none;out
 .send-btn:disabled{opacity:.4;cursor:not-allowed;background:var(--ink-4);color:var(--ink-3)}
 
 /* Quick prompts */
-.quick-prompts{max-width:780px;margin:0 auto 8px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:auto}
+.quick-prompts{max-width:780px;margin:10px auto 0;display:flex;flex-wrap:wrap;gap:6px;padding:0 2px}
 .qp{padding:5px 11px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);font-size:11.5px;cursor:pointer;transition:.12s}
 .qp:hover{background:var(--surface-2);color:var(--ink);border-color:var(--line-2)}
 
 /* ===== Right pane — Context ===== */
-.context{background:var(--surface);border-left:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.context{background:var(--surface);border-left:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden;width:320px;flex-shrink:0;min-width:0}
 .ctx-tabs{display:flex;border-bottom:1px solid var(--line);padding:0 14px}
 .ctx-tab{padding:14px 12px;font-size:12px;color:var(--ink-3);position:relative;cursor:pointer;font-weight:500;letter-spacing:-0.01em}
 .ctx-tab.on{color:var(--ink)}
@@ -279,11 +279,11 @@ input,textarea{font-family:inherit;color:inherit;background:none;border:none;out
 .i{width:14px;height:14px;stroke:currentColor;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
 
 /* ===== Page (non-studio views) ===== */
-.page{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.page{display:flex;flex-direction:column;overflow:hidden;background:var(--bg);min-width:0;flex:1}
 .page-head{display:flex;align-items:flex-end;justify-content:space-between;padding:24px 36px 18px;border-bottom:1px solid var(--line);gap:20px}
 .page-title{font-family:"Instrument Serif",serif;font-size:32px;line-height:1;letter-spacing:-0.02em;color:var(--ink)}
 .page-sub{font-size:12.5px;color:var(--ink-3);margin-top:6px;font-family:"Geist Mono",monospace}
-.page-body{flex:1;overflow-y:auto;padding:28px 36px 60px}
+.page-body{flex:1;overflow-y:auto;padding:24px 28px 48px;min-height:0}
 .page-body::-webkit-scrollbar{width:8px}
 .page-body::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
 .page-actions{display:flex;gap:8px}
@@ -1974,67 +1974,9 @@ async function callClaudeWithWebSearch(system, messages) {
 // Route to correct API based on agent type and available key
 const WEB_SEARCH_AGENTS = new Set(["VeilleAgent","SubventionsAgent"]);
 
-function detectAgentFromFile(filename, previewText = "") {
-  const s = (filename + " " + previewText).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-  if (/t1|t2|tps|tvq|gst|hst|impot|tax|cra|fiscal|revenu.quebec|declaration|amortissement|deduction/.test(s)) return "TaxAgent";
-  if (/audit|ifrs|aspe|verification|controle.interne|cpa|materialite|norme/.test(s)) return "AuditAgent";
-  if (/tresorerie|cash|liquidite|flux|budget|prevision|bfr/.test(s)) return "CashFlowAgent";
-  if (/conformite|loi.25|casl|pipeda|politique|donnees.personnelles|consentement|efvp/.test(s)) return "ComplianceAgent";
-  if (/ratio|analyse.financiere|benchmark|baiia|ebitda|marge|solvabilite|etats.financiers/.test(s)) return "FinancialAgent";
-  if (/investissement|roi|tir|van|dcf|portefeuille|acquisition/.test(s)) return "InvestmentAgent";
-  if (/scan|ocr|photo|facture.num|releve.num|manuscrit/.test(s)) return "OCRAgent";
-  if (/veille|actualite|mise.a.jour|bulletin|circulaire|nouveaute/.test(s)) return "VeilleAgent";
-  if (/subvention|aide.financiere|programme|grant|bourse|sred|irap/.test(s)) return "SubventionsAgent";
-  return "FinancialAgent";
-}
-
-// Inspired by VectDocs — lightweight language detection (no external lib)
-function detectLanguage(text) {
-  if (!text || text.length < 30) return "unknown";
-  const fr = (text.match(/\b(les|des|dans|pour|avec|sur|est|sont|une|qui|que|mais|par|nous|vous|ils|elles|cette|votre|notre)\b/gi)||[]).length;
-  const en = (text.match(/\b(the|and|for|with|that|this|are|from|have|been|will|your|their|not|can|all|been|more)\b/gi)||[]).length;
-  return fr > en ? "fr" : en > fr ? "en" : "unknown";
-}
-
-// Estimate chunks before server processes (VectDocs-inspired schema enrichment)
-function uploadStageLabel(progress) {
-  if (progress < 15) return "Lecture...";
-  if (progress < 35) return "Extraction texte...";
-  if (progress < 60) return "Chunking (500 tok)...";
-  if (progress < 85) return "Embedding HF...";
-  if (progress < 100) return "Stockage pgvector...";
-  return null;
-}
-
 // ─── SHARED UTILS ─────────────────────────────────────────────────────────────
-async function callClaude(system, messages) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1200, system, messages: messages.map(m=>({role:m.role,content:m.content})) })
-  });
-  if (!res.ok) throw new Error(`API ${res.status}`);
-  const d = await res.json();
-  return d.content?.[0]?.text || "Erreur inattendue.";
-}
-
 // Web-search-enabled call — VeilleAgent + SubventionsAgent
 // Uses Anthropic web_search tool for real-time information
-async function callClaudeWithWebSearch(system, messages) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({
-      model:"claude-sonnet-4-20250514", max_tokens:2000, system,
-      tools:[{ type:"web_search_20250305", name:"web_search" }],
-      messages: messages.map(m=>({role:m.role,content:m.content}))
-    })
-  });
-  if (!res.ok) throw new Error(`API ${res.status}`);
-  const d = await res.json();
-  // Collect all text blocks (may be multiple after tool use)
-  const textBlocks = (d.content||[]).filter(b=>b.type==="text").map(b=>b.text);
-  return textBlocks.join("\n\n") || "Erreur inattendue.";
-}
-
 // Route to correct API based on agent type and available key
 const ORCHESTRATOR_PROMPT = {
   fr: `Tu es l'Orchestrateur du Bureau CPA Virtuel — le directeur coordinateur qui dirige une équipe de 9 spécialistes CPA.
@@ -2403,192 +2345,7 @@ const DATA_QUALITY = [
 // It analyzes each request, determines the optimal workflow (single/parallel/sequential),
 // assigns the right specialists, coordinates execution, and synthesizes results.
 
-async function analyzeWorkflow(query, historyMsgs, lang, openrouterKey) {
-  const system = ORCHESTRATOR_PROMPT[lang] || ORCHESTRATOR_PROMPT.fr;
-  const msgs = [
-    ...historyMsgs.slice(-4).filter(m=>m.role!=="system"),
-    { role:"user", content: `Analyse cette demande et retourne le plan de workflow JSON :\n\n"${query}"` }
-  ];
-  try {
-    let raw;
-    if (openrouterKey) {
-      raw = await callOpenRouter(DEFAULT_AGENT_MODEL, system, msgs, openrouterKey, false);
-    } else {
-      raw = await callClaude(system, msgs);
-    }
-    // Extract JSON from response
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const plan = JSON.parse(jsonMatch[0]);
-      // Validate agents exist
-      if (plan.agents) plan.agents = plan.agents.filter(id => AGENTS_DEF.find(a=>a.id===id));
-      return plan;
-    }
-  } catch(e) { console.warn("Orchestrator parse error:", e); }
-  // Fallback: fast route
-  const fast = fastRoute(query);
-  return { type:"single", priority:"normal", agents:[fast||"FinancialAgent"],
-    reason:"Routing automatique", user_message:"", estimated_seconds:10, synthesis_needed:false };
-}
-
 // Execute a workflow plan — returns array of {agentId, name, reply, status}
-async function executeWorkflow(plan, query, historyMsgs, agentSettings, openrouterKey, lang, onProgress) {
-  const baseMessages = historyMsgs.slice(-6).filter(m=>m.role!=="system");
-  const userMsg = { role:"user", content:query };
-
-  const runOne = async (agentId, contextExtra="") => {
-    const def = agentById(agentId);
-    const prompt = agentSettings[agentId]?.prompt || def.defaultPrompt[lang];
-    const model  = agentSettings[agentId]?.model;
-    const msgs = [...baseMessages, userMsg];
-    if (contextExtra) msgs.push({ role:"user", content: contextExtra });
-    onProgress?.(agentId, "working");
-    try {
-      const reply = await callAgent(agentId, prompt, msgs, openrouterKey, model);
-      onProgress?.(agentId, "done");
-      return { agentId, name:agentName(agentId, lang), title:agentTitle(agentId, lang), reply, status:"done" };
-    } catch(e) {
-      onProgress?.(agentId, "error");
-      return { agentId, name:agentName(agentId, lang), title:agentTitle(agentId, lang), reply:`Erreur : ${e.message}`, status:"error" };
-    }
-  };
-
-  if (plan.type === "single") {
-    const result = await runOne(plan.agents[0]);
-    return [result];
-  }
-
-  if (plan.type === "parallel") {
-    return await Promise.all(plan.agents.map(id => runOne(id)));
-  }
-
-  if (plan.type === "sequential") {
-    const results = [];
-    let context = "";
-    for (const agentId of plan.agents) {
-      const result = await runOne(agentId, context);
-      results.push(result);
-      const n = agentName(agentId, lang);
-      context = lang==="fr"
-        ? `\n\n[Analyse préalable de ${n} :]:\n${result.reply}\n\n[Suite de la demande originale :]`
-        : `\n\n[Prior analysis by ${n}:]:\n${result.reply}\n\n[Continuation of original request:]`;
-    }
-    return results;
-  }
-
-  if (plan.type === "hybrid" && plan.phases) {
-    const results = [];
-    let prevContext = "";
-    for (const phase of plan.phases) {
-      if (phase.type === "parallel") {
-        const phaseResults = await Promise.all(phase.agents.map(id => runOne(id, prevContext)));
-        results.push(...phaseResults);
-        prevContext = phaseResults.map(r => `[${r.name}]: ${r.reply}`).join("\n\n");
-      } else {
-        for (const agentId of phase.agents) {
-          const result = await runOne(agentId, prevContext);
-          results.push(result);
-          prevContext = `[${result.name}]: ${result.reply}`;
-        }
-      }
-    }
-    return results;
-  }
-
-  return [await runOne(plan.agents?.[0] || "FinancialAgent")];
-}
-
-// Synthesize multiple agent results into a unified response
-async function synthesizeResults(results, query, plan, lang, openrouterKey, agentSettings) {
-  if (results.length <= 1) return null;
-  const synthPrompt = lang === "fr"
-    ? `Tu es l'Orchestrateur du Bureau CPA Virtuel. Plusieurs spécialistes ont analysé la demande suivante en parallèle ou en séquence. Tu dois maintenant synthétiser leurs analyses en une réponse unifiée, structurée et directement actionnable pour le client.
-
-INSTRUCTIONS :
-- Commence par un résumé exécutif de 3-5 points clés
-- Intègre les recommandations complémentaires de chaque spécialiste sans répétition
-- Mets en évidence les points de convergence et les tensions éventuelles entre analyses
-- Termine par un plan d'action priorisé (URGENT / ÉLEVÉ / NORMAL) avec responsable suggéré
-- Sois direct, pratique et orienté décision — pas de théorie
-- Indique quel spécialiste a produit chaque analyse (prénom seulement)`
-    : `You are the Virtual CPA Firm Orchestrator. Multiple specialists have analyzed the following request in parallel or sequentially. Synthesize their analyses into a unified, structured, directly actionable response.
-
-INSTRUCTIONS:
-- Start with a 3-5 point executive summary
-- Integrate complementary recommendations without repetition
-- Highlight convergence points and potential tensions
-- End with a prioritized action plan (URGENT / HIGH / NORMAL) with suggested owner
-- Be direct, practical, decision-oriented — no theory
-- Indicate which specialist produced each analysis (first name only)`;
-
-  const combined = results.map(r => `### ${r.name} — ${r.title}\n${r.reply}`).join("\n\n---\n\n");
-  const msgs = [{ role:"user", content:`Demande originale :\n"${query}"\n\n${combined}` }];
-  try {
-    if (openrouterKey) return await callOpenRouter(DEFAULT_AGENT_MODEL, synthPrompt, msgs, openrouterKey, false);
-    return await callClaude(synthPrompt, msgs);
-  } catch { return null; }
-}
-
-async function callOpenRouter(model, system, messages, apiKey, useWebSearch = false) {
-  const body = {
-    model,
-    messages: [{ role:"system", content:system }, ...messages.map(m=>({role:m.role,content:m.content}))],
-    max_tokens: useWebSearch ? 2000 : 1400,
-    ...(useWebSearch ? { plugins:[{ id:"web", max_results:5 }] } : {}),
-  };
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "Authorization":`Bearer ${apiKey}`,
-      "HTTP-Referer":"https://z12cfo.zakiai.com",
-      "X-Title":"Z12 AI CFO Suite",
-    },
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(()=>({}));
-    throw new Error(err?.error?.message || `OpenRouter ${res.status}`);
-  }
-  const d = await res.json();
-  return d.choices?.[0]?.message?.content || "Erreur inattendue.";
-}
-
-async function callAgent(agentId, system, messages, openrouterKey, agentModel) {
-  const useWeb = WEB_SEARCH_AGENTS.has(agentId);
-  // Priority: OpenRouter key → Anthropic direct
-  if (openrouterKey) {
-    const model = agentModel || DEFAULT_AGENT_MODEL;
-    return callOpenRouter(model, system, messages, openrouterKey, useWeb);
-  }
-  // Fallback: Anthropic API direct (no web search for free tier)
-  return useWeb
-    ? callClaudeWithWebSearch(system, messages)
-    : callClaude(system, messages);
-}
-
-function fastRoute(msg) {
-  const m = msg.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-  if (/t1|t2|tps|tvq|gst|hst|fiscal|impot|cra|revenu.quebec|deduction|amortissement/.test(m)) return "TaxAgent";
-  if (/audit|ifrs|aspe|verification|controle.interne|cpa|materialite/.test(m)) return "AuditAgent";
-  if (/tresorerie|cash.flow|liquidite|flux.de|budget|prevision.de.caisse|bfr/.test(m)) return "CashFlowAgent";
-  if (/loi.25|casl|pipeda|conformite|donnees.personnelles|consentement|efvp/.test(m)) return "ComplianceAgent";
-  if (/ratio|analyse.financiere|benchmark|baiia|ebitda|marge|solvabilite/.test(m)) return "FinancialAgent";
-  if (/investissement|roi|tir|van|dcf|portefeuille|acquisition/.test(m)) return "InvestmentAgent";
-  if (/scan|ocr|photo|facture.scan|releve.scan|manuscrit/.test(m)) return "OCRAgent";
-  if (/veille|actualite|mise.a.jour|nouveaute|changement.recent|derniere.loi|nouvelle.norme|bulletin|circulaire|nouvelles.fiscales/.test(m)) return "VeilleAgent";
-  if (/subvention|aide.financiere|programme.financement|grant|bourse|sred|irap|pari|investissement.quebec|cld|mrc|financement.gouvern|non.gouvern|fondation|accelerateur/.test(m)) return "SubventionsAgent";
-  return null;
-}
-
-async function routeViaAPI(msg) {
-  try {
-    const r = await callClaude("You are a routing agent. Given a user message, return ONLY the agent name — one of: TaxAgent, AuditAgent, CashFlowAgent, ComplianceAgent, FinancialAgent, InvestmentAgent, OCRAgent. Return nothing else.", [{role:"user",content:msg}]);
-    const name = r.trim().replace(/[^a-zA-Z]/g,"");
-    return AGENTS_DEF.find(a=>a.id===name)?.id || "FinancialAgent";
-  } catch { return "FinancialAgent"; }
-}
-
 // ─── MOCK DATA ────────────────────────────────────────────────────────────────
 function UploadZone({ color, lang, t, onAdd }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -3197,8 +2954,8 @@ function TeamView({lang, t}) {
 
 function SettingsView({ lang, t, openrouterKey, agentSettings }: any) {
   const fr = lang === "fr";
-  const [key, setKey] = useLocalStorage<string>("z12-openrouter-key", "");
-  const [settings, setSettings] = useLocalStorage<any>("z12-agent-settings", {});
+  const [key, setKey] = useLocalStorage("z12-openrouter-key", "");
+  const [settings, setSettings] = useLocalStorage("z12-agent-settings", {});
   const [testResult, setTestResult] = React.useState<string>("");
   const [testing, setTesting] = React.useState(false);
 
@@ -3274,180 +3031,6 @@ function SettingsView({ lang, t, openrouterKey, agentSettings }: any) {
 
 
 // ─── ENHANCED UPLOAD ZONE (VectDocs-inspired) ──────────────────────────────
-function UploadZone({ color, lang, t, onAdd }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [drag, setDrag]   = useState(false);
-  const [queue, setQueue] = useState([]);
-  const EXT_PILLS = ["PDF","Word","Excel","PowerPoint","CSV","TXT","JSON","Images","ZIP","Email","Audio","Vidéo","et plus"];
-
-  const processFiles = useCallback(async files => {
-    const arr = Array.from(files);
-    const items = arr.map((f: any) => ({
-      id: Date.now() + Math.random(),
-      name: f.name,
-      rawFile: f,
-      size: fmtSize(f.size),
-      ext: f.name.split(".").pop().toLowerCase(),
-      progress: 0,
-      stage: "Lecture...",
-      error: validateFile(),
-      preview: null,
-      detectedAgent: detectAgentFromFile(f.name),
-      words: 0,
-      estChunks: 0,
-      language: "unknown",
-      overrideAgent: null,
-    }));
-    setQueue(prev => [...items, ...prev].slice(0, 15));
-
-    // VectDocs-inspired: extract text preview instantly BEFORE server indexing
-    for (const item of items) {
-      if (item.error) continue;
-      // Async extraction in parallel
-      extractTextPreview(item.rawFile).then((result: any) => {
-        const detected = detectAgentFromFile(item.name, result?.text || "");
-        const lang_d   = detectLanguage(result?.text || "");
-        const words_d  = result?.words || 0;
-        setQueue(prev => prev.map(q => q.id === item.id ? {
-          ...q,
-          preview: result?.text || "",
-          words: words_d,
-          estChunks: estimateChunks(words_d),
-          language: lang_d,
-          detectedAgent: detected,
-          source: result?.source,
-        } : q));
-      });
-
-      // Simulate server pipeline stages
-      let p = 0;
-      const iv = setInterval(() => {
-        p += Math.random() * 14 + 5;
-        if (p >= 100) { p = 100; clearInterval(iv); }
-        const stage = uploadStageLabel(p);
-        setQueue(prev => prev.map(q => q.id === item.id ? {...q, progress:Math.round(p), stage} : q));
-        if (p === 100 && onAdd) {
-          const agent = item.overrideAgent || detectAgentFromFile(item.name);
-          onAdd({ id:"u_"+Date.now()+Math.random(), name:item.name, agent, size:item.size,
-            date:new Date().toISOString().slice(0,10), chunks:estimateChunks(item.words||30),
-            type:item.ext, words:item.words||0, language:item.language||"fr",
-            preview:item.preview||"", desc:"Document uploadé" });
-        }
-      }, 220);
-    }
-  }, [onAdd]);
-
-  // VectDocs-inspired folder picker (showDirectoryPicker API)
-  const pickFolder = useCallback(async () => {
-    if (!(window as any).showDirectoryPicker) {
-      alert("Folder picker requires Chrome/Edge. Use the file button instead.");
-      return;
-    }
-    try {
-      const dirHandle = await (window as any).showDirectoryPicker();
-      const files = [];
-      for await (const [, handle] of dirHandle.entries()) {
-        if (handle.kind === "file") files.push(await handle.getFile());
-      }
-      if (files.length > 0) processFiles(files);
-    } catch(e) { if (e.name !== "AbortError") console.error(e); }
-  }, [processFiles]);
-
-  const langFlag = l => l === "fr" ? "🇫🇷" : l === "en" ? "🇬🇧" : "";
-
-  return (
-    <div style={{marginTop:14}}>
-      {/* Drop zone */}
-      <div onDrop={e=>{e.preventDefault();setDrag(false);processFiles(e.dataTransfer.files);}}
-        onDragOver={e=>{e.preventDefault();setDrag(true);}} onDragLeave={()=>setDrag(false)}
-        onClick={()=>inputRef.current?.click()}
-        style={{background:drag?`${color}12`:"var(--bg-card)",border:`2px dashed ${drag?color:"var(--bg-border)"}`,borderRadius:14,padding:"22px 20px",textAlign:"center",cursor:"pointer",transition:"all .2s"}}>
-        <div style={{fontSize:28,marginBottom:8}}>{drag?"📂":"📤"}</div>
-        <div style={{fontSize:14,fontWeight:500,color:drag?color:"var(--t2)",marginBottom:5}}>{t.docs.upload}</div>
-        <div style={{fontSize:12,color:"var(--t3)",marginBottom:12}}>{t.docs.sub}</div>        <div style={{display:"flex",flexWrap:"wrap",gap:4,justifyContent:"center",marginBottom:12}}>
-          {EXT_PILLS.map(e=><span key={e} style={{fontSize:10,padding:"2px 8px",borderRadius:20,background:`${color}15`,color,border:`1px solid ${color}35`,fontWeight:500}}>{e}</span>)}
-        </div>
-        <input ref={inputRef} type="file" multiple accept="*/*" style={{display:"none"}} onChange={e=>processFiles(e.target.files)}/>
-      </div>
-
-      {/* Folder picker button */}
-      <button onClick={pickFolder} style={{width:"100%",marginTop:8,background:"transparent",border:`1px solid var(--bg-border)`,borderRadius:10,padding:"8px 0",color:"var(--t2)",fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-        📁 {lang==="fr"?"Uploader un dossier entier (Chrome/Edge)":"Upload entire folder (Chrome/Edge)"}
-      </button>
-
-      {/* Queue with VectDocs-inspired preview */}
-      {queue.length > 0 && (
-        <div style={{background:"var(--bg-card)",border:"1px solid var(--bg-border)",borderRadius:12,overflow:"hidden",marginTop:10}}>
-          <div style={{padding:"9px 14px",borderBottom:"1px solid var(--bg-border)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <span style={{fontSize:12,fontWeight:500,color:"var(--t2)"}}>
-              {lang==="fr"?"File d'indexation":"Indexing queue"} ({queue.length})
-            </span>
-            <button onClick={()=>setQueue([])} style={{background:"transparent",border:"none",color:"var(--t3)",fontSize:11,cursor:"pointer"}}>✕ {lang==="fr"?"Effacer":"Clear"}</button>
-          </div>
-
-          {queue.map(f => (
-            <div key={f.id} style={{padding:"11px 14px",borderBottom:"1px solid var(--bg-border)"}}>
-              <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
-                <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{typeIcon(f.ext)}</span>
-                <div style={{flex:1,minWidth:0}}>
-                  {/* File name + size + language */}
-                  <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                    <span style={{fontSize:12,color:"var(--t1)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{f.name}</span>
-                    <span style={{fontSize:10,color:"var(--t3)",flexShrink:0}}>{f.size}</span>
-                    {f.language !== "unknown" && <span style={{fontSize:12}}>{langFlag(f.language)}</span>}
-                  </div>
-
-                  {/* VectDocs-inspired: detected agent badge (overrideable) */}
-                  {!f.error && (
-                    <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:6,flexWrap:"wrap"}}>
-                      <span style={{fontSize:10,color:"var(--t3)"}}>{lang==="fr"?"Agent détecté :":"Detected agent:"}</span>
-                      <select
-                        value={f.overrideAgent || f.detectedAgent}
-                        onChange={e => setQueue(prev=>prev.map(q=>q.id===f.id?{...q,overrideAgent:e.target.value}:q))}
-                        onClick={e=>e.stopPropagation()}
-                        style={{fontSize:10,background:"var(--bg-input)",border:`1px solid ${agentColor(f.overrideAgent||f.detectedAgent)}50`,borderRadius:6,padding:"2px 6px",color:agentColor(f.overrideAgent||f.detectedAgent),cursor:"pointer",fontWeight:500}}>
-                        {AGENTS_DEF.map(a=><option key={a.id} value={a.id}>{a.icon} {a.personName?.[lang]?.split(" ")[0]||a.id.replace("Agent","")}</option>)}
-                      </select>
-                      {f.words > 0 && <span style={{fontSize:10,color:"var(--t3)"}}>{f.words.toLocaleString()} mots · ~{f.estChunks} chunks</span>}
-                    </div>
-                  )}
-
-                  {/* VectDocs-inspired: instant text preview */}
-                  {f.preview && f.progress < 100 && (
-                    <div style={{fontSize:10,color:"var(--t3)",background:"var(--bg-input)",borderRadius:6,padding:"5px 8px",marginBottom:6,lineHeight:1.4,overflow:"hidden",maxHeight:40,textOverflow:"ellipsis",fontStyle:"italic"}}>
-                      "{f.preview.slice(0,120)}{f.preview.length>120?"...":""}"
-                    </div>
-                  )}
-                  {f.source === "server-only" && f.progress < 100 && (
-                    <div style={{fontSize:10,color:"var(--t3)",marginBottom:5}}>📡 {t.docs.staServerOnly}</div>
-                  )}
-
-                  {/* Progress bar with stage label */}
-                  {f.error
-                    ? <div style={{fontSize:11,color:"#EF4444",fontWeight:500}}>{f.error}</div>
-                    : f.progress < 100
-                      ? <div>
-                          <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
-                            <span style={{fontSize:10,color:color}}>{f.stage}</span>
-                            <span style={{fontSize:10,color:"var(--t3)"}}>{f.progress}%</span>
-                          </div>
-                          <div style={{height:3,background:"var(--bg-border)",borderRadius:2}}>
-                            <div style={{height:"100%",width:`${f.progress}%`,background:color,borderRadius:2,transition:"width .3s"}}/>
-                          </div>
-                        </div>
-                      : <div style={{fontSize:11,color:"#10B981",fontWeight:500}}>✓ {t.docs.indexed} — {f.ext.toUpperCase()} · {f.estChunks} chunks</div>
-                  }
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-
 // ─── DOCUMENTS (VectDocs-enhanced) ───────────────────────────────────────────
 function Documents({ t, P, lang }) {
   const [tab, setTab]       = useState("knowledge");
@@ -3641,6 +3224,27 @@ function Documents({ t, P, lang }) {
 
 
 // ─── SANDBOX COMPONENT ────────────────────────────────────────────────────────
+async function generateViz(dataText: string, lang: string, openrouterKey: string, agentSettings: any) {
+  const SANDBOX_VIZ_PROMPT = {
+    fr: `Tu es un expert en visualisation de données financières. Génère une page HTML COMPLÈTE et AUTO-SUFFISANTE avec Chart.js (CDN), tableaux HTML, KPIs, bouton Excel (SheetJS CDN), bouton PDF (window.print). Réponds UNIQUEMENT avec le HTML complet, commençant par <!DOCTYPE html> et finissant par </html>.`,
+    en: `You are a financial data visualization expert. Generate a COMPLETE, SELF-CONTAINED HTML page with Chart.js (CDN), HTML tables, KPI cards, Excel button (SheetJS CDN), PDF button (window.print). Respond ONLY with complete HTML, starting with <!DOCTYPE html> and ending with </html>.`
+  };
+  const system = SANDBOX_VIZ_PROMPT[lang as "fr"|"en"] || SANDBOX_VIZ_PROMPT.fr;
+  const msgs = [{ role:"user", content: dataText }];
+  try {
+    let raw = "";
+    if (openrouterKey) {
+      raw = await callOpenRouter(DEFAULT_AGENT_MODEL, system, msgs, openrouterKey, false);
+    } else {
+      raw = await callClaude(system, msgs);
+    }
+    const match = raw.match(/<!DOCTYPE html>[\s\S]*<\/html>/i);
+    return match ? match[0] : raw;
+  } catch(e: any) {
+    return `<html><body style="font-family:sans-serif;padding:20px;color:#EF4444">Error: ${e.message}</body></html>`;
+  }
+}
+
 function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
   const [input,     setInput]     = useState<string>(() => localStorage.getItem("z12-sandbox-prefill")||"");
   useEffect(() => {
@@ -3943,181 +3547,182 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
   ];
 
   return (
-    <div style={{display:"flex",flex:1,overflow:"hidden",position:"relative"}}>
-      {/* ── CENTER: Thread + Composer ────────────────────────────────── */}
-      <div className="studio" style={{flex:1}}>
-        {/* Studio header */}
+    <div style={{display:"flex",flex:1,overflow:"hidden",minWidth:0}}>
+      {/* ── Studio column: header + scrollable thread + sticky composer ── */}
+      <div className="studio">
         <header className="studio-head">
-          <div className="studio-head-l">
-            <div style={{minWidth:0}}>
-              <div className="thread-title">{lang==="fr"?"Orchestration Studio":"Orchestration Studio"}</div>
-              <div className="thread-meta">
-                {workflow ? `${workflow.type || "—"} · ${(workflow.agents||[]).length} agent${(workflow.agents||[]).length!==1?"s":""}` : (lang==="fr"?"Prêt — décrivez votre demande":"Ready — describe your request")}
-              </div>
-            </div>
-          </div>
-          <div className="studio-head-r">
-            <button className="icon-btn" title={showRight?"Hide panel":"Show panel"} onClick={()=>setShowRight(v=>!v)}>
-              <svg viewBox="0 0 16 16" className="i"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M10 3v10"/></svg>
-            </button>
-          </div>
-        </header>
+                  <div className="studio-head-l">
+                    <div style={{minWidth:0}}>
+                      <div className="thread-title">{lang==="fr"?"Orchestration Studio":"Orchestration Studio"}</div>
+                      <div className="thread-meta">
+                        {workflow ? `${workflow.type || "—"} · ${(workflow.agents||[]).length} agent${(workflow.agents||[]).length!==1?"s":""}` : (lang==="fr"?"Prêt — décrivez votre demande":"Ready — describe your request")}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="studio-head-r">
+                    <button className="icon-btn" title={showRight?"Hide panel":"Show panel"} onClick={()=>setShowRight(v=>!v)}>
+                      <svg viewBox="0 0 16 16" className="i"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M10 3v10"/></svg>
+                    </button>
+                  </div>
+                </header>
 
-        {/* Thread */}
+        {/* Scrollable message thread */}
         <div className="thread" ref={threadRef}>
           <div className="thread-inner">
-            {msgs.map((m: any, i: number) => {
-              const ma = agentById(m.agent || agentId);
-              const isOrch = m.isOrchestrator;
-              const studioAgent = AGENTS_STUDIO.find((a: any) => a.id === (m.agent || agentId)) || AGENTS_STUDIO[0];
-
-              if (m.role === "user") return (
-                <div className="msg msg-user" key={i}>
-                  <div className="msg-user-bubble" dangerouslySetInnerHTML={{__html:renderText(m.content)}}/>
-                </div>
-              );
-
-              return (
-                <div className="msg" key={i}>
-                  {/* Orchestrator card */}
-                  {isOrch ? (
-                    <div className="orch-card">
-                      <div className="orch-head">
-                        <div className="orch-mark">⌬</div>
-                        <div style={{minWidth:0}}>
-                          <div className="orch-title">{lang==="fr"?"Orchestrateur · Bureau CPA Virtuel":"Orchestrator · Virtual CPA Firm"}</div>
-                          <div className="orch-sub">9 {lang==="fr"?"spécialistes disponibles":"specialists available"}</div>
-                        </div>
-                      </div>
-                      <div style={{padding:"14px 18px",fontSize:13,lineHeight:1.65,color:"var(--ink-2)"}}
-                           dangerouslySetInnerHTML={{__html:renderText(m.content)}}/>
-                    </div>
-                  ) : (
-                    /* Agent reply card */
-                    <div className="orch-card">
-                      <div className="orch-head">
-                        <Avatar agent={studioAgent} size={24}/>
-                        <div style={{minWidth:0}}>
-                          <div className="orch-title">{agentName(m.agent||agentId, lang)}</div>
-                          <div className="orch-sub mono">{agentTitle(m.agent||agentId, lang)}</div>
-                        </div>
-                        <div style={{marginLeft:"auto",fontSize:10.5,color:"var(--ink-3)",fontFamily:"Geist Mono,monospace"}}>
-                          {m.ts ? fmtTime(new Date(m.ts).toISOString()) : "—"}
-                        </div>
-                      </div>
-                      {/* Multi-agent attribution */}
-                      {m.wfResults && m.wfResults.length > 1 && (
-                        <div style={{padding:"8px 18px 0",display:"flex",gap:6,flexWrap:"wrap" as any}}>
-                          {m.wfResults.map((r: any, ri: number) => {
-                            const sa = AGENTS_STUDIO.find((a: any) => a.id === r.agentId) || AGENTS_STUDIO[0];
-                            return (
-                              <span key={ri} style={{display:"inline-flex",alignItems:"center",gap:5,padding:"3px 9px",borderRadius:99,fontSize:10.5,fontFamily:"Geist Mono,monospace",background:"var(--surface-2)",border:"1px solid var(--line)",color:"var(--ink-2)"}}>
-                                <Avatar agent={sa} size={14}/>{sa.name.split(" ")[0]}
-                              </span>
-                            );
-                          })}
+                      {msgs.map((m: any, i: number) => {
+                        const ma = agentById(m.agent || agentId);
+                        const isOrch = m.isOrchestrator;
+                        const studioAgent = AGENTS_STUDIO.find((a: any) => a.id === (m.agent || agentId)) || AGENTS_STUDIO[0];
+          
+                        if (m.role === "user") return (
+                          <div className="msg msg-user" key={i}>
+                            <div className="msg-user-bubble" dangerouslySetInnerHTML={{__html:renderText(m.content)}}/>
+                          </div>
+                        );
+          
+                        return (
+                          <div className="msg" key={i}>
+                            {/* Orchestrator card */}
+                            {isOrch ? (
+                              <div className="orch-card">
+                                <div className="orch-head">
+                                  <div className="orch-mark">⌬</div>
+                                  <div style={{minWidth:0}}>
+                                    <div className="orch-title">{lang==="fr"?"Orchestrateur · Bureau CPA Virtuel":"Orchestrator · Virtual CPA Firm"}</div>
+                                    <div className="orch-sub">9 {lang==="fr"?"spécialistes disponibles":"specialists available"}</div>
+                                  </div>
+                                </div>
+                                <div style={{padding:"14px 18px",fontSize:13,lineHeight:1.65,color:"var(--ink-2)"}}
+                                     dangerouslySetInnerHTML={{__html:renderText(m.content)}}/>
+                              </div>
+                            ) : (
+                              /* Agent reply card */
+                              <div className="orch-card">
+                                <div className="orch-head">
+                                  <Avatar agent={studioAgent} size={24}/>
+                                  <div style={{minWidth:0}}>
+                                    <div className="orch-title">{agentName(m.agent||agentId, lang)}</div>
+                                    <div className="orch-sub mono">{agentTitle(m.agent||agentId, lang)}</div>
+                                  </div>
+                                  <div style={{marginLeft:"auto",fontSize:10.5,color:"var(--ink-3)",fontFamily:"Geist Mono,monospace"}}>
+                                    {m.ts ? fmtTime(new Date(m.ts).toISOString()) : "—"}
+                                  </div>
+                                </div>
+                                {/* Multi-agent attribution */}
+                                {m.wfResults && m.wfResults.length > 1 && (
+                                  <div style={{padding:"8px 18px 0",display:"flex",gap:6,flexWrap:"wrap" as any}}>
+                                    {m.wfResults.map((r: any, ri: number) => {
+                                      const sa = AGENTS_STUDIO.find((a: any) => a.id === r.agentId) || AGENTS_STUDIO[0];
+                                      return (
+                                        <span key={ri} style={{display:"inline-flex",alignItems:"center",gap:5,padding:"3px 9px",borderRadius:99,fontSize:10.5,fontFamily:"Geist Mono,monospace",background:"var(--surface-2)",border:"1px solid var(--line)",color:"var(--ink-2)"}}>
+                                          <Avatar agent={sa} size={14}/>{sa.name.split(" ")[0]}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                                <div style={{padding:"12px 18px 16px",fontSize:13,lineHeight:1.65,color:"var(--ink-2)"}}
+                                     dangerouslySetInnerHTML={{__html:renderText(m.content)}}/>
+                                {/* Copy button */}
+                                <div style={{padding:"0 18px 12px",display:"flex",gap:8}}>
+                                  <button onClick={()=>copy(m.content,i)} style={{fontSize:10.5,color:"var(--ink-3)",background:"transparent",border:"none",cursor:"pointer",padding:0}}>
+                                    {copied===i?(lang==="fr"?"Copié ✓":"Copied ✓"):(lang==="fr"?"Copier":"Copy")}
+                                  </button>
+                                  <button onClick={()=>{localStorage.setItem("z12-sandbox-prefill",m.content);setView("sandbox");}}
+                                    style={{fontSize:10.5,color:"var(--ink-3)",background:"transparent",border:"none",cursor:"pointer",padding:0}}>
+                                    📊 {lang==="fr"?"Sandbox":"Sandbox"}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+          
+                      {/* Orchestrator analyzing + workflow status */}
+                      {(routing || loading) && (
+                        <div className="msg">
+                          <div className="orch-card">
+                            <div className="orch-head">
+                              <div className="orch-mark">⌬</div>
+                              <div style={{minWidth:0}}>
+                                <div className="orch-title">
+                                  {routing ? (lang==="fr"?"Analyse de la demande…":"Analyzing request…") : (lang==="fr"?"Agents en cours…":"Agents working…")}
+                                </div>
+                                <div className="orch-sub mono">
+                                  {workflow ? `${workflow.type} · ${workflow.reason||""}` : ""}
+                                </div>
+                              </div>
+                              {workflow?.priority==="urgent" && <div className="orch-pill" style={{background:"var(--warn-soft)",color:"var(--warn)",borderColor:"var(--warn)"}}>🔴 URGENT</div>}
+                              {workflow?.priority==="high"   && <div className="orch-pill" style={{background:"var(--gold-soft)",color:"var(--gold)",borderColor:"var(--gold)"}}>🟠 {lang==="fr"?"PRIORITAIRE":"HIGH"}</div>}
+                              {workflow && !workflow.priority?.match(/urgent|high/) && <div className="orch-pill">⚡ {workflow.type?.toUpperCase()}</div>}
+                            </div>
+                            {/* Phase plan */}
+                            {wfSteps.length > 0 && (
+                              <div style={{padding:"12px 18px 6px"}}>
+                                <div style={{display:"flex",gap:6,flexWrap:"wrap" as any}}>
+                                  {wfSteps.map((step: any, i: number) => {
+                                    const sa = AGENTS_STUDIO.find((a: any) => a.id === step.agentId) || AGENTS_STUDIO[0];
+                                    const working = step.status==="working";
+                                    const done    = step.status==="done";
+                                    const pend    = step.status==="pending";
+                                    return (
+                                      <div key={i} className={`plan-cell ${working?"busy":done?"done":""}`} style={{position:"relative" as any}}>
+                                        <Avatar agent={sa} size={20} status={working?"busy":done?"done":undefined}/>
+                                        <span className="plan-cell-name">{sa.name.split(" ")[0]}</span>
+                                        <span className="plan-cell-task">
+                                          {working?"— ⋯":done?"— ✓":pend?"— ○":""}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            {/* Shimmer lines */}
+                            {loading && (
+                              <div style={{padding:"10px 18px 14px"}}>
+                                <div className="shimmer s60"/><div className="shimmer s40"/><div className="shimmer" style={{width:"75%"}}/>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
-                      <div style={{padding:"12px 18px 16px",fontSize:13,lineHeight:1.65,color:"var(--ink-2)"}}
-                           dangerouslySetInnerHTML={{__html:renderText(m.content)}}/>
-                      {/* Copy button */}
-                      <div style={{padding:"0 18px 12px",display:"flex",gap:8}}>
-                        <button onClick={()=>copy(m.content,i)} style={{fontSize:10.5,color:"var(--ink-3)",background:"transparent",border:"none",cursor:"pointer",padding:0}}>
-                          {copied===i?(lang==="fr"?"Copié ✓":"Copied ✓"):(lang==="fr"?"Copier":"Copy")}
-                        </button>
-                        <button onClick={()=>{localStorage.setItem("z12-sandbox-prefill",m.content);setView("sandbox");}}
-                          style={{fontSize:10.5,color:"var(--ink-3)",background:"transparent",border:"none",cursor:"pointer",padding:0}}>
-                          📊 {lang==="fr"?"Sandbox":"Sandbox"}
-                        </button>
-                      </div>
+                      <div ref={undefined} style={{height:200}}/>
                     </div>
-                  )}
-                </div>
-              );
-            })}
-
-            {/* Orchestrator analyzing + workflow status */}
-            {(routing || loading) && (
-              <div className="msg">
-                <div className="orch-card">
-                  <div className="orch-head">
-                    <div className="orch-mark">⌬</div>
-                    <div style={{minWidth:0}}>
-                      <div className="orch-title">
-                        {routing ? (lang==="fr"?"Analyse de la demande…":"Analyzing request…") : (lang==="fr"?"Agents en cours…":"Agents working…")}
-                      </div>
-                      <div className="orch-sub mono">
-                        {workflow ? `${workflow.type} · ${workflow.reason||""}` : ""}
-                      </div>
-                    </div>
-                    {workflow?.priority==="urgent" && <div className="orch-pill" style={{background:"var(--warn-soft)",color:"var(--warn)",borderColor:"var(--warn)"}}>🔴 URGENT</div>}
-                    {workflow?.priority==="high"   && <div className="orch-pill" style={{background:"var(--gold-soft)",color:"var(--gold)",borderColor:"var(--gold)"}}>🟠 {lang==="fr"?"PRIORITAIRE":"HIGH"}</div>}
-                    {workflow && !workflow.priority?.match(/urgent|high/) && <div className="orch-pill">⚡ {workflow.type?.toUpperCase()}</div>}
                   </div>
-                  {/* Phase plan */}
-                  {wfSteps.length > 0 && (
-                    <div style={{padding:"12px 18px 6px"}}>
-                      <div style={{display:"flex",gap:6,flexWrap:"wrap" as any}}>
-                        {wfSteps.map((step: any, i: number) => {
-                          const sa = AGENTS_STUDIO.find((a: any) => a.id === step.agentId) || AGENTS_STUDIO[0];
-                          const working = step.status==="working";
-                          const done    = step.status==="done";
-                          const pend    = step.status==="pending";
-                          return (
-                            <div key={i} className={`plan-cell ${working?"busy":done?"done":""}`} style={{position:"relative" as any}}>
-                              <Avatar agent={sa} size={20} status={working?"busy":done?"done":undefined}/>
-                              <span className="plan-cell-name">{sa.name.split(" ")[0]}</span>
-                              <span className="plan-cell-task">
-                                {working?"— ⋯":done?"— ✓":pend?"— ○":""}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  {/* Shimmer lines */}
-                  {loading && (
-                    <div style={{padding:"10px 18px 14px"}}>
-                      <div className="shimmer s60"/><div className="shimmer s40"/><div className="shimmer" style={{width:"75%"}}/>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            <div ref={undefined} style={{height:200}}/>
-          </div>
-        </div>
 
-        {/* Composer */}
-        <div className="composer-wrap" style={{left:0,right:showRight?380:0}}>
-          <div className="quick-prompts">
-            {msgs.length <= 1 && quickPrompts.map((q,i)=>(
-              <button key={i} className="qp" onClick={()=>setInput(q)}>{q}</button>
-            ))}
-          </div>
+        {/* Sticky composer — no position:absolute, lives at bottom of flex column */}
+        <div className="composer-wrap">
+          {msgs.length <= 1 && (
+            <div className="quick-prompts">
+              {quickPrompts.map((q:string,i:number)=>(
+                <button key={i} className="qp" onClick={()=>setInput(q)}>{q}</button>
+              ))}
+            </div>
+          )}
           <div className="composer">
             <textarea
               ref={inputRef}
               className="composer-input"
               placeholder={lang==="fr"?"Posez une question, déposez un document, ou lancez une analyse…":"Ask a question, drop a document, or run an analysis…"}
               value={input}
-              onChange={e=>setInput(e.target.value)}
+              onChange={(e:any)=>setInput(e.target.value)}
               rows={1}
-              onInput={(e: any) => { e.target.style.height="auto"; e.target.style.height=Math.min(e.target.scrollHeight,140)+"px"; }}
-              onKeyDown={(e: any)=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
+              onInput={(e:any) => { e.target.style.height="auto"; e.target.style.height=Math.min(e.target.scrollHeight,140)+"px"; }}
+              onKeyDown={(e:any)=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
             />
             <div className="composer-tools">
-              <button className={`tool-chip ${ragOn?"on":""}`} onClick={()=>setRagOn((v: boolean)=>!v)}>
+              <button className={`tool-chip ${ragOn?"on":""}`} onClick={()=>setRagOn((v:boolean)=>!v)}>
                 <svg viewBox="0 0 16 16" className="i"><path d="M4 2h6l3 3v9H4z"/><path d="M10 2v3h3"/></svg>
                 <span>{lang==="fr"?"RAG documents":"RAG documents"}</span>
               </button>
-              <button className={`tool-chip ${webOn?"on":""}`} onClick={()=>setWebOn((v: boolean)=>!v)}>
+              <button className={`tool-chip ${webOn?"on":""}`} onClick={()=>setWebOn((v:boolean)=>!v)}>
                 <svg viewBox="0 0 16 16" className="i"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12"/></svg>
                 <span>{lang==="fr"?"Recherche web":"Web search"}</span>
               </button>
               <button className="send-btn" disabled={loading||routing||!input.trim()} onClick={send}>
-                {loading||routing ? "…" : (lang==="fr"?"Envoyer":"Send")}
+                {loading||routing?"…":(lang==="fr"?"Envoyer":"Send")}
                 <svg viewBox="0 0 16 16" className="i" style={{width:12,height:12}}><path d="M2 8l12-5-5 12-2-5z"/></svg>
               </button>
             </div>
@@ -4125,97 +3730,99 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
         </div>
       </div>
 
-      {/* ── RIGHT: Context panel ─────────────────────────────────────── */}
+      {/* ── Context panel column ── */}
       {showRight && (
         <aside className="context">
-          <div className="ctx-tabs">
-            {(["workflow","sources","cost"] as string[]).map(k => (
-              <div key={k} className={`ctx-tab ${ctxTab===k?"on":""}`} onClick={()=>setCtxTab(k)}>
-                {k==="workflow"?(lang==="fr"?"Workflow":"Workflow"):k==="sources"?(lang==="fr"?"Sources":"Sources"):(lang==="fr"?"Coût":"Cost")}
-                {k==="workflow" && wfSteps.length > 0 && <span className="ct-count">{wfSteps.filter((s:any)=>s.status!=="pending").length}/{wfSteps.length}</span>}
-                {k==="sources" && <span className="ct-count">{convs.length}</span>}
-              </div>
-            ))}
-          </div>
-          <div className="ctx-scroll">
-            {ctxTab==="workflow" && (
-              <div className="ctx-section">
-                <div className="ctx-section-title">
-                  {wfSteps.length > 0
-                    ? `${wfSteps.filter((s:any)=>s.status==="working").length} ${lang==="fr"?"agents actifs":"agents working"}`
-                    : (lang==="fr"?"Aucun workflow actif":"No active workflow")}
-                </div>
-                <div className="timeline">
-                  {wfSteps.map((step: any, i: number) => {
-                    const sa = AGENTS_STUDIO.find((a:any) => a.id===step.agentId) || AGENTS_STUDIO[0];
-                    return (
-                      <div key={i} className={`tl-item ${step.status==="working"?"busy":step.status==="done"?"done":"pending"}`}>
-                        <div className="tl-name">{sa.name.split(" ")[0]} {sa.name.split(" ").slice(-1)[0][0]}.</div>
-                        <div className="tl-task">{agentTitle(step.agentId, lang)}</div>
-                        <div className="tl-time">{step.status==="done"?"✓":step.status==="working"?"running…":"queued"}</div>
+                  <div className="ctx-tabs">
+                    {(["workflow","sources","cost"] as string[]).map(k => (
+                      <div key={k} className={`ctx-tab ${ctxTab===k?"on":""}`} onClick={()=>setCtxTab(k)}>
+                        {k==="workflow"?(lang==="fr"?"Workflow":"Workflow"):k==="sources"?(lang==="fr"?"Sources":"Sources"):(lang==="fr"?"Coût":"Cost")}
+                        {k==="workflow" && wfSteps.length > 0 && <span className="ct-count">{wfSteps.filter((s:any)=>s.status!=="pending").length}/{wfSteps.length}</span>}
+                        {k==="sources" && <span className="ct-count">{convs.length}</span>}
                       </div>
-                    );
-                  })}
-                </div>
-                {/* Conversation history */}
-                {convs.length > 0 && (
-                  <>
-                    <div className="ctx-section-title" style={{marginTop:20}}>{lang==="fr"?"Historique":"History"}</div>
-                    {convs.slice(0,8).map((conv: any) => {
-                      const sa = AGENTS_STUDIO.find((a:any) => a.id===conv.agentId) || AGENTS_STUDIO[0];
-                      return (
-                        <div key={conv.id} className="doc-row" onClick={()=>{setActiveId(conv.id);setMsgs(conv.messages||[]);}}
-                          style={{padding:"6px 0",cursor:"pointer"}}>
-                          <Avatar agent={sa} size={20}/>
-                          <div className="doc-meta">
-                            <div className="doc-name" style={{fontSize:11.5}}>{conv.title||"Conversation"}</div>
-                            <div className="doc-info">{fmtTime(conv.updatedAt)}</div>
-                          </div>
+                    ))}
+                  </div>
+                  <div className="ctx-scroll">
+                    {ctxTab==="workflow" && (
+                      <div className="ctx-section">
+                        <div className="ctx-section-title">
+                          {wfSteps.length > 0
+                            ? `${wfSteps.filter((s:any)=>s.status==="working").length} ${lang==="fr"?"agents actifs":"agents working"}`
+                            : (lang==="fr"?"Aucun workflow actif":"No active workflow")}
                         </div>
-                      );
-                    })}
-                  </>
-                )}
-              </div>
-            )}
-            {ctxTab==="sources" && (
-              <div className="ctx-section">
-                <div className="ctx-section-title">{lang==="fr"?"Conversations":"Conversations"}</div>
-                {convs.length === 0 && <div style={{fontSize:11,color:"var(--ink-3)"}}>{lang==="fr"?"Aucune conversation":"No conversations yet"}</div>}
-                {convs.map((conv: any) => {
-                  const sa = AGENTS_STUDIO.find((a:any) => a.id===conv.agentId) || AGENTS_STUDIO[0];
-                  return (
-                    <div key={conv.id} className="doc-row" onClick={()=>{setActiveId(conv.id);setMsgs(conv.messages||[]);}}
-                      style={{cursor:"pointer",borderRadius:6,padding:"6px 8px",transition:".1s"}}>
-                      <div className="doc-icon" style={{width:28,height:32,fontSize:10.5}}>
-                        <Avatar agent={sa} size={22}/>
+                        <div className="timeline">
+                          {wfSteps.map((step: any, i: number) => {
+                            const sa = AGENTS_STUDIO.find((a:any) => a.id===step.agentId) || AGENTS_STUDIO[0];
+                            return (
+                              <div key={i} className={`tl-item ${step.status==="working"?"busy":step.status==="done"?"done":"pending"}`}>
+                                <div className="tl-name">{sa.name.split(" ")[0]} {sa.name.split(" ").slice(-1)[0][0]}.</div>
+                                <div className="tl-task">{agentTitle(step.agentId, lang)}</div>
+                                <div className="tl-time">{step.status==="done"?"✓":step.status==="working"?"running…":"queued"}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {/* Conversation history */}
+                        {convs.length > 0 && (
+                          <>
+                            <div className="ctx-section-title" style={{marginTop:20}}>{lang==="fr"?"Historique":"History"}</div>
+                            {convs.slice(0,8).map((conv: any) => {
+                              const sa = AGENTS_STUDIO.find((a:any) => a.id===conv.agentId) || AGENTS_STUDIO[0];
+                              return (
+                                <div key={conv.id} className="doc-row" onClick={()=>{setActiveId(conv.id);setMsgs(conv.messages||[]);}}
+                                  style={{padding:"6px 0",cursor:"pointer"}}>
+                                  <Avatar agent={sa} size={20}/>
+                                  <div className="doc-meta">
+                                    <div className="doc-name" style={{fontSize:11.5}}>{conv.title||"Conversation"}</div>
+                                    <div className="doc-info">{fmtTime(conv.updatedAt)}</div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </>
+                        )}
                       </div>
-                      <div className="doc-meta">
-                        <div className="doc-name">{conv.title||"Untitled"}</div>
-                        <div className="doc-info">{fmtTime(conv.updatedAt)}</div>
+                    )}
+                    {ctxTab==="sources" && (
+                      <div className="ctx-section">
+                        <div className="ctx-section-title">{lang==="fr"?"Conversations":"Conversations"}</div>
+                        {convs.length === 0 && <div style={{fontSize:11,color:"var(--ink-3)"}}>{lang==="fr"?"Aucune conversation":"No conversations yet"}</div>}
+                        {convs.map((conv: any) => {
+                          const sa = AGENTS_STUDIO.find((a:any) => a.id===conv.agentId) || AGENTS_STUDIO[0];
+                          return (
+                            <div key={conv.id} className="doc-row" onClick={()=>{setActiveId(conv.id);setMsgs(conv.messages||[]);}}
+                              style={{cursor:"pointer",borderRadius:6,padding:"6px 8px",transition:".1s"}}>
+                              <div className="doc-icon" style={{width:28,height:32,fontSize:10.5}}>
+                                <Avatar agent={sa} size={22}/>
+                              </div>
+                              <div className="doc-meta">
+                                <div className="doc-name">{conv.title||"Untitled"}</div>
+                                <div className="doc-info">{fmtTime(conv.updatedAt)}</div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            {ctxTab==="cost" && (
-              <div className="ctx-section">
-                <div className="meter">
-                  <div className="meter-row"><span>{lang==="fr"?"Tokens utilisés":"Tokens used"}</span><strong>{msgs.reduce((acc: number, m: any) => acc + (m.content?.length||0), 0).toLocaleString()}</strong></div>
-                  <div className="meter-row"><span>{lang==="fr"?"Conversations":"Conversations"}</span><strong>{convs.length}</strong></div>
-                  <div className="meter-row"><span>{lang==="fr"?"Agents actifs":"Active agents"}</span><strong>{wfSteps.filter((s:any)=>s.status==="working").length}</strong></div>
-                  <div className="meter-bar"><div className="meter-fill" style={{width:Math.min(100, convs.length * 5) + "%"}}/></div>
-                  <div className="meter-foot"><span>{lang==="fr"?"session":"session"}</span><span>{lang==="fr"?"OpenRouter":"OpenRouter"}</span></div>
-                </div>
-              </div>
-            )}
-          </div>
-        </aside>
+                    )}
+                    {ctxTab==="cost" && (
+                      <div className="ctx-section">
+                        <div className="meter">
+                          <div className="meter-row"><span>{lang==="fr"?"Tokens utilisés":"Tokens used"}</span><strong>{msgs.reduce((acc: number, m: any) => acc + (m.content?.length||0), 0).toLocaleString()}</strong></div>
+                          <div className="meter-row"><span>{lang==="fr"?"Conversations":"Conversations"}</span><strong>{convs.length}</strong></div>
+                          <div className="meter-row"><span>{lang==="fr"?"Agents actifs":"Active agents"}</span><strong>{wfSteps.filter((s:any)=>s.status==="working").length}</strong></div>
+                          <div className="meter-bar"><div className="meter-fill" style={{width:Math.min(100, convs.length * 5) + "%"}}/></div>
+                          <div className="meter-foot"><span>{lang==="fr"?"session":"session"}</span><span>{lang==="fr"?"OpenRouter":"OpenRouter"}</span></div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </aside>
       )}
     </div>
   );
 }
+
+
 
 
 
@@ -4230,13 +3837,13 @@ const TWEAK_DEFAULTS = {
 export default function Z12CFOSuite() {
   const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const lang = tweaks.lang as string;
-  const [view,        setView]       = useLocalStorage<string>("z12-view", "studio");
-  const [darkMode,    setDarkMode]   = useLocalStorage<boolean>("z12-dark", true);
-  const [convs,       setConvs]      = useLocalStorage<any[]>("z12-conversations", []);
-  const [activeId,    setActiveId]   = useLocalStorage<string|null>("z12-active-conv", null);
-  const [openrouterKey] = useLocalStorage<string>("z12-openrouter-key", "");
-  const [agentSettings] = useLocalStorage<any>("z12-agent-settings", {});
-  const [sidebarOpen, setSidebarOpen] = useLocalStorage<boolean>("z12-sidebar", true);
+  const [view,        setView]       = useLocalStorage("z12-view", "studio");
+  const [darkMode,    setDarkMode]   = useLocalStorage("z12-dark", true);
+  const [convs,       setConvs]      = useLocalStorage("z12-conversations", []);
+  const [activeId,    setActiveId]   = useLocalStorage("z12-active-conv", null);
+  const [openrouterKey] = useLocalStorage("z12-openrouter-key", "");
+  const [agentSettings] = useLocalStorage("z12-agent-settings", {});
+  const [sidebarOpen, setSidebarOpen] = useLocalStorage("z12-sidebar", true);
 
   // Apply theme
   React.useEffect(() => {
