@@ -417,7 +417,7 @@ input,textarea{font-family:inherit;color:inherit;background:none;border:none;out
   .composer-wrap{right:0}
   .context{display:none}
 }
-/*     Additional animations     */
+/*  Additional animations  */
 .avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:"Geist Mono",monospace;font-weight:600;letter-spacing:-0.02em;flex:0 0 30px;color:#0a0a0a;font-size:10.5px;position:relative}
 .avatar.busy{box-shadow:0 0 0 1.5px var(--bg),0 0 0 2.5px var(--accent),0 0 14px oklch(0.74 0.13 152 / .4)}
 .avatar-status{position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;border:1.5px solid var(--surface)}
@@ -562,7 +562,7 @@ const STUDIO_T: Record<string,any> = {
 //     );
 //   }
 //
-//                                                                              
+// 
 
 
 // tweaks-panel.jsx
@@ -610,7 +610,7 @@ const STUDIO_T: Record<string,any> = {
 //     );
 //   }
 //
-//                                                                              
+// 
 
 const __TWEAKS_STYLE = `
   .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
@@ -722,7 +722,7 @@ const __TWEAKS_STYLE = `
     filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
 `;
 
-//    useTweaks                                                                
+//  useTweaks 
 // Single source of truth for tweak values. setTweak persists via the host
 // (__edit_mode_set_keys � host rewrites the EDITMODE block on disk).
 function useTweaks(defaults: any) {
@@ -742,7 +742,7 @@ function useTweaks(defaults: any) {
   return [values, setTweak];
 }
 
-//    TweaksPanel                                                              
+//  TweaksPanel 
 // Floating shell. Registers the protocol listener BEFORE announcing
 // availability  if the announce ran first, the host's activate could land
 // before our handler exists and the toolbar toggle would silently no-op.
@@ -877,7 +877,7 @@ function TweaksPanel({ title = 'Tweaks', noDeckControls = false, children }: any
   );
 }
 
-//    Layout helpers                                                           
+//  Layout helpers 
 
 function TweakSection({ label, children }: any) {
   return (
@@ -900,7 +900,7 @@ function TweakRow({ label, value, children, inline = false }: any) {
   );
 }
 
-//    Controls                                                                 
+//  Controls 
 
 function TweakSlider({ label, value, min = 0, max = 100, step = 1, unit = '', onChange }: any) {
   return (
@@ -1136,41 +1136,41 @@ function useLocalStorage(key, initial) {
 }
 
 
-//     CONSTANTS                                                                 
+//  CONSTANTS 
 // OpenRouter model catalog  used in Settings page
 const OPENROUTER_MODELS = [
-  //    Anthropic                                                               
+  //  Anthropic 
   { id:"anthropic/claude-sonnet-4-5",        label:"Claude Sonnet 4.5",         provider:"Anthropic", tier:"premium",   cost:"$$"   },
   { id:"anthropic/claude-3.5-sonnet",        label:"Claude 3.5 Sonnet",         provider:"Anthropic", tier:"premium",   cost:"$$"   },
   { id:"anthropic/claude-3-opus",            label:"Claude 3 Opus",             provider:"Anthropic", tier:"premium",   cost:"$$$$" },
   { id:"anthropic/claude-3-haiku",           label:"Claude 3 Haiku",            provider:"Anthropic", tier:"fast",      cost:"$"    },
-  //    OpenAI                                                                 
+  //  OpenAI 
   { id:"openai/gpt-4o",                      label:"GPT-4o",                    provider:"OpenAI",    tier:"premium",   cost:"$$$"  },
   { id:"openai/gpt-4o-mini",                 label:"GPT-4o Mini",               provider:"OpenAI",    tier:"fast",      cost:"$"    },
   { id:"openai/gpt-4-turbo",                 label:"GPT-4 Turbo",               provider:"OpenAI",    tier:"premium",   cost:"$$$"  },
   { id:"openai/o3-mini",                     label:"o3 Mini (Reasoning)",        provider:"OpenAI",    tier:"reasoning", cost:"$$"   },
   { id:"openai/o1",                          label:"o1 (Reasoning)",             provider:"OpenAI",    tier:"reasoning", cost:"$$$$" },
-  //    Google                                                                 
+  //  Google 
   { id:"google/gemini-2.5-pro-preview",      label:"Gemini 2.5 Pro",            provider:"Google",    tier:"premium",   cost:"$$"   },
   { id:"google/gemini-2.0-flash-001",        label:"Gemini 2.0 Flash",          provider:"Google",    tier:"fast",      cost:"$"    },
   { id:"google/gemini-2.0-flash-exp:free",   label:"Gemini 2.0 Flash (Free)",   provider:"Google",    tier:"free",      cost:"FREE" },
   { id:"google/gemini-flash-1.5-8b",         label:"Gemini Flash 1.5 8B",       provider:"Google",    tier:"fast",      cost:"$"    },
-  //    Meta                                                                   
+  //  Meta 
   { id:"meta-llama/llama-3.3-70b-instruct",  label:"Llama 3.3 70B",             provider:"Meta",      tier:"fast",      cost:"$"    },
   { id:"meta-llama/llama-3.1-8b-instruct:free", label:"Llama 3.1 8B (Free)",   provider:"Meta",      tier:"free",      cost:"FREE" },
-  //    Mistral                                                                
+  //  Mistral 
   { id:"mistralai/mistral-large-2411",       label:"Mistral Large 2411",        provider:"Mistral",   tier:"premium",   cost:"$$"   },
   { id:"mistralai/mistral-small-3.1-24b-instruct:free", label:"Mistral Small 3.1 (Free)", provider:"Mistral", tier:"free", cost:"FREE" },
-  //    DeepSeek                                                               
+  //  DeepSeek 
   { id:"deepseek/deepseek-chat-v3-0324",     label:"DeepSeek V3",               provider:"DeepSeek",  tier:"fast",      cost:"$"    },
   { id:"deepseek/deepseek-r1",               label:"DeepSeek R1 (Reasoning)",   provider:"DeepSeek",  tier:"reasoning", cost:"$"    },
   { id:"deepseek/deepseek-r1-zero:free",     label:"DeepSeek R1 Zero (Free)",   provider:"DeepSeek",  tier:"free",      cost:"FREE" },
-  //    Cohere                                                                 
+  //  Cohere 
   { id:"cohere/command-r-plus-08-2024",      label:"Command R+ (Aug 2024)",     provider:"Cohere",    tier:"premium",   cost:"$$"   },
-  //    xAI                                                                    
+  //  xAI 
   { id:"x-ai/grok-3-beta",                   label:"Grok 3 Beta",               provider:"xAI",       tier:"premium",   cost:"$$$"  },
   { id:"x-ai/grok-2-1212",                   label:"Grok 2",                    provider:"xAI",       tier:"premium",   cost:"$$"   },
-  //    Qwen                                                                   
+  //  Qwen 
   { id:"qwen/qwen-2.5-72b-instruct",         label:"Qwen 2.5 72B",              provider:"Alibaba",   tier:"fast",      cost:"$"    },
   { id:"qwen/qwq-32b:free",                  label:"QwQ 32B Reasoning (Free)",  provider:"Alibaba",   tier:"free",      cost:"FREE" },
 ];
@@ -1185,8 +1185,8 @@ const MODELS = [
 const DEFAULT_AGENT_MODEL = "anthropic/claude-sonnet-4-5";
 
 const AGENTS_DEF = [
-  //     1. SOPHIE MERCIER  TaxAgent
-  { id:"TaxAgent", icon:"=i=�", color:"#10B981",
+  //  1. SOPHIE MERCIER  TaxAgent
+  { id:"TaxAgent", icon:"🧾", color:"#10B981",
     personName:{fr:"Sophie Mercier",     en:"Sophie Mercier"},
     personTitle:{fr:"Fiscaliste principale � CPA, M.Fisc.", en:"Senior Tax Specialist � CPA, M.Tax."},
     short:{fr:"Sophie",en:"Sophie"},
@@ -1241,8 +1241,8 @@ I always distinguish federal (CRA) from provincial (Revenu Qu�bec) rules, and 
 I respond in Canadian French or English.`}
   },
 
-  //     2. ALEXANDRE BOUCHARD  AuditAgent
-  { id:"AuditAgent", icon:"=h=�", color:"#3B82F6",
+  //  2. ALEXANDRE BOUCHARD  AuditAgent
+  { id:"AuditAgent", icon:"🔍", color:"#3B82F6",
     personName:{fr:"Alexandre Bouchard", en:"Alexandre Bouchard"},
     personTitle:{fr:"Auditeur certifi� senior � CPA-CA", en:"Senior Certified Auditor � CPA-CA"},
     short:{fr:"Alex",en:"Alex"},
@@ -1300,8 +1300,8 @@ Procedures: Tests of controls vs substantive; ACOMPV assertions; Key areas: inve
 I respond in the user's language.`}
   },
 
-  //     3. NATALIE CHEN  CashFlowAgent
-  { id:"CashFlowAgent", icon:"=i=�", color:"#8B5CF6",
+  //  3. NATALIE CHEN  CashFlowAgent
+  { id:"CashFlowAgent", icon:"💰", color:"#8B5CF6",
     personName:{fr:"Natalie Chen",       en:"Natalie Chen"},
     personTitle:{fr:"Directrice tr�sorerie � CTP", en:"Treasury Director � CTP"},
     short:{fr:"Natalie",en:"Natalie"},
@@ -1355,8 +1355,8 @@ I quantify everything in dollars and days, benchmarked against Quebec sector dat
 I respond in the user's language.`}
   },
 
-  //     4. ISABELLE ROY  ComplianceAgent
-  { id:"ComplianceAgent", icon:"=i�", color:"#F59E0B",
+  //  4. ISABELLE ROY  ComplianceAgent
+  { id:"ComplianceAgent", icon:"⚖️", color:"#F59E0B",
     personName:{fr:"Isabelle Roy",       en:"Isabelle Roy"},
     personTitle:{fr:"Conseill�re conformit� & vie priv�e � LL.M., DPO", en:"Compliance & Privacy Advisor � LL.M., DPO"},
     short:{fr:"Isabelle",en:"Isabelle"},
@@ -1417,8 +1417,8 @@ I distinguish Law 25 (QC) / PIPEDA (federal) / CASL (federal) and flag in-force 
 I respond in the user's language.`}
   },
 
-  //     5. MARC TREMBLAY  FinancialAgent
-  { id:"FinancialAgent", icon:"=h=�", color:"#06B6D4",
+  //  5. MARC TREMBLAY  FinancialAgent
+  { id:"FinancialAgent", icon:"📊", color:"#06B6D4",
     personName:{fr:"Marc Tremblay",      en:"Marc Tremblay"},
     personTitle:{fr:"Analyste financier senior � CFA", en:"Senior Financial Analyst � CFA"},
     short:{fr:"Marc",en:"Marc"},
@@ -1478,8 +1478,8 @@ Valuation: EBITDA multiples 3x-8x; DCF with WACC=[E/(E+D)�Ke]+[D/(E+D)�Kd�
 I respond in the user's language.`}
   },
 
-  //     6. SARAH BLACKWELL  InvestmentAgent
-  { id:"InvestmentAgent", icon:"=i=�", color:"#EC4899",
+  //  6. SARAH BLACKWELL  InvestmentAgent
+  { id:"InvestmentAgent", icon:"📈", color:"#EC4899",
     personName:{fr:"Sarah Blackwell",    en:"Sarah Blackwell"},
     personTitle:{fr:"Analyste investissement & M&A � CFA, MBA", en:"Investment & M&A Analyst � CFA, MBA"},
     short:{fr:"Sarah",en:"Sarah"},
@@ -1551,8 +1551,8 @@ Normalized EBITDA; Net debt (hidden liabilities); NWC normalization; Projection 
 I respond in the user's language.`}
   },
 
-  //     7. JEAN-FRAN�OIS LEBEL  OCRAgent
-  { id:"OCRAgent", icon:">�=,", color:"#F97316",
+  //  7. JEAN-FRAN�OIS LEBEL  OCRAgent
+  { id:"OCRAgent", icon:"📄", color:"#F97316",
     personName:{fr:"Jean-Fran�ois Lebel", en:"Jean-Fran�ois Lebel"},
     personTitle:{fr:"Sp�cialiste extraction & traitement documentaire", en:"Document Extraction & Processing Specialist"},
     short:{fr:"JF",en:"JF"},
@@ -1631,8 +1631,8 @@ I never invent data and always perform arithmetic validations.
 I respond in the user's language.`}
   },
 
-  //     8. �MILIE C�T�  VeilleAgent
-  { id:"VeilleAgent", icon:"=i=�", color:"#14B8A6",
+  //  8. �MILIE C�T�  VeilleAgent
+  { id:"VeilleAgent", icon:"🔔", color:"#14B8A6",
     personName:{fr:"�milie C�t�",        en:"�milie C�t�"},
     personTitle:{fr:"Analyste veille r�glementaire & fiscale", en:"Regulatory & Tax Watch Analyst"},
     short:{fr:"�milie",en:"�milie"},
@@ -1706,8 +1706,8 @@ I only report verified information and prioritize items <3 months old.
 I respond in the user's language.`}
   },
 
-  //     9. PATRICK GAGNON  SubventionsAgent
-  { id:"SubventionsAgent", icon:"=h=�", color:"#A855F7",
+  //  9. PATRICK GAGNON  SubventionsAgent
+  { id:"SubventionsAgent", icon:"🏆", color:"#A855F7",
     personName:{fr:"Patrick Gagnon",     en:"Patrick Gagnon"},
     personTitle:{fr:"Expert financement & subventions publics", en:"Public Financing & Grants Expert"},
     short:{fr:"Patrick",en:"Patrick"},
@@ -1817,7 +1817,7 @@ const agentIcon    = id => agentById(id).icon;
 const agentName    = (id, lang) => agentById(id).personName?.[lang] || agentById(id).id;
 const agentTitle   = (id, lang) => agentById(id).personTitle?.[lang] || "";
 
-//     VECTDOCS-INSPIRED UTILITIES                                              
+//  VECTDOCS-INSPIRED UTILITIES 
 
 // Inspired by VectDocs EmbeddedDocument fileType enum  extended for finance
 const FILE_CATEGORY = ext => {
@@ -1915,7 +1915,7 @@ function uploadStageLabel(progress) {
   return null;
 }
 
-//     SHARED UTILS                                                              
+//  SHARED UTILS 
 const fmtSize = b => { if(!b) return ""; const m=b/1048576; return m>=1?m.toFixed(1)+" MB":Math.round(b/1024)+" KB"; };
 const fmtTime = (iso: string) => { const d=Math.floor((Date.now()-new Date(iso).getTime())/60000); if(d<1)return"� l'instant";if(d<60)return`${d} min`;if(d<1440)return`${Math.floor(d/60)}h`;if(d<2880)return"Hier";return new Date(iso).toLocaleDateString("fr-CA",{day:"numeric",month:"short"}); };
 const genTitle = msg => { const w=msg.replace(/[*#_]/g,"").trim().split(" "); return w.slice(0,7).join(" ")+(w.length>7?"...":""); };
@@ -1941,7 +1941,7 @@ const T = {
   }
 };
 
-//     API                                                                       
+//  API 
 // Standard call  RAG agents (no web search)
 async function callClaude(system, messages, anthropicKey?: string) {
   const key = anthropicKey || '';
@@ -1988,7 +1988,7 @@ async function callClaudeWithWebSearch(system, messages, anthropicKey?: string) 
 // Route to correct API based on agent type and available key
 const WEB_SEARCH_AGENTS = new Set(["VeilleAgent","SubventionsAgent"]);
 
-//     SHARED UTILS                                                              
+//  SHARED UTILS 
 // Web-search-enabled call  VeilleAgent + SubventionsAgent
 // Uses Anthropic web_search tool for real-time information
 // Route to correct API based on agent type and available key
@@ -2308,7 +2308,7 @@ async function routeViaAPI(msg) {
 
 const card = (P, extra={}) => ({ background:P.card, border:`1px solid ${P.border}`, borderRadius:12, ...extra });
 
-//     MOCK DATA                                                                 
+//  MOCK DATA 
 const KNOWLEDGE_DOCS_INIT = [
   {id:"k1",name:"Guide CRA T2  Corporations 2024",   agent:"TaxAgent",        size:"5.1 MB",date:"2024-11-01",chunks:132,type:"pdf", words:49500,language:"fr",preview:"Les soci�t�s canadiennes doivent produire une d�claration T2 dans les six mois suivant la fin de leur exercice. Le pr�sent guide explique les principales d�ductions admissibles...",desc:"Guide officiel ARC d�clarations soci�t�s"},
   {id:"k2",name:"IFRS Normes compl�tes  �dition 2024",agent:"AuditAgent",     size:"12.4 MB",date:"2024-10-15",chunks:310,type:"pdf", words:116250,language:"en",preview:"These standards require entities to present financial statements that fairly represent the financial position and performance of the entity...",desc:"Normes IFRS Foundation  �dition annuelle"},
@@ -2351,16 +2351,16 @@ const DATA_QUALITY = [
   {label:{fr:"Taux d'indexation",       en:"Indexing rate"},            value:"99.2%",trend:"�",    status:"stable"},
 ];
 
-//     ENHANCED UPLOAD ZONE (VectDocs-inspired)                               
+//  ENHANCED UPLOAD ZONE (VectDocs-inspired) 
 
 
-//     ORCHESTRATOR SYSTEM                                                       
+//  ORCHESTRATOR SYSTEM 
 // The orchestrator is the brain of the virtual CPA firm.
 // It analyzes each request, determines the optimal workflow (single/parallel/sequential),
 // assigns the right specialists, coordinates execution, and synthesizes results.
 
 // Execute a workflow plan  returns array of {agentId, name, reply, status}
-//     MOCK DATA                                                                 
+//  MOCK DATA 
 function UploadZone({ color, lang, t, onAdd }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag]   = useState(false);
@@ -2536,7 +2536,7 @@ function UploadZone({ color, lang, t, onAdd }) {
 
 
 
-//     STUDIO AGENTS MAP (for Avatar short codes)                               
+//  STUDIO AGENTS MAP (for Avatar short codes) 
 // Maps AGENTS_DEF ids to studio avatar short codes
 const AGENTS_STUDIO = AGENTS_DEF.map(a => ({
   id: a.id,
@@ -2548,7 +2548,7 @@ const AGENTS_STUDIO = AGENTS_DEF.map(a => ({
 // Map agent IDs to studio agents for Avatar
 const A_STUDIO: Record<string,any> = Object.fromEntries(AGENTS_STUDIO.map(a => [a.id, a]));
 
-//     AVATAR COMPONENT                                                         
+//  AVATAR COMPONENT 
 function Avatar({ agent, size=30, status }: any) {
   return (
     <div className={"avatar " + (status==="busy"?"busy":status==="done"?"done":"")}
@@ -2559,7 +2559,7 @@ function Avatar({ agent, size=30, status }: any) {
   );
 }
 
-//     ROSTER SIDEBAR                                                           
+//  ROSTER SIDEBAR 
 function Roster({ lang, busyIds, doneIds, activeNav, setNav, compact, setCompact, darkMode, setDarkMode, tweaks, setTweak }: any) {
   const navItems: [string,string,any][] = [
     ["studio",   lang==="fr"?"Studio":"Studio",               <svg viewBox="0 0 16 16" className="i"><path d="M2 4h12M2 8h12M2 12h7"/></svg>],
@@ -2638,7 +2638,7 @@ function Roster({ lang, busyIds, doneIds, activeNav, setNav, compact, setCompact
         {!compact && (
           <button onClick={()=>setDarkMode((v: boolean)=>!v)}
             style={{marginLeft:"auto",width:26,height:26,borderRadius:6,border:"1px solid var(--line)",background:"transparent",cursor:"pointer",color:"var(--ink-3)",fontSize:12}}>
-            {darkMode?" ":"<"}
+            {darkMode?"":"<"}
           </button>
         )}
       </div>
@@ -2702,7 +2702,7 @@ function StreamingText({ text, speed=8, onDone }: any) {
   return <span dangerouslySetInnerHTML={{__html: out + (done?"":"<span class=\'cursor\'></span>")}}/>;
 }
 
-//     DEMO WORKFLOW (for non-active state visual)                              
+//  DEMO WORKFLOW (for non-active state visual) 
 const WORKFLOW_STUDIO = [
   { id:"jf-extract", agent:"OCRAgent",      phase:1, task:{fr:"Extraire P&L � 3 ans",     en:"Extract P&L � 3yr"},     dur:1400 },
   { id:"marc-norm",  agent:"FinancialAgent", phase:2, task:{fr:"BAIIA normalis�",           en:"Normalize EBITDA"},       dur:2200 },
@@ -3013,7 +3013,7 @@ function SettingsView({ lang, t, openrouterKey, agentSettings }: any) {
           </div>
         </div>
 
-        {/*    Anthropic API Key (fallback direct)     */}
+        {/*  Anthropic API Key (fallback direct)  */}
         <div className="set-card">
           <div className="set-h">= {fr ? "Cl� API Anthropic (fallback)" : "Anthropic API Key (fallback)"}</div>
           <div className="set-sub">{fr ? "Utilis�e quand aucune cl� OpenRouter n'est configur�e. Requise pour les agents Veille et Subventions." : "Used when no OpenRouter key is configured. Required for Veille and Subventions agents."}</div>
@@ -3058,8 +3058,8 @@ function SettingsView({ lang, t, openrouterKey, agentSettings }: any) {
 }
 
 
-//     ENHANCED UPLOAD ZONE (VectDocs-inspired)                               
-//     DOCUMENTS (VectDocs-enhanced)                                            
+//  ENHANCED UPLOAD ZONE (VectDocs-inspired) 
+//  DOCUMENTS (VectDocs-enhanced) 
 function Documents({ t, P, lang }) {
   const [tab, setTab]       = useState("knowledge");
   const [kDocs, setKDocs]   = useLocalStorage("z12-kdocs", KNOWLEDGE_DOCS_INIT);
@@ -3183,7 +3183,7 @@ function Documents({ t, P, lang }) {
       {/* Search + Sort toolbar  VectDocs-inspired */}
       <div style={{display:"flex",gap:8,marginBottom:12,alignItems:"center"}}>
         <div style={{flex:1,position:"relative"}}>
-          <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:13,color:P.t3}}>=</span>
+          <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:13,color:P.t3}}>🔍</span>
           <input value={search} onChange={e=>{setSearch(e.target.value);setExpanded(null);}}
             placeholder={lang==="fr"?"Rechercher par nom, agent, contenu...":"Search by name, agent, content..."}
             style={{width:"100%",background:P.input,border:`1px solid ${P.border}`,borderRadius:9,padding:"8px 12px 8px 32px",color:P.t1,fontSize:12,outline:"none"}}/>
@@ -3251,7 +3251,7 @@ function Documents({ t, P, lang }) {
 }
 
 
-//     SANDBOX COMPONENT                                                         
+//  SANDBOX COMPONENT 
 async function generateViz(dataText: string, lang: string, openrouterKey: string, agentSettings: any) {
   const SANDBOX_VIZ_PROMPT = {
     fr: `Tu es un expert en visualisation de donn�es financi�res. G�n�re une page HTML COMPL�TE et AUTO-SUFFISANTE avec Chart.js (CDN), tableaux HTML, KPIs, bouton Excel (SheetJS CDN), bouton PDF (window.print). R�ponds UNIQUEMENT avec le HTML complet, commen�ant par <!DOCTYPE html> et finissant par </html>.`,
@@ -3331,7 +3331,7 @@ function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
 
   return (
     <div style={{display:"flex",flex:1,overflow:"hidden"}}>
-      {/*    Left panel: history + input                                  */}
+      {/*  Left panel: history + input  */}
       <div style={{width:240,background:P.sb,borderRight:`1px solid ${P.border}`,display:"flex",flexDirection:"column",flexShrink:0}}>
         <div style={{padding:"14px 14px 10px",borderBottom:`1px solid ${P.border}`}}>
           <div style={{fontSize:14,fontWeight:600,color:P.t1,marginBottom:2}}>
@@ -3382,7 +3382,7 @@ function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
         )}
       </div>
 
-      {/*    Right panel: input + preview                                  */}
+      {/*  Right panel: input + preview  */}
       <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
         {/* Toolbar */}
         <div style={{padding:"10px 14px",background:P.sb,borderBottom:`1px solid ${P.border}`,display:"flex",gap:8,alignItems:"flex-start"}}>
@@ -3463,7 +3463,7 @@ function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
 function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, activeId, setActiveId, setView }: any) {
   const { useState: _s, useEffect: _e, useRef: _r, useMemo: _m, useCallback: _c } = React;
 
-  //    Core state                                                           
+  //  Core state 
   const [msgs,      setMsgs]      = _s<any[]>([]);
   const [input,     setInput]     = _s("");
   const [loading,   setLoading]   = _s(false);
@@ -3480,7 +3480,7 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
   const threadRef  = _r<HTMLDivElement>(null);
   const inputRef   = _r<HTMLTextAreaElement>(null);
 
-  //    Orchestrator welcome                                              
+  //  Orchestrator welcome 
   const orchWelcome = _m(() => [{
     role:"assistant", isOrchestrator:true, ts:Date.now(),
     content: lang==="fr"
@@ -3491,7 +3491,7 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
   _e(() => { if(msgs.length===0) setMsgs(orchWelcome); }, [orchWelcome]);
   _e(() => { threadRef.current?.scrollTo({top:99999,behavior:"smooth"}); }, [msgs, loading]);
 
-  //    Send handler                                                      
+  //  Send handler 
   const send = _c(async () => {
     if (!input.trim() || loading) return;
     const userMsg = {role:"user", content:input, ts:Date.now()};
@@ -3542,7 +3542,7 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
     try { await navigator.clipboard.writeText(text); setCopied(i); setTimeout(()=>setCopied(null),2000); } catch {}
   }, []);
 
-  //    Render helpers                                                    
+  //  Render helpers 
   const renderText = (s: string) => s
     .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
     .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
@@ -3553,14 +3553,14 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
     .replace(/(<li>.*<\/li>)/s,"<ul>$1</ul>")
     .replace(/\n/g,"<br/>");
 
-  //    Compute busy/done sets for roster highlight                       
+  //  Compute busy/done sets for roster highlight 
   const busyIds = _m(() => new Set(wfSteps.filter((s:any) => s.status==="working").map((s:any) => {
     const def = AGENTS_DEF.find((a:any) => a.id === s.agentId);
     return def?.id || s.agentId;
   })), [wfSteps]);
   const doneIds = _m(() => new Set(wfSteps.filter((s:any) => s.status==="done").map((s:any) => s.agentId)), [wfSteps]);
 
-  //    QUICK PROMPTS                                                     
+  //  QUICK PROMPTS 
   const quickPrompts = lang==="fr" ? [
     "<� Analyse compl�te de l\'entreprise",
     "=� Diagnostic financier PME",
@@ -3577,7 +3577,7 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
 
   return (
     <div style={{display:"flex",flex:1,overflow:"hidden",minWidth:0}}>
-      {/*    Studio column: header + scrollable thread + sticky composer    */}
+      {/*  Studio column: header + scrollable thread + sticky composer  */}
       <div className="studio">
         <header className="studio-head">
                   <div className="studio-head-l">
@@ -3759,7 +3759,7 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
         </div>
       </div>
 
-      {/*    Context panel column    */}
+      {/*  Context panel column  */}
       {showRight && (
         <aside className="context">
                   <div className="ctx-tabs">
