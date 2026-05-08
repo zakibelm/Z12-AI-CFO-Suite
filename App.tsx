@@ -1242,7 +1242,7 @@ I respond in Canadian French or English.`}
   },
 
   //  2. ALEXANDRE BOUCHARD — AuditAgent
-  { id:"AuditAgent", icon:"=", color:"#3B82F6",
+  { id:"AuditAgent", icon:"🔍", color:"#3B82F6",
     personName:{fr:"Alexandre Bouchard", en:"Alexandre Bouchard"},
     personTitle:{fr:"Auditeur certifié senior à CPA-CA", en:"Senior Certified Auditor à CPA-CA"},
     short:{fr:"Alex",en:"Alex"},
@@ -3183,7 +3183,7 @@ function Documents({ t, P, lang }) {
       {/* Search + Sort toolbar — VectDocs-inspired */}
       <div style={{display:"flex",gap:8,marginBottom:12,alignItems:"center"}}>
         <div style={{flex:1,position:"relative"}}>
-          <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:13,color:P.t3}}>=</span>
+          <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:13,color:P.t3}}>🔍</span>
           <input value={search} onChange={e=>{setSearch(e.target.value);setExpanded(null);}}
             placeholder={lang==="fr"?"Rechercher par nom, agent, contenu...":"Search by name, agent, content..."}
             style={{width:"100%",background:P.input,border:`1px solid ${P.border}`,borderRadius:9,padding:"8px 12px 8px 32px",color:P.t1,fontSize:12,outline:"none"}}/>
