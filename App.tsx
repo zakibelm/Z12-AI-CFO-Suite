@@ -3219,7 +3219,7 @@ function Documents({ t, P, lang }) {
       {tab === "client" && (
         <>
           <div style={{background:`${P.gold}10`,border:`1px solid ${P.gold}30`,borderRadius:10,padding:"10px 14px",marginBottom:12,display:"flex",gap:9,alignItems:"flex-start"}}>
-            <span><�</span>
+            <span>🗂️</span>
             <div style={{fontSize:12,color:P.t2,lineHeight:1.5}}>{lang==="fr"?"Documents sp�cifiques � chaque client. Les agents les":"Client-specific documents. Agents"} <strong style={{color:P.t1}}>{lang==="fr"?"analysent en les croisant avec les sources m�tier.":"analyze them by cross-referencing knowledge sources."}</strong></div>
           </div>
           <div style={{...card(P),overflow:"hidden"}}>
