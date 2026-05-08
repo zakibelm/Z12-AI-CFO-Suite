@@ -768,7 +768,7 @@ function TweaksPanel({ title = 'Tweaks', noDeckControls = false, children }: any
   // covers TweaksPanel mounting after the message already arrived; the
   // listener covers the common case of mounting first.
   const [railEnabled, setRailEnabled] = React.useState(
-    () => hasDeckStage && !!document.querySelector('deck-stage')?._railEnabled,
+    () => hasDeckStage && !!(document.querySelector('deck-stage') as any)?._railEnabled,
   );
   React.useEffect(() => {
     if (!hasDeckStage || railEnabled) return undefined;
@@ -1850,7 +1850,7 @@ async function extractTextPreview(file) {
     return new Promise(resolve => {
       const r = new FileReader();
       r.onload = e => {
-        const full = e.target.result || "";
+        const full = (e.target?.result as string) || "";
         resolve({ text: full.slice(0, 600), words: full.split(/\s+/).filter(w=>w.length>1).length, source:"client" });
       };
       r.onerror = () => resolve(null);
@@ -1863,7 +1863,7 @@ async function extractTextPreview(file) {
       const r = new FileReader();
       r.onload = e => {
         try {
-          const s = e.target.result || "";
+          const s = (e.target?.result as string) || "";
           // Extract visible text between BT...ET markers and parentheses
           const parens = (s.match(/\(([^)]{3,80})\)/g) || []).map(m => m.slice(1,-1)).filter(t => /[a-zA-ZÀ-ÿ]{3}/.test(t));
           const text = parens.join(" ").replace(/\\n/g," ").replace(/\s{2,}/g," ").slice(0,600);
@@ -1917,7 +1917,7 @@ function uploadStageLabel(progress) {
 
 // ─── SHARED UTILS ─────────────────────────────────────────────────────────────
 const fmtSize = b => { if(!b) return "—"; const m=b/1048576; return m>=1?m.toFixed(1)+" MB":Math.round(b/1024)+" KB"; };
-const fmtTime = iso => { const d=Math.floor((Date.now()-new Date(iso))/60000); if(d<1)return"À l'instant";if(d<60)return`${d} min`;if(d<1440)return`${Math.floor(d/60)}h`;if(d<2880)return"Hier";return new Date(iso).toLocaleDateString("fr-CA",{day:"numeric",month:"short"}); };
+const fmtTime = (iso: string) => { const d=Math.floor((Date.now()-new Date(iso).getTime())/60000); if(d<1)return"À l'instant";if(d<60)return`${d} min`;if(d<1440)return`${Math.floor(d/60)}h`;if(d<2880)return"Hier";return new Date(iso).toLocaleDateString("fr-CA",{day:"numeric",month:"short"}); };
 const genTitle = msg => { const w=msg.replace(/[*#_]/g,"").trim().split(" "); return w.slice(0,7).join(" ")+(w.length>7?"...":""); };
 // Aucune limite de taille — tous les fichiers acceptés sans restriction
 const validateFile = () => null;
@@ -3871,12 +3871,12 @@ export default function Z12CFOSuite() {
 
       {/* Main content area */}
       {view==="dashboard"  && <DashboardView  lang={lang} t={STUDIO_T[lang as "fr"|"en"]}/>}
-      {view==="docs"       && <Documents      lang={lang} P={{}} agentSettings={agentSettings}/>}
+      {view==="docs"       && <Documents      lang={lang} P={{} as any} agentSettings={agentSettings} t={STUDIO_T[lang as "fr"|"en"]} {...{} as any}/>}
       {view==="pipeline"   && <PipelineView   lang={lang} t={STUDIO_T[lang as "fr"|"en"]}/>}
       {view==="governance" && <GovernanceView lang={lang} t={STUDIO_T[lang as "fr"|"en"]}/>}
       {view==="team"       && <TeamView       lang={lang} t={STUDIO_T[lang as "fr"|"en"]}/>}
       {view==="settings"   && <SettingsView   lang={lang} t={STUDIO_T[lang as "fr"|"en"]} openrouterKey={openrouterKey} agentSettings={agentSettings}/>}
-      {view==="sandbox"    && <Sandbox        lang={lang} P={{accent:"var(--accent)",t1:"var(--ink)",t2:"var(--ink-2)",t3:"var(--ink-3)",card:"var(--surface)",border:"var(--line)",input:"var(--surface-2)",sb:"var(--surface)",bg:"var(--bg)"} as any} agentSettings={agentSettings} openrouterKey={openrouterKey as string}/>}
+      {view==="sandbox"    && <Sandbox        lang={lang} P={{accent:"var(--accent)",t1:"var(--ink)",t2:"var(--ink-2)",t3:"var(--ink-3)",card:"var(--surface)",border:"var(--line)",input:"var(--surface-2)",sb:"var(--surface)",bg:"var(--bg)"} as any} agentSettings={agentSettings} openrouterKey={openrouterKey as string} t={STUDIO_T[lang as "fr"|"en"]}/>}
       {(view==="studio" || !["dashboard","docs","pipeline","governance","team","settings","sandbox"].includes(view as string)) && (
         <Studio {...viewProps} setView={setView} P={{}}/>
       )}
