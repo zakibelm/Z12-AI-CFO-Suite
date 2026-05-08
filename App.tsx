@@ -2091,6 +2091,11 @@ Respond ONLY with valid JSON, no text before or after:
 
 // Analyze request and return workflow plan
 async function analyzeWorkflow(query, historyMsgs, lang, openrouterKey) {
+  if (!openrouterKey || !openrouterKey.trim()) {
+    throw new Error(lang === "fr"
+      ? "Clé API OpenRouter manquante. Configurez votre clé dans Paramètres."
+      : "OpenRouter API key missing. Configure your key in Settings.");
+  }
   const system = ORCHESTRATOR_PROMPT[lang] || ORCHESTRATOR_PROMPT.fr;
   const msgs = [
     ...historyMsgs.slice(-4).filter(m=>m.role!=="system"),
@@ -3210,6 +3215,11 @@ function Documents({ t, P, lang }) {
 
 //  SANDBOX COMPONENT 
 async function generateViz(dataText: string, lang: string, openrouterKey: string, agentSettings: any) {
+  if (!openrouterKey || !openrouterKey.trim()) {
+    throw new Error(lang === "fr"
+      ? "Clé API OpenRouter manquante. Allez dans Paramètres pour configurer votre clé."
+      : "OpenRouter API key missing. Go to Settings to configure your key.");
+  }
   const SANDBOX_VIZ_PROMPT = {
     fr: `Tu es un expert en visualisation de données financières. Génère une page HTML COMPLéTE et AUTO-SUFFISANTE avec Chart.js (CDN), tableaux HTML, KPIs, bouton Excel (SheetJS CDN), bouton PDF (window.print). Réponds UNIQUEMENT avec le HTML complet, commenéant par <!DOCTYPE html> et finissant par </html>.`,
     en: `You are a financial data visualization expert. Generate a COMPLETE, SELF-CONTAINED HTML page with Chart.js (CDN), HTML tables, KPI cards, Excel button (SheetJS CDN), PDF button (window.print). Respond ONLY with complete HTML, starting with <!DOCTYPE html> and ending with </html>.`
@@ -3370,7 +3380,7 @@ function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
 
         {/* Viz preview */}
         <div style={{flex:1,overflow:"hidden",position:"relative",background:P.bg}}>
-          {!html && !loading && (
+          {!html && !loading && !error && (
             <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",gap:12,padding:30}}>
               <span style={{fontSize:48}}>📊</span>
               <div style={{fontSize:15,fontWeight:500,color:P.t2,textAlign:"center"}}>
