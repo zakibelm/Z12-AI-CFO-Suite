@@ -9,6 +9,12 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false,
+    chunkSizeWarningLimit: 4000,
+    rollupOptions: {
+      output: {
+        manualChunks: { vendor: ['react', 'react-dom'] }
+      }
+    }
   },
 });
