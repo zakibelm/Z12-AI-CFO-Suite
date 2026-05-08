@@ -13,7 +13,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 4000,
     rollupOptions: {
       output: {
-        manualChunks: { vendor: ['react', 'react-dom'] }
+        // manualChunks disabled to force cache bust
       }
     }
   },

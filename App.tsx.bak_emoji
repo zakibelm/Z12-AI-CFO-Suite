@@ -496,7 +496,7 @@ const STUDIO_T: Record<string,any> = {
     nav_governance:"Gouvernance", nav_agents:"Équipe", nav_settings:"Paramètres",
     sec_workspace:"Espace de travail", sec_team:"Équipe CPA virtuelle",
     thread_title:"Orchestration Studio", thread_meta:"Prêt",
-    placeholder:"Posez une question, déposez un document, ou lancez une analyse...",
+    placeholder:"Posez une question, déposez un document, ou lancez une analyse&",
     quick:["Diagnostic financier complet","Subventions disponibles 2026","Revue conformité Loi 25","Vérifier admissibilité RS&DE"],
     web_on:"Recherche web", rag_on:"RAG documents", send:"Envoyer", attach:"Joindre",
     sources:"Sources", workflow:"Workflow", artifacts:"Artefacts", cost:"Coût session",
@@ -1314,7 +1314,7 @@ I respond in the user's language.`}
 
 ## Mon expertise trésorerie
 **Modélisation des flux** :
-- Rolling forecast 13 semaines : granularité hebdomadaire, hypothèses documentées, variance analysis (réel vs prévu ±5%)
+- Rolling forecast 13 semaines : granularité hebdomadaire, hypothèses documentées, variance analysis (réel vs prévu é5%)
 - Budget trésorerie annuel : mensuel, scénarios base/optimiste/pessimiste
 - Méthode directe (flux par flux) vs indirecte (à partir du résultat net)
 
@@ -1344,7 +1344,7 @@ Je réponds dans la langue de l'utilisateur.`,
       en:`I am Natalie Chen, CTP-certified Treasury Director at this virtual CPA firm, with 12+ years managing treasury and working capital for Quebec SMEs ($5M-$100M revenue).
 
 ## My Expertise
-13-week rolling forecast (weekly, documented assumptions, ±5% variance analysis); Annual cash budget (base/optimistic/pessimistic scenarios); Direct vs indirect method
+13-week rolling forecast (weekly, documented assumptions, é5% variance analysis); Annual cash budget (base/optimistic/pessimistic scenarios); Direct vs indirect method
 
 KPIs: DSO=(AR/Rev)é365 | DPO=(AP/Purchases)é365 | DIO=(Inv/COGS)é365 | CCC=DSO+DIO-DPO | Current>1.5 | Quick>1.0 | D/EBITDA<3-4x | DSCR
 
@@ -1372,7 +1372,7 @@ I respond in the user's language.`}
 - Phase 1 (sept. 2022) : nomination CPO, incidents de confidentialité (registre + formulaire PI-1 CAI), accès et rectification
 - Phase 2 (sept. 2023) : EFVP obligatoire, consentement explicite (art. 12-14), décision automatisée (art. 12.1), portabilité
 - Phase 3 (sept. 2024) : désindexation (art. 28.1), renseignements biométriques, IA/profilage
-- Sanctions CAI : jusqu'à 25M$ ou 4% du CA mondial (art. 90-93)
+- Sanctions CAI : jusqu'é 25M$ ou 4% du CA mondial (art. 90-93)
 
 **PIPEDA** (L.C. 2000, ch. 5) + Projet C-27 (LAPFAP, ATIA, AIDA) :
 - 10 principes équitables (Annexe 1) | Notification atteintes : DORS/2018-64 si risque réel préjudice grave
@@ -1380,7 +1380,7 @@ I respond in the user's language.`}
 
 **CASL** (L.C. 2010, ch. 23 + DORS/2013-221) :
 - Consentement exprés vs implicite — preuve documentée | Désabonnement d 10 jours ouvrables
-- Sanctions CRTC : jusqu'à 10M$ par violation
+- Sanctions CRTC : jusqu'é 10M$ par violation
 
 ## Ma méthodologie EFVP (6 étapes)
 1. Cartographie des flux de données personnelles
@@ -1605,7 +1605,7 @@ I respond in the user's language.`}
 
 ## Mon format de sortie
 1. JSON ou tableau markdown complet avec tous les champs
-2. Rapport de validation : ✅ vérifications OK | N erreurs + calcul attendu
+2. Rapport de validation :  vérifications OK |  erreurs + calcul attendu
 3. Zones problématiques : liste numérotée avec impact
 4. Score de confiance global : HIGH/MEDIUM/LOW avec justification
 
@@ -1624,7 +1624,7 @@ Invoices (number, date, vendor BN, GST# RT0001, QST#, line items, GST 5%, QST 9.
 4) Confidence scoring per field: HIGH/MEDIUM/LOW
 5) Flagging: [ILLEGIBLE] with position; [AMBIGUOUS]; missing required fields; suspicious data
 
-Output: JSON/table + validation report (N/M) + problem areas list + overall confidence
+Output: JSON/table + validation report (/) + problem areas list + overall confidence
 
 I never invent data and always perform arithmetic validations.
 
@@ -1632,7 +1632,7 @@ I respond in the user's language.`}
   },
 
   //  8. éMILIE CéTé — VeilleAgent
-  { id:"VeilleAgent", icon:"👁️", color:"#14B8A6",
+  { id:"VeilleAgent", icon:"=", color:"#14B8A6",
     personName:{fr:"Émilie Côté",        en:"Émilie Côté"},
     personTitle:{fr:"Analyste veille règlementaire & fiscale", en:"Regulatory & Tax Watch Analyst"},
     short:{fr:"Émilie",en:"Émilie"},
@@ -1668,10 +1668,10 @@ J'utilise la recherche web en temps réel pour surveiller :
 
 ## Mon format de rapport
 
-**[Titre de la mise à jour]**
+**=é [Titre de la mise à jour]**
 - **Source** : organisme officiel + URL direct
 - **Date** : publication ou date d'entrée en vigueur
-- **Statut** : [En vigueur] [Projet de loi X] [Consultation publique X] [Adopté, date future ]
+- **Statut** : [En vigueur ] [Projet de loi =é] [Consultation publique =é] [Adopté, date future =é]
 - **Résumé** : 2-3 phrases sur le contenu essentiel
 - **Impact PME québécoises** : conséquences concrétes pour les entreprises
 - **Actions recommandées** : ce que les entreprises doivent faire (délai, priorité)
@@ -1696,9 +1696,9 @@ Financial regulation: AMF Quebec, OSC, CIRO; Bank of Canada — rate decisions, 
 Data protection: CAI — Law 25 decisions; OPC — PIPEDA updates; Bill C-27 progress
 
 ## My Report Format
-**[Update Title]**
+**=é [Update Title]**
 - Source: official body + URL | Date: publication or effective date
-- Status: [In Force] [Bill X] [Public Consultation X] [Adopted, Future Date ]
+- Status: [In Force ] [Bill =é] [Public Consultation =é] [Adopted, Future Date =é]
 - Summary: 2-3 sentences | SME Impact | Recommended actions (deadline, priority) | Risk if no action
 
 I only report verified information and prioritize items <3 months old.
@@ -1723,11 +1723,11 @@ I respond in the user's language.`}
 
 ### Niveau fédéral
 **RS&DE** (Sciences et Recherche & Développement Expérimental) :
-- SPCC : CII 35% jusqu'à 3M$ dépenses admissibles (remboursable) | 15% au-delé
+- SPCC : CII 35% jusqu'é 3M$ dépenses admissibles (remboursable) | 15% au-delé
 - Formulaires T661 + RC4088 | Délai : 18 mois aprés fin exercice
 - CII RS&DE Québec : 14-30% remboursable (CO-1029.8.36.01), cumulable
 
-**IRAP (CNRC)** : Financement jusqu'à 75% des salaires, 50K$-500K$, accompagnement CTI gratuit
+**IRAP (CNRC)** : Financement jusqu'é 75% des salaires, 50K$-500K$, accompagnement CTI gratuit
 
 **Autres** : CanExport PME (50% export, max 50K$) | DEC Québec (prêts + contributions NR) | Fonds technologie propre | FCC (agri-food)
 
@@ -1753,19 +1753,19 @@ BDC (prêts technologie, BDC Capital) | Fondaction CSN | Fonds solidarité FTQ |
 5. Je présente et priorise sous forme de fiches structurées
 
 ## Mon format de fiche programme
-**[Nom officiel du programme]**
+**=é [Nom officiel du programme]**
 | Champ | Détails |
 |---|---|
 | Organisme | Nom + ministére/agence |
 | Niveau | Fédéral / Provincial / Municipal / Para-public |
 | Type | Non remboursable / Remboursable / Crédit d'impôt / Prêt |
-| Montant | Minimum/Maximum ou % dépenses |
+| Montant | MinimumMaximum ou % dépenses |
 | Taux | X% des dépenses admissibles |
 | Critères | Secteur, taille, région, type projet |
 | Dépenses admissibles | Liste détaillée |
 | Date limite | Date ou continu |
 | Lien officiel | URL |
-| ⚠️ Attention | Restrictions, cumul, piéges |
+| é Attention | Restrictions, cumul, piéges |
 
 **Synthèse** : total potentiel = $NR + $R + $crédits | Top 3 prioritaires | Note : consultant certifié recommandé pour RS&DE et >100K$ potentiel
 
@@ -1796,13 +1796,13 @@ Je réponds dans la langue de l'utilisateur.`,
 | Organization | Name + ministry/agency |
 | Level | Federal/Provincial/Municipal/Para-public |
 | Type | Non-repayable/Repayable/Tax credit/Loan/Guarantee |
-| Amount | Min/Max or % of expenses |
+| Amount | MinMax or % of expenses |
 | Rate | X% of eligible expenditures |
 | Key criteria | Sector, size, region, project type |
 | Eligible expenses | Detailed list |
 | Deadline | Date or ongoing |
 | Official link | URL |
-| ⚠️ Watch points | Restrictions, stacking, pitfalls |
+| é Watch points | Restrictions, stacking, pitfalls |
 
 Summary: total potential ($NR + $R + $TaxCredits) | Top 3 priorities | Note: certified consultant recommended for SR&ED and >$100K potential
 
@@ -1834,7 +1834,7 @@ const FILE_CATEGORY = ext => {
   return "unknown";
 };
 
-const typeIcon = ext => ({pdf:"📄",docx:"📄",doc:"📄",xlsx:"📄",xls:"📄",pptx:"📄",ppt:"📄",csv:"📄",txt:"📄",md:"📄",json:"📄",html:"<",xml:"📄",png:"📄",jpg:"📄",jpeg:"📄",gif:"📄",webp:"📄",tiff:"📄",zip:"📄",rar:"📄",msg:"📄",eml:"📄",mp4:"<📄",mp3:"<📄",wav:"<📄"}[ext] || "📄");
+const typeIcon = ext => ({pdf:"📄",docx:"📄",doc:"📄",xlsx:"📄",xls:"📄",pptx:"📄",ppt:"📄",csv:"📄",txt:"📄",md:"📄",json:"📄",html:"<",xml:"📄",png:"📄",jpg:"📄",jpeg:"📄",gif:"📄",webp:"📄",tiff:"📄",zip:"📄",rar:"📄",msg:"📄",eml:"📄",mp4:"<📄",mp3:"<📄",wav:"<📄"}[ext] || "📄");
 
 // Inspired by VectDocs — client-side text extraction for instant preview
 // Decision: only for lightweight text formats; DOCX/PPTX/XLSX stay server-side
@@ -1916,7 +1916,7 @@ function uploadStageLabel(progress) {
 }
 
 //  SHARED UTILS 
-const fmtSize = b => { if(!b) return "~"; const m=b/1048576; return m>=1?m.toFixed(1)+" MB":Math.round(b/1024)+" KB"; };
+const fmtSize = b => { if(!b) return ""; const m=b/1048576; return m>=1?m.toFixed(1)+" MB":Math.round(b/1024)+" KB"; };
 const fmtTime = (iso: string) => { const d=Math.floor((Date.now()-new Date(iso).getTime())/60000); if(d<1)return"é l'instant";if(d<60)return`${d} min`;if(d<1440)return`${Math.floor(d/60)}h`;if(d<2880)return"Hier";return new Date(iso).toLocaleDateString("fr-CA",{day:"numeric",month:"short"}); };
 const genTitle = msg => { const w=msg.replace(/[*#_]/g,"").trim().split(" "); return w.slice(0,7).join(" ")+(w.length>7?"...":""); };
 // Aucune limite de taille — tous les fichiers acceptés sans restriction
@@ -1925,7 +1925,7 @@ const validateFile = () => null;
 const T = {
   fr: { nav:{dashboard:"Dashboard",chat:"Chat IA",documents:"Documents",pipeline:"Pipeline RAG",governance:"Gouvernance",agents:"Agents",settings:"Paramètres"}, lang:"FR", langToggle:"EN",
     dash:{title:"Tableau de bord",updated:"Mis à jour",activity:"Activité récente",calendar:"Calendrier fiscal 2025"},
-    docs:{title:"Gestion documentaire RAG",knowledge:"Sources de connaissance métier",client:"Documents client",upload:"Glissez vos fichiers ici",sub:"Cliquez pour parcourir à Dossier entier à Jusqu'à 500 MB/fichier à Stockage RAG illimité à Tous types",indexed:"✅ Indexé",staServerOnly:"Extraction côté serveur"},
+    docs:{title:"Gestion documentaire RAG",knowledge:"Sources de connaissance métier",client:"Documents client",upload:"Glissez vos fichiers ici",sub:"Cliquez pour parcourir à Dossier entier à Jusqu'é 500 MB/fichier à Stockage RAG illimité à Tous types",indexed:" Indexé",staServerOnly:"Extraction côté serveur"},
     chat:{new:"Nouvelle conversation",send:"Envoyer",copy:"Copier",copied:"Copié !",export:"Exporter",retry:"Réessayer",routing:"Détection agent...",noConv:"Aucune conversation\nCommencez par envoyer un message",resume:"Conversation reprise",autoRouted:"Auto-routé vers"},
     agents:{title:"Annuaire des agents",startConv:"Démarrer une conversation",savePrompt:"Sauvegarder",cancel:"Annuler"},
     pipeline:{title:"Pipeline RAG · Observabilité",availability:"Disponibilité",latency:"Latence",errors:"Erreurs",sla:"✓",lastRun:"Dernier run"},
@@ -1933,7 +1933,7 @@ const T = {
   },
   en: { nav:{dashboard:"Dashboard",chat:"AI Chat",documents:"Documents",pipeline:"RAG Pipeline",governance:"Governance",agents:"Agents",settings:"Settings"}, lang:"EN", langToggle:"FR",
     dash:{title:"Dashboard",updated:"Updated",activity:"Recent activity",calendar:"Fiscal calendar 2025"},
-    docs:{title:"RAG Document Management",knowledge:"Business knowledge sources",client:"Client documents",upload:"Drag your files here",sub:"Click to browse à Folder upload à Up to 500 MB/file à Unlimited RAG storage à All types",indexed:"✅ Indexed",staServerOnly:"Server-side extraction"},
+    docs:{title:"RAG Document Management",knowledge:"Business knowledge sources",client:"Client documents",upload:"Drag your files here",sub:"Click to browse à Folder upload à Up to 500 MB/file à Unlimited RAG storage à All types",indexed:" Indexed",staServerOnly:"Server-side extraction"},
     chat:{new:"New conversation",send:"Send",copy:"Copy",copied:"Copied!",export:"Export",retry:"Retry",routing:"Detecting agent...",noConv:"No conversations\nStart by sending a message",resume:"Conversation resumed",autoRouted:"Auto-routed to"},
     agents:{title:"Agent directory",startConv:"Start a conversation",savePrompt:"Save",cancel:"Cancel"},
     pipeline:{title:"RAG Pipeline — Observability",availability:"Availability",latency:"Latency",errors:"Errors",sla:"SLA",lastRun:"Last run"},
@@ -2005,9 +2005,9 @@ Exemples : "Nouveau projet tech : quelles subventions, quelle structure fiscale,
 
 ## Régles de priorité
 - **URGENT** (=4) : délais règlementaires <30 jours, risques légaux, cotisations imminentes
-- **ÉLEVÉE** (H) : décisions d'affaires importantes, opportunités financières, audit en cours
-- **NORMALE** (M) : analyse stratégique, planification, optimisation
-- **FAIBLE** (L) : veille, information générale, questions de fond
+- **éLEVéE** (=é) : décisions d'affaires importantes, opportunités financières, audit en cours
+- **NORMALE** (=é) : analyse stratégique, planification, optimisation
+- **FAIBLE** (=é) : veille, information générale, questions de fond
 
 ## Régles d'assignation intelligente
 - Toujours mobiliser OCR en PREMIER si un document scanné est mentionné (Jean-François extrait, les autres analysent)
@@ -2064,9 +2064,9 @@ Analyze each user request and decide the optimal processing strategy:
 
 ## Priority Rules
 - **URGENT** (=4): regulatory deadlines <30 days, legal risks
-- **HIGH** (H): important business decisions, active audits
-- **NORMAL** (M): strategic analysis, planning, optimization
-- **LOW** (L): monitoring, general information
+- **HIGH** (=é): important business decisions, active audits
+- **NORMAL** (=é): strategic analysis, planning, optimization
+- **LOW** (=é): monitoring, general information
 
 ## Smart Assignment Rules
 - Always OCR first if scanned document mentioned (JF extracts, others analyze)
@@ -2300,10 +2300,10 @@ const CLIENT_DOCS_INIT = [
 ];
 
 const PIPELINE_DATA = [
-  {id:"bronze",label:"Ingestion (Bronze)",icon:"⚖️",desc:"Upload, validation SHA-256, stockage S3 ca-central-1",metrics:{availability:"99.8%",latency:"1.2s",errors:"0.02%",sla:"✅"},status:"active",lastRun:"Il y a 4 min"},
-  {id:"silver",label:"Traitement (Silver)",icon:"⚖️",desc:"Extraction texte (PyPDF2/python-docx), nettoyage, chunking 500 tokens",metrics:{availability:"99.5%",latency:"3.8s",errors:"0.1%",sla:"✅"},status:"active",lastRun:"Il y a 5 min"},
-  {id:"gold",  label:"Embedding (Gold)",  icon:"(",desc:"HF multilingual-e5-large à pgvector 1024 dims",metrics:{availability:"99.9%",latency:"2.1s",errors:"0.0%",sla:"✅"},status:"active",lastRun:"Il y a 5 min"},
-  {id:"ready", label:"Prêt à l'emploi",   icon:"✅",desc:"search_chunks() à cosine similarity à seuil 0.6 à EVV 9/10",metrics:{availability:"100%",latency:"0.4s",errors:"0.0%",sla:"✅"},status:"completed",lastRun:"En continu"},
+  {id:"bronze",label:"Ingestion (Bronze)",icon:"⚖️",desc:"Upload, validation SHA-256, stockage S3 ca-central-1",metrics:{availability:"99.8%",latency:"1.2s",errors:"0.02%",sla:""},status:"active",lastRun:"Il y a 4 min"},
+  {id:"silver",label:"Traitement (Silver)",icon:"⚖️",desc:"Extraction texte (PyPDF2/python-docx), nettoyage, chunking 500 tokens",metrics:{availability:"99.5%",latency:"3.8s",errors:"0.1%",sla:""},status:"active",lastRun:"Il y a 5 min"},
+  {id:"gold",  label:"Embedding (Gold)",  icon:"(",desc:"HF multilingual-e5-large à pgvector 1024 dims",metrics:{availability:"99.9%",latency:"2.1s",errors:"0.0%",sla:""},status:"active",lastRun:"Il y a 5 min"},
+  {id:"ready", label:"Prêt à l'emploi",   icon:"✅",desc:"search_chunks() à cosine similarity à seuil 0.6 à EVV 9/10",metrics:{availability:"100%",latency:"0.4s",errors:"0.0%",sla:""},status:"completed",lastRun:"En continu"},
 ];
 
 const GOV_POLICIES = [
@@ -2410,7 +2410,7 @@ function UploadZone({ color, lang, t, onAdd }) {
     } catch(e) { if (e.name !== "AbortError") console.error(e); }
   }, [processFiles]);
 
-  const langFlag = l => l === "fr" ? "🇫🇷" : l === "en" ? "🇬🇧" : "";
+  const langFlag = l => l === "fr" ? "<é<é" : l === "en" ? "<é<é" : "";
 
   return (
     <div style={{marginTop:14}}>
@@ -2419,7 +2419,7 @@ function UploadZone({ color, lang, t, onAdd }) {
         onDragOver={e=>{e.preventDefault();setDrag(true);}} onDragLeave={()=>setDrag(false)}
         onClick={()=>inputRef.current?.click()}
         style={{background:drag?`${color}12`:"var(--bg-card)",border:`2px dashed ${drag?color:"var(--bg-border)"}`,borderRadius:14,padding:"22px 20px",textAlign:"center",cursor:"pointer",transition:"all .2s"}}>
-        <div style={{fontSize:28,marginBottom:8}}>{drag?"📂":"📄"}</div>
+        <div style={{fontSize:28,marginBottom:8}}>{drag?"=é":"=é"}</div>
         <div style={{fontSize:14,fontWeight:500,color:drag?color:"var(--t2)",marginBottom:5}}>{t.docs.upload}</div>
         <div style={{fontSize:12,color:"var(--t3)",marginBottom:12}}>{t.docs.sub}</div>        <div style={{display:"flex",flexWrap:"wrap",gap:4,justifyContent:"center",marginBottom:12}}>
           {EXT_PILLS.map(e=><span key={e} style={{fontSize:10,padding:"2px 8px",borderRadius:20,background:`${color}15`,color,border:`1px solid ${color}35`,fontWeight:500}}>{e}</span>)}
@@ -2429,7 +2429,7 @@ function UploadZone({ color, lang, t, onAdd }) {
 
       {/* Folder picker button */}
       <button onClick={pickFolder} style={{width:"100%",marginTop:8,background:"transparent",border:`1px solid var(--bg-border)`,borderRadius:10,padding:"8px 0",color:"var(--t2)",fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-        📂 {lang==="fr"?"Uploader un dossier entier (Chrome/Edge)":"Upload entire folder (Chrome/Edge)"}
+        =é {lang==="fr"?"Uploader un dossier entier (Chrome/Edge)":"Upload entire folder (Chrome/Edge)"}
       </button>
 
       {/* Queue with VectDocs-inspired preview */}
@@ -2476,7 +2476,7 @@ function UploadZone({ color, lang, t, onAdd }) {
                     </div>
                   )}
                   {f.source === "server-only" && f.progress < 100 && (
-                    <div style={{fontSize:10,color:"var(--t3)",marginBottom:5}}>🔒 {t.docs.staServerOnly}</div>
+                    <div style={{fontSize:10,color:"var(--t3)",marginBottom:5}}>=é {t.docs.staServerOnly}</div>
                   )}
 
                   {/* Progress bar with stage label */}
@@ -2492,7 +2492,7 @@ function UploadZone({ color, lang, t, onAdd }) {
                             <div style={{height:"100%",width:`${f.progress}%`,background:color,borderRadius:2,transition:"width .3s"}}/>
                           </div>
                         </div>
-                      : <div style={{fontSize:11,color:"#10B981",fontWeight:500}}>✅ {t.docs.indexed} — {f.ext.toUpperCase()} à {f.estChunks} chunks</div>
+                      : <div style={{fontSize:11,color:"#10B981",fontWeight:500}}> {t.docs.indexed} — {f.ext.toUpperCase()} à {f.estChunks} chunks</div>
                   }
                 </div>
               </div>
@@ -2622,7 +2622,7 @@ function PlanCell({ agent, task, status }) {
     <div className={"plan-cell " + (status||"")}>
       <Avatar agent={agent} size={20} status={status==="busy"?"busy":null}/>
       <span className="plan-cell-name">{agent.short==="JF"?"JF Lebel":agent.name.split(" ")[0]}</span>
-      <span className="plan-cell-task">• {task}</span>
+      <span className="plan-cell-task"> {task}</span>
     </div>
   );
 }
@@ -2645,7 +2645,7 @@ function PhasePlan({ lang, t, phaseStatus, taskStatus }: any) {
                   <div key={w.id} className={`plan-cell ${status==="busy"?"busy":status==="done"?"done":""}`}>
                     <Avatar agent={sa} size={20} status={status==="busy"?"busy":null}/>
                     <span className="plan-cell-name">{sa.name.split(" ")[0]}</span>
-                    <span className="plan-cell-task">• {w.task[lang]}</span>
+                    <span className="plan-cell-task"> {w.task[lang]}</span>
                   </div>
                 );
               })}
@@ -2701,10 +2701,10 @@ function DashboardView({lang, t}) {
         actions={<><button className="btn">{fr?"Exporter":"Export"}</button><button className="btn btn-primary">+ {fr?"Nouvelle analyse":"New analysis"}</button></>}/>
       <div className="page-body">
         <div className="dash-grid">
-          <div className="tile"><div className="tile-label">{fr?"Conversations":"Conversations"}</div><div className="tile-val">147</div><div className="tile-foot"><span className="tile-delta">↑ 23%</span><span>📅 {fr?"30 derniers jours":"last 30 days"}</span></div><Spark/></div>
-          <div className="tile"><div className="tile-label">{fr?"Documents indexés":"Indexed documents"}</div><div className="tile-val">412</div><div className="tile-foot"><span className="tile-delta">↑ 8</span><span>📅 {fr?"cette semaine":"this week"}</span></div><Spark color="var(--gold)"/></div>
+          <div className="tile"><div className="tile-label">{fr?"Conversations":"Conversations"}</div><div className="tile-val">147</div><div className="tile-foot"><span className="tile-delta">é 23%</span><span>é {fr?"30 derniers jours":"last 30 days"}</span></div><Spark/></div>
+          <div className="tile"><div className="tile-label">{fr?"Documents indexés":"Indexed documents"}</div><div className="tile-val">412</div><div className="tile-foot"><span className="tile-delta">é 8</span><span>é {fr?"cette semaine":"this week"}</span></div><Spark color="var(--gold)"/></div>
           <div className="tile"><div className="tile-label">{fr?"Workflows à mai":"Workflows à May"}</div><div className="tile-val">52</div><div className="tile-foot"><span style={{color:"var(--ink-3)"}}>{fr?"38 hybrid à 14 single":"38 hybrid à 14 single"}</span></div><Spark/></div>
-          <div className="tile"><div className="tile-label">{fr?"Coût à mai":"Cost à May"}</div><div className="tile-val">38,40 $</div><div className="tile-foot"><span className="tile-delta neg">↓ 12%</span><span>↓ vs avril</span></div><Spark color="var(--warn)"/></div>
+          <div className="tile"><div className="tile-label">{fr?"Coût à mai":"Cost à May"}</div><div className="tile-val">38,40 $</div><div className="tile-foot"><span className="tile-delta neg">é 12%</span><span>é vs avril</span></div><Spark color="var(--warn)"/></div>
         </div>
 
         <div className="col-2">
@@ -2716,7 +2716,7 @@ function DashboardView({lang, t}) {
                 {d:"15",m:"JUN",name:fr?"Remise TPS/TVQ — déclarants mensuels":"GST/QST remittance — monthly filers",info:fr?"7 clients à 29 jours":"7 clients à 29 days",t:"",tag:"TPS"},
                 {d:"30",m:"JUN",name:fr?"T2 — fin d'exercice 31 décembre":"T2 — Dec 31 year-end",info:fr?"2 clients à 44 jours":"2 clients à 44 days",t:"",tag:"T2"},
                 {d:"31",m:fr?"JUL":"JUL",name:fr?"RS&DE T661 — délai 18 mois":"SR&ED T661 — 18-month deadline",info:fr?"1 client à 75 jours à ~85 K$":"1 client à 75 days à ~$85K",t:"",tag:"R&D"},
-                {d:"15",m:fr?"AOÛT":"AUG",name:fr?"Acompte T1 personnel":"Personal T1 instalment",info:fr?"4 clients à 90 jours":"4 clients à 90 days",t:"",tag:"T1"},
+                {d:"15",m:fr?"AOé":"AUG",name:fr?"Acompte T1 personnel":"Personal T1 instalment",info:fr?"4 clients à 90 jours":"4 clients à 90 days",t:"",tag:"T1"},
               ].map((r,i)=>(
                 <div className="cal-row" key={i}>
                   <div className="cal-date">{r.d}<small>{r.m}</small></div>
@@ -2872,7 +2872,7 @@ function GovernanceView({lang, t}) {
               <div className="gov-list">
                 {c.items.map((i,k)=>(
                   <div className="gov-item" key={k}>
-                    <span className={"gov-check " + i[0]}>{i[0]==="ok"?"✅":i[0]==="warn"?"!":"é"}</span>
+                    <span className={"gov-check " + i[0]}>{i[0]==="ok"?"":i[0]==="warn"?"!":"é"}</span>
                     <span>{i[1]}</span>
                   </div>
                 ))}
@@ -2896,7 +2896,7 @@ function GovernanceView({lang, t}) {
                   <div className="conv-title"><span className="mono" style={{color:"var(--ink-3)",marginRight:8}}>{r.a.toUpperCase()}</span>{r.res}</div>
                   <div className="conv-info">{A[r.who].name} à {r.t}</div>
                 </div>
-                <span className="cal-tag">SHA-256 📋</span>
+                <span className="cal-tag">SHA-256 </span>
               </div>
             ))}
           </div>
@@ -2924,7 +2924,7 @@ function TeamView({lang, t}) {
               <div className="team-domain">{AGENTS_DEF.find(d=>d.id===a.id)?.domain?.[lang]||""}</div>
               <div className="team-foot">
                 <span className="team-model">{AGENTS_DEF.find(d=>d.id===a.id)?.webSearch?"sonnet-4-5 + <":"sonnet-4-5"}</span>
-                <button className="team-edit">{fr?"éditer prompt ✏️":"Edit prompt ✏️"}</button>
+                <button className="team-edit">{fr?"éditer prompt é":"Edit prompt é"}</button>
               </div>
             </div>
           ))}
@@ -2947,7 +2947,7 @@ function SettingsView({ lang, t, openrouterKey, agentSettings }: any) {
     setTesting(true); setTestResult("");
     try {
       const r = await fetch("https://openrouter.ai/api/v1/models",{headers:{Authorization:`Bearer ${key}`}});
-      if (r.ok) setTestResult(fr?"✅ Connexion réussie":"✅ Connection successful");
+      if (r.ok) setTestResult(fr?" Connexion réussie":" Connection successful");
       else setTestResult(fr?"L Clé invalide":"L Invalid key");
     } catch { setTestResult(fr?"L Erreur réseau":"L Network error"); }
     setTesting(false);
@@ -3051,7 +3051,7 @@ function Documents({ t, P, lang }) {
   const totalKChunks = useMemo(() => kDocs.reduce((s,d)=>s+d.chunks,0), [kDocs]);
   const totalCChunks = useMemo(() => cDocs.reduce((s,d)=>s+d.chunks,0), [cDocs]);
 
-  const langFlag = l => l==="fr"?"🇫🇷":l==="en"?"🇬🇧":"";
+  const langFlag = l => l==="fr"?"<é<é":l==="en"?"<é<é":"";
 
   const DocRow = useCallback(({ doc, onDel }) => {
     const isExp = expanded === doc.id;
@@ -3071,9 +3071,9 @@ function Documents({ t, P, lang }) {
           <span style={{fontSize:11,color:ac,fontWeight:500}}>{doc.agent?.replace("Agent","")}</span>
           <span style={{fontSize:11,color:P.t2,fontFamily:"'DM Mono',monospace"}}>{doc.size}</span>
           <span style={{fontSize:11,color:P.t2,fontFamily:"'DM Mono',monospace"}}>{doc.chunks}</span>
-          <span style={{fontSize:10,padding:"3px 7px",borderRadius:20,background:`${P.accent}18`,color:P.accent,fontWeight:500,whiteSpace:"nowrap"}}>✅ {lang==="fr"?"indexé":"indexed"}</span>
+          <span style={{fontSize:10,padding:"3px 7px",borderRadius:20,background:`${P.accent}18`,color:P.accent,fontWeight:500,whiteSpace:"nowrap"}}> {lang==="fr"?"indexé":"indexed"}</span>
           <button onClick={e=>{e.stopPropagation();if(window.confirm(lang==="fr"?`Supprimer "${doc.name}" ?`:`Delete "${doc.name}"?`))onDel(doc.id);}}
-            style={{background:"transparent",border:"none",color:P.t3,fontSize:13,cursor:"pointer",padding:0,lineHeight:1}}>🗑</button>
+            style={{background:"transparent",border:"none",color:P.t3,fontSize:13,cursor:"pointer",padding:0,lineHeight:1}}>=é</button>
         </div>
 
         {/* VectDocs-inspired: expandable preview panel */}
@@ -3082,10 +3082,10 @@ function Documents({ t, P, lang }) {
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:10,marginBottom:12}}>
               {[
                 {l:lang==="fr"?"Agent":"Agent",v:`${agentIcon(doc.agent)} ${doc.agent?.replace("Agent","")}`,c:ac},
-                {l:lang==="fr"?"Mots":"Words",v:doc.words?.toLocaleString()||"—",c:P.t1},
+                {l:lang==="fr"?"Mots":"Words",v:doc.words?.toLocaleString()||"",c:P.t1},
                 {l:"Chunks",v:doc.chunks,c:P.t1},
-                {l:lang==="fr"?"Langue":"Language",v:doc.language==="fr"?"Franéais":doc.language==="en"?"English":"—",c:P.t1},
-                {l:lang==="fr"?"Type":"Type",v:doc.type?.toUpperCase()||"—",c:P.t1},
+                {l:lang==="fr"?"Langue":"Language",v:doc.language==="fr"?"Franéais":doc.language==="en"?"English":"",c:P.t1},
+                {l:lang==="fr"?"Type":"Type",v:doc.type?.toUpperCase()||"",c:P.t1},
                 {l:"Date",v:doc.date,c:P.t1},
               ].map(s=>(
                 <div key={s.l} style={{background:P.card,borderRadius:8,padding:"8px 10px",border:`1px solid ${P.border}`}}>
@@ -3109,20 +3109,20 @@ function Documents({ t, P, lang }) {
   }, [expanded, P, lang]);
 
   const tabs = [
-    {id:"knowledge",icon:"📚",label:t.docs.knowledge,count:filteredK.length,total:kDocs.length,color:P.blue},
-    {id:"client",   icon:"📁",label:t.docs.client,   count:filteredC.length,total:cDocs.length,color:P.gold},
+    {id:"knowledge",icon:"=é",label:t.docs.knowledge,count:filteredK.length,total:kDocs.length,color:P.blue},
+    {id:"client",   icon:"<é",label:t.docs.client,   count:filteredC.length,total:cDocs.length,color:P.gold},
   ];
 
   return (
     <div style={{padding:26,overflowY:"auto",flex:1}}>
       <h1 style={{fontSize:20,fontWeight:600,color:P.t1,fontFamily:"'Playfair Display',Georgia,serif",marginBottom:4}}>{t.docs.title}</h1>
       <p style={{fontSize:13,color:P.t2,marginBottom:14}}>
-        {kDocs.length} {lang==="fr"?"sources métier":"knowledge sources"} ({totalKChunks.toLocaleString()} chunks) à {cDocs.length} {lang==="fr"?"docs client":"client docs"} ({totalCChunks.toLocaleString()} chunks) à pgvector 1024 dims à <strong style={{color:P.t1}}>{lang==="fr"?"Jusqu'à 500 MB/fichier à Stockage RAG illimité":"Up to 500 MB/file à Unlimited RAG storage"}</strong>
+        {kDocs.length} {lang==="fr"?"sources métier":"knowledge sources"} ({totalKChunks.toLocaleString()} chunks) à {cDocs.length} {lang==="fr"?"docs client":"client docs"} ({totalCChunks.toLocaleString()} chunks) à pgvector 1024 dims à <strong style={{color:P.t1}}>{lang==="fr"?"Jusqu'é 500 MB/fichier à Stockage RAG illimité":"Up to 500 MB/file à Unlimited RAG storage"}</strong>
       </p>
 
       {/* Stats */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:16}}>
-        {[{icon:"📚",val:kDocs.length,l:lang==="fr"?"Sources métier":"Knowledge",c:P.blue},{icon:"📁",val:cDocs.length,l:lang==="fr"?"Docs client":"Client docs",c:P.gold},{icon:"🔢",val:(totalKChunks+totalCChunks).toLocaleString(),l:"Vecteurs pgvector",c:P.accent},{icon:"~",val:lang==="fr"?"Illimité":"Unlimited",l:lang==="fr"?"Stockage RAG":"RAG storage",c:P.violet}].map(s=>(
+        {[{icon:"=é",val:kDocs.length,l:lang==="fr"?"Sources métier":"Knowledge",c:P.blue},{icon:"<é",val:cDocs.length,l:lang==="fr"?"Docs client":"Client docs",c:P.gold},{icon:"é",val:(totalKChunks+totalCChunks).toLocaleString(),l:"Vecteurs pgvector",c:P.accent},{icon:"~",val:lang==="fr"?"Illimité":"Unlimited",l:lang==="fr"?"Stockage RAG":"RAG storage",c:P.violet}].map(s=>(
           <div key={s.l} style={{...card(P),padding:"10px 12px"}}><div style={{fontSize:16,marginBottom:4}}>{s.icon}</div><div style={{fontSize:18,fontWeight:600,color:s.c,fontFamily:"'DM Mono',monospace"}}>{s.val}</div><div style={{fontSize:11,color:P.t2,marginTop:2}}>{s.l}</div></div>
         ))}
       </div>
@@ -3147,8 +3147,8 @@ function Documents({ t, P, lang }) {
         </div>
         <select value={sort} onChange={e=>setSort(e.target.value)}
           style={{background:P.input,border:`1px solid ${P.border}`,borderRadius:9,padding:"8px 10px",color:P.t2,fontSize:12,cursor:"pointer",outline:"none",flexShrink:0}}>
-          <option value="date-desc">{lang==="fr"?"Date":"Date"}</option>
-          <option value="date-asc">{lang==="fr"?"Date":"Date"}</option>
+          <option value="date-desc">{lang==="fr"?"Date é":"Date é"}</option>
+          <option value="date-asc">{lang==="fr"?"Date é":"Date é"}</option>
           <option value="name">{lang==="fr"?"Nom A-Z":"Name A-Z"}</option>
           <option value="chunks">Chunks é</option>
           <option value="size">{lang==="fr"?"Taille é":"Size é"}</option>
@@ -3160,7 +3160,7 @@ function Documents({ t, P, lang }) {
       {tab === "knowledge" && (
         <>
           <div style={{background:`${P.blue}10`,border:`1px solid ${P.blue}30`,borderRadius:10,padding:"10px 14px",marginBottom:12,display:"flex",gap:9,alignItems:"flex-start"}}>
-            <span>✅</span>
+            <span>=é</span>
             <div style={{fontSize:12,color:P.t2,lineHeight:1.5}}>{lang==="fr"?"Socle de connaissances permanentes des agents. Consulté via RAG pour":"Permanent agent knowledge base. Consulted via RAG to"} <strong style={{color:P.t1}}>{lang==="fr"?"appuyer et valider":"support and validate"}</strong> {lang==="fr"?"les analyses des documents client.":"client document analyses."}</div>
           </div>
           <div style={{...card(P),overflow:"hidden"}}>
@@ -3176,7 +3176,7 @@ function Documents({ t, P, lang }) {
       {tab === "client" && (
         <>
           <div style={{background:`${P.gold}10`,border:`1px solid ${P.gold}30`,borderRadius:10,padding:"10px 14px",marginBottom:12,display:"flex",gap:9,alignItems:"flex-start"}}>
-            <span></span>
+            <span>=é</span>
             <div style={{fontSize:12,color:P.t2,lineHeight:1.5}}>{lang==="fr"?"Documents spécifiques à chaque client. Les agents les":"Client-specific documents. Agents"} <strong style={{color:P.t1}}>{lang==="fr"?"analysent en les croisant avec les sources métier.":"analyze them by cross-referencing knowledge sources."}</strong></div>
           </div>
           <div style={{...card(P),overflow:"hidden"}}>
@@ -3193,7 +3193,7 @@ function Documents({ t, P, lang }) {
       {/* Flow legend */}
       <div style={{...card(P),padding:"12px 16px",marginTop:14,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
         <span style={{fontSize:12,fontWeight:500,color:P.t2,flexShrink:0}}>Flux RAG :</span>
-        {[{icon:"📚",l:lang==="fr"?"Sources métier":"Knowledge",c:P.blue},{icon:"📚",l:"search_chunks()",c:P.accent},{icon:"📁",l:lang==="fr"?"Docs client":"Client docs",c:P.gold},{icon:">",l:"LLM",c:P.violet}].map((s,i)=>(
+        {[{icon:"=é",l:lang==="fr"?"Sources métier":"Knowledge",c:P.blue},{icon:"é",l:"search_chunks()",c:P.accent},{icon:"<é",l:lang==="fr"?"Docs client":"Client docs",c:P.gold},{icon:">",l:"LLM",c:P.violet}].map((s,i)=>(
           <div key={s.l} style={{display:"flex",alignItems:"center",gap:5}}>
             {i>0&&<span style={{color:P.t3,fontSize:12}}>é</span>}
             <div style={{display:"flex",alignItems:"center",gap:5,padding:"4px 9px",background:`${s.c}10`,border:`1px solid ${s.c}30`,borderRadius:8}}>
@@ -3248,16 +3248,16 @@ function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const QUICK_VIZ = lang==="fr" ? [
-    { label:"📊 Ratios financiers PME",        prompt:"Génère une visualisation des ratios financiers typiques d'une PME québécoise du secteur manufacturier : Ratio courant 1.8, Quick ratio 1.2, D/BAIIA 2.4, Marge BAIIA 18%, ROE 22%, Marge nette 8%. Compare avec les benchmarks sectoriels BDC." },
-    { label:"📊 Cash Flow 13 semaines",         prompt:"Visualise un forecast de trésorerie sur 13 semaines pour une PME : semaines 1-3 positif (+45K, +32K, +28K), semaine 4-5 négatif (-15K, -42K), semaines 6-8 recovery (+12K, +35K, +55K), semaines 9-13 stable (+28K, +31K, +29K, +33K, +38K). Solde initial 85K$. Marque la zone de tension en rouge." },
-    { label:"📊 Analyse investissement DCF",    prompt:"Visualise une analyse DCF : projections FCF sur 5 ans (280K, 320K, 375K, 430K, 495K$), taux d'actualisation 12%, valeur terminale 3.8M$, VAN totale 2.9M$. Montre aussi l'analyse de sensibilité WACC (10%, 12%, 14%) à taux de croissance terminal (2%, 3%, 4%)." },
-    { label:"💰 Subventions disponibles",       prompt:"Crée un tableau de comparaison des subventions disponibles pour une PME tech IA Québec : SR&DE fédéral 35% (max 185K$), CDAE Québec 30% (max 90K$), IRAP CNRC 75% salaires (max 200K$), Essor IQ prêt 500K$, CanExport 50% (max 50K$). Inclus un graphique donut du potentiel total." },
-    { label:"⚖️ Conformité Loi 25",             prompt:"Visualise le statut de conformité Loi 25 d'une PME : Phase 1 (Conforme), Phase 2 EFVP manquante (é compléter), Phase 3 (Non applicable). Score global 65/100. Avec tableau des actions prioritaires et délais." },
+    { label:"=é Ratios financiers PME",        prompt:"Génère une visualisation des ratios financiers typiques d'une PME québécoise du secteur manufacturier : Ratio courant 1.8, Quick ratio 1.2, D/BAIIA 2.4, Marge BAIIA 18%, ROE 22%, Marge nette 8%. Compare avec les benchmarks sectoriels BDC." },
+    { label:"=é Cash Flow 13 semaines",         prompt:"Visualise un forecast de trésorerie sur 13 semaines pour une PME : semaines 1-3 positif (+45K, +32K, +28K), semaine 4-5 négatif (-15K, -42K), semaines 6-8 recovery (+12K, +35K, +55K), semaines 9-13 stable (+28K, +31K, +29K, +33K, +38K). Solde initial 85K$. Marque la zone de tension en rouge." },
+    { label:"=é Analyse investissement DCF",    prompt:"Visualise une analyse DCF : projections FCF sur 5 ans (280K, 320K, 375K, 430K, 495K$), taux d'actualisation 12%, valeur terminale 3.8M$, VAN totale 2.9M$. Montre aussi l'analyse de sensibilité WACC (10%, 12%, 14%) à taux de croissance terminal (2%, 3%, 4%)." },
+    { label:"<é Subventions disponibles",       prompt:"Crée un tableau de comparaison des subventions disponibles pour une PME tech IA Québec : SR&DE fédéral 35% (max 185K$), CDAE Québec 30% (max 90K$), IRAP CNRC 75% salaires (max 200K$), Essor IQ prêt 500K$, CanExport 50% (max 50K$). Inclus un graphique donut du potentiel total." },
+    { label:"é Conformité Loi 25",             prompt:"Visualise le statut de conformité Loi 25 d'une PME : Phase 1 (Conforme ), Phase 2 EFVP manquante (é compléter é), Phase 3 (Non applicable ). Score global 65/100. Avec tableau des actions prioritaires et délais." },
   ] : [
-    { label:"📊 SME Financial Ratios",          prompt:"Generate a visualization of typical Quebec manufacturing SME financial ratios: Current ratio 1.8, Quick ratio 1.2, D/EBITDA 2.4, EBITDA margin 18%, ROE 22%, Net margin 8%. Compare with BDC sector benchmarks." },
-    { label:"📊 13-Week Cash Flow",             prompt:"Visualize a 13-week cash forecast for an SME: weeks 1-3 positive (+45K, +32K, +28K), week 4-5 negative (-15K, -42K), weeks 6-8 recovery (+12K, +35K, +55K), weeks 9-13 stable (+28K, +31K, +29K, +33K, +38K). Opening balance $85K. Highlight stress zone in red." },
-    { label:"📊 DCF Investment Analysis",       prompt:"Visualize a DCF analysis: 5-year FCF projections ($280K, $320K, $375K, $430K, $495K), 12% discount rate, terminal value $3.8M, total NPV $2.9M. Also show WACC sensitivity (10%, 12%, 14%) à terminal growth rate (2%, 3%, 4%)." },
-    { label:"💰 Available Grants",              prompt:"Create a comparison table of available grants for a Quebec AI tech SME: Federal SR&ED 35% (max $185K), Quebec CDAE 30% (max $90K), NRC IRAP 75% salaries (max $200K), IQ Essor loan $500K, CanExport 50% (max $50K). Include donut chart of total potential." },
+    { label:"=é SME Financial Ratios",          prompt:"Generate a visualization of typical Quebec manufacturing SME financial ratios: Current ratio 1.8, Quick ratio 1.2, D/EBITDA 2.4, EBITDA margin 18%, ROE 22%, Net margin 8%. Compare with BDC sector benchmarks." },
+    { label:"=é 13-Week Cash Flow",             prompt:"Visualize a 13-week cash forecast for an SME: weeks 1-3 positive (+45K, +32K, +28K), week 4-5 negative (-15K, -42K), weeks 6-8 recovery (+12K, +35K, +55K), weeks 9-13 stable (+28K, +31K, +29K, +33K, +38K). Opening balance $85K. Highlight stress zone in red." },
+    { label:"=é DCF Investment Analysis",       prompt:"Visualize a DCF analysis: 5-year FCF projections ($280K, $320K, $375K, $430K, $495K), 12% discount rate, terminal value $3.8M, total NPV $2.9M. Also show WACC sensitivity (10%, 12%, 14%) à terminal growth rate (2%, 3%, 4%)." },
+    { label:"<é Available Grants",              prompt:"Create a comparison table of available grants for a Quebec AI tech SME: Federal SR&ED 35% (max $185K), Quebec CDAE 30% (max $90K), NRC IRAP 75% salaries (max $200K), IQ Essor loan $500K, CanExport 50% (max $50K). Include donut chart of total potential." },
   ];
 
   const generate = async (prompt?: string) => {
@@ -3292,7 +3292,7 @@ function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
       <div style={{width:240,background:P.sb,borderRight:`1px solid ${P.border}`,display:"flex",flexDirection:"column",flexShrink:0}}>
         <div style={{padding:"14px 14px 10px",borderBottom:`1px solid ${P.border}`}}>
           <div style={{fontSize:14,fontWeight:600,color:P.t1,marginBottom:2}}>
-            📊 {lang==="fr"?"Sandbox IA":"AI Sandbox"}
+            =é {lang==="fr"?"Sandbox IA":"AI Sandbox"}
           </div>
           <div style={{fontSize:11,color:P.t2}}>
             {lang==="fr"?"Tableaux à Graphiques à Export":"Tables à Charts à Export"}
@@ -3351,17 +3351,17 @@ function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
           <div style={{display:"flex",flexDirection:"column",gap:6,flexShrink:0}}>
             <button onClick={()=>generate()} disabled={loading||!input.trim()}
               style={{background:loading||!input.trim()?P.border:"#10B981",border:"none",borderRadius:10,padding:"9px 16px",color:"#fff",fontSize:12,fontWeight:500,cursor:loading||!input.trim()?"not-allowed":"pointer",whiteSpace:"nowrap"}}>
-              {loading?(lang==="fr"?"Génération...":"Generating..."):(lang==="fr"?"⚡ Génèrer":"⚡ Generate")}
+              {loading?(lang==="fr"?"Génération...":"Generating..."):(lang==="fr"?"=é Génèrer":"=é Generate")}
             </button>
             {html && (
               <>
                 <button onClick={downloadPDF}
                   style={{background:"transparent",border:`1px solid ${P.border}`,borderRadius:10,padding:"7px 10px",color:P.t2,fontSize:11,cursor:"pointer",whiteSpace:"nowrap"}}>
-                  📄 PDF
+                  =é PDF
                 </button>
                 <button onClick={openFull}
                   style={{background:"transparent",border:`1px solid ${P.border}`,borderRadius:10,padding:"7px 10px",color:P.t2,fontSize:11,cursor:"pointer",whiteSpace:"nowrap"}}>
-                  📂 {lang==="fr"?"Ouvrir":"Open"}
+                  = {lang==="fr"?"Ouvrir":"Open"}
                 </button>
               </>
             )}
@@ -3372,7 +3372,7 @@ function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
         <div style={{flex:1,overflow:"hidden",position:"relative",background:P.bg}}>
           {!html && !loading && (
             <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",gap:12,padding:30}}>
-              <span style={{fontSize:48}}>📊</span>
+              <span style={{fontSize:48}}>=é</span>
               <div style={{fontSize:15,fontWeight:500,color:P.t2,textAlign:"center"}}>
                 {lang==="fr"?"Choisissez un rapport rapide ou décrivez vos données":"Choose a quick report or describe your data"}
               </div>
@@ -3441,8 +3441,8 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
   const orchWelcome = _m(() => [{
     role:"assistant", isOrchestrator:true, ts:Date.now(),
     content: lang==="fr"
-      ? "🏢 **Orchestrateur — Bureau CPA Virtuel**\n\nBonjour ! Je coordonne une Équipe de **9 spécialistes CPA** à votre service :\n\n👩 **Sophie** à Fiscaliste  |  👨 **Alexandre** à Auditeur  |  👩 **Natalie** à Trésorerie\n👩 **Isabelle** à Conformité  |  👨 **Marc** à Analyse financière  |  👩 **Sarah** à Investissement\n📄 **Jean-François** à OCR  |  👩 **Émilie** à Veille  |  👨 **Patrick** à Subventions\n\nDécrivez votre demande — j\'analyse et j\'assigne les spécialistes appropriés."
-      : "🏢 **Orchestrator — Virtual CPA Firm**\n\nHello! I coordinate a team of **9 CPA specialists** at your service:\n\n👩 **Sophie** à Tax  |  👨 **Alexandre** à Audit  |  👩 **Natalie** à Treasury\n👩 **Isabelle** à Compliance  |  👨 **Marc** à Financial analysis  |  👩 **Sarah** à Investment\n📄 **Jean-François** à OCR  |  👩 **Émilie** à Watch  |  👨 **Patrick** à Grants\n\nDescribe your request — I\'ll analyze and assign the most appropriate specialist(s)."
+      ? "<é **Orchestrateur — Bureau CPA Virtuel**\n\nBonjour ! Je coordonne une Équipe de **9 spécialistes CPA** à votre service :\n\n=i\u200d=é **Sophie** à Fiscaliste  |  =h\u200d=é **Alexandre** à Auditeur  |  =i\u200d=é **Natalie** à Trésorerie\n=i\u200dé **Isabelle** à Conformité  |  =h\u200d=é **Marc** à Analyse financière  |  =i\u200d=é **Sarah** à Investissement\n>é\u200d=, **Jean-François** à OCR  |  =i\u200d=é **Émilie** à Veille  |  =h\u200d=é **Patrick** à Subventions\n\nDécrivez votre demande — j\'analyse et j\'assigne les spécialistes appropriés."
+      : "<é **Orchestrator — Virtual CPA Firm**\n\nHello! I coordinate a team of **9 CPA specialists** at your service:\n\n=i\u200d=é **Sophie** à Tax  |  =h\u200d=é **Alexandre** à Audit  |  =i\u200d=é **Natalie** à Treasury\n=i\u200dé **Isabelle** à Compliance  |  =h\u200d=é **Marc** à Financial analysis  |  =i\u200d=é **Sarah** à Investment\n>é\u200d=, **Jean-François** à OCR  |  =i\u200d=é **Émilie** à Watch  |  =h\u200d=é **Patrick** à Grants\n\nDescribe your request — I\'ll analyze and assign the most appropriate specialist(s)."
   }], [lang]);
 
   _e(() => { if(msgs.length===0) setMsgs(orchWelcome); }, [orchWelcome]);
@@ -3519,17 +3519,17 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
 
   //  QUICK PROMPTS 
   const quickPrompts = lang==="fr" ? [
-    "📊 Analyse compléte de l\'entreprise",
-    "💹 Diagnostic financier PME",
-    "💰 Subventions disponibles 2026",
-    "📋 Revue conformité Loi 25",
-    "💸 évaluer une acquisition",
+    "<é Analyse compléte de l\'entreprise",
+    "=é Diagnostic financier PME",
+    "<é Subventions disponibles 2026",
+    "é Revue conformité Loi 25",
+    "=é évaluer une acquisition",
   ] : [
-    "📊 Full company analysis",
-    "💹 SME financial diagnostic",
-    "💰 Available grants 2026",
-    "📋 Law 25 compliance review",
-    "📊 Evaluate an acquisition",
+    "<é Full company analysis",
+    "=é SME financial diagnostic",
+    "<é Available grants 2026",
+    "é Law 25 compliance review",
+    "=é Evaluate an acquisition",
   ];
 
   return (
@@ -3541,7 +3541,7 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
                     <div style={{minWidth:0}}>
                       <div className="thread-title">{lang==="fr"?"Orchestration Studio":"Orchestration Studio"}</div>
                       <div className="thread-meta">
-                        {workflow ? `${workflow.type || "—"} à ${(workflow.agents||[]).length} agent${(workflow.agents||[]).length!==1?"s":""}` : (lang==="fr"?"Prêt — décrivez votre demande":"Ready — describe your request")}
+                        {workflow ? `${workflow.type || ""} à ${(workflow.agents||[]).length} agent${(workflow.agents||[]).length!==1?"s":""}` : (lang==="fr"?"Prêt — décrivez votre demande":"Ready — describe your request")}
                       </div>
                     </div>
                   </div>
@@ -3591,7 +3591,7 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
                                     <div className="orch-sub mono">{agentTitle(m.agent||agentId, lang)}</div>
                                   </div>
                                   <div style={{marginLeft:"auto",fontSize:10.5,color:"var(--ink-3)",fontFamily:"Geist Mono,monospace"}}>
-                                    {m.ts ? fmtTime(new Date(m.ts).toISOString()) : "—"}
+                                    {m.ts ? fmtTime(new Date(m.ts).toISOString()) : ""}
                                   </div>
                                 </div>
                                 {/* Multi-agent attribution */}
@@ -3612,11 +3612,11 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
                                 {/* Copy button */}
                                 <div style={{padding:"0 18px 12px",display:"flex",gap:8}}>
                                   <button onClick={()=>copy(m.content,i)} style={{fontSize:10.5,color:"var(--ink-3)",background:"transparent",border:"none",cursor:"pointer",padding:0}}>
-                                    {copied===i?(lang==="fr"?"Copié ✓":"Copied ✓"):(lang==="fr"?"Copier":"Copy")}
+                                    {copied===i?(lang==="fr"?"Copié ":"Copied "):(lang==="fr"?"Copier":"Copy")}
                                   </button>
                                   <button onClick={()=>{localStorage.setItem("z12-sandbox-prefill",m.content);setView("sandbox");}}
                                     style={{fontSize:10.5,color:"var(--ink-3)",background:"transparent",border:"none",cursor:"pointer",padding:0}}>
-                                    📊 {lang==="fr"?"Sandbox":"Sandbox"}
+                                    =é {lang==="fr"?"Sandbox":"Sandbox"}
                                   </button>
                                 </div>
                               </div>
@@ -3640,7 +3640,7 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
                                 </div>
                               </div>
                               {workflow?.priority==="urgent" && <div className="orch-pill" style={{background:"var(--warn-soft)",color:"var(--warn)",borderColor:"var(--warn)"}}>=4 URGENT</div>}
-                              {workflow?.priority==="high"   && <div className="orch-pill" style={{background:"var(--gold-soft)",color:"var(--gold)",borderColor:"var(--gold)"}}>⚠️ {lang==="fr"?"PRIORITAIRE":"HIGH"}</div>}
+                              {workflow?.priority==="high"   && <div className="orch-pill" style={{background:"var(--gold-soft)",color:"var(--gold)",borderColor:"var(--gold)"}}>=é {lang==="fr"?"PRIORITAIRE":"HIGH"}</div>}
                               {workflow && !workflow.priority?.match(/urgent|high/) && <div className="orch-pill">é {workflow.type?.toUpperCase()}</div>}
                             </div>
                             {/* Phase plan */}
@@ -3657,7 +3657,7 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
                                         <Avatar agent={sa} size={20} status={working?"busy":done?"done":undefined}/>
                                         <span className="plan-cell-name">{sa.name.split(" ")[0]}</span>
                                         <span className="plan-cell-task">
-                                          {working?"⌛ é":done?"✅":pend?"⌛ é":""}
+                                          {working?" é":done?" ":pend?" é":""}
                                         </span>
                                       </div>
                                     );
@@ -3691,7 +3691,7 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
             <textarea
               ref={inputRef}
               className="composer-input"
-              placeholder={lang==="fr"?"Posez une question, déposez un document, ou lancez une analyse...":"Ask a question, drop a document, or run an analysis&"}
+              placeholder={lang==="fr"?"Posez une question, déposez un document, ou lancez une analyse&":"Ask a question, drop a document, or run an analysis&"}
               value={input}
               onChange={(e:any)=>setInput(e.target.value)}
               rows={1}
@@ -3743,7 +3743,7 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
                               <div key={i} className={`tl-item ${step.status==="working"?"busy":step.status==="done"?"done":"pending"}`}>
                                 <div className="tl-name">{sa.name.split(" ")[0]} {sa.name.split(" ").slice(-1)[0][0]}.</div>
                                 <div className="tl-task">{agentTitle(step.agentId, lang)}</div>
-                                <div className="tl-time">{step.status==="done"?"✅":step.status==="working"?"running&":"queued"}</div>
+                                <div className="tl-time">{step.status==="done"?"":step.status==="working"?"running&":"queued"}</div>
                               </div>
                             );
                           })}
