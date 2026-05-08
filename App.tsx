@@ -1,38 +1,1134 @@
-/**
- * Z12 AI CFO Suite — v3.1
- * ZAKI OS Platform · May 2026
- *
- * ── Intégrations VectDocs appliquées ──────────────────────────────────────────
- * ✅ extractTextPreview()   — lecture client-side instantanée (TXT/CSV/JSON/PDF)
- * ✅ detectAgentFromFile()  — auto-assignation agent depuis nom + contenu
- * ✅ detectLanguage()       — détection FR/EN depuis le texte extrait
- * ✅ estimateChunks()       — estimation chunks avant indexation serveur
- * ✅ Folder batch upload    — showDirectoryPicker() avec fallback gracieux
- * ✅ EmbeddedDocument schema enrichi : fileType | words | language | preview
- * ✅ Pipeline stages labels — "Lecture → Extraction → Chunking → Embedding → Indexé"
- * ✅ Agent badge overrideable dans la queue d'upload
- * ✅ Documents : Search + Sort + Expandable preview panel + Delete
- *
- * ── Héritage v3.0 ─────────────────────────────────────────────────────────────
- * ✅ useLocalStorage — persistance complète
- * ✅ Auto-routing 2 niveaux (regex rapide + fallback Claude API)
- * ✅ 9 agents : 7 RAG + VeilleAgent + SubventionsAgent (web search temps réel)
- * ✅ callClaudeWithWebSearch() — outil web_search Anthropic pour veille/subventions
- * ✅ Settings éditables par agent (modèle + prompt)
- * ✅ FR/EN + Dark/Light mode
- * ✅ Pipeline RAG view + Governance view
- * ✅ Copy/Export/Delete conversations
- * ✅ Quick prompts par agent
- * ✅ useMemo/useCallback — zéro re-render inutile
- */
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
-// ─── PALETTE ──────────────────────────────────────────────────────────────────
-const DARK  = { bg:"#070B14",sb:"#0C1220",card:"#0F1929",border:"#1C2D42",accent:"#10B981",gold:"#F59E0B",red:"#EF4444",blue:"#3B82F6",violet:"#8B5CF6",pink:"#EC4899",cyan:"#06B6D4",orange:"#F97316",t1:"#F1F5F9",t2:"#8B9BB4",t3:"#4A5568",input:"#0A1525" };
-const LIGHT = { bg:"#F8FAFC",sb:"#FFFFFF",card:"#FFFFFF",border:"#E2E8F0",accent:"#059669",gold:"#D97706",red:"#DC2626",blue:"#2563EB",violet:"#7C3AED",pink:"#DB2777",cyan:"#0891B2",orange:"#EA580C",t1:"#0F172A",t2:"#475569",t3:"#94A3B8",input:"#F1F5F9" };
+const CSS_STYLES = `
+:root{
+  --bg:#0E0D0B;
+  --surface:#16140F;
+  --surface-2:#1C1A14;
+  --line:#26231C;
+  --line-2:#33301F;
+  --ink:#F5F2E8;
+  --ink-2:#B8B2A0;
+  --ink-3:#7A7567;
+  --ink-4:#4A4639;
+  --accent: oklch(0.74 0.13 152);
+  --accent-soft: oklch(0.74 0.13 152 / .14);
+  --accent-line: oklch(0.74 0.13 152 / .35);
+  --gold: oklch(0.78 0.13 78);
+  --gold-soft: oklch(0.78 0.13 78 / .14);
+  --warn: oklch(0.72 0.13 40);
+  --warn-soft: oklch(0.72 0.13 40 / .14);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 0 rgba(255,255,255,.02) inset, 0 12px 40px rgba(0,0,0,.4);
+}
+.theme-light{
+  --bg:#F4F1EA;
+  --surface:#FBF9F4;
+  --surface-2:#FFFFFF;
+  --line:#E5E0D2;
+  --line-2:#D4CDBB;
+  --ink:#191712;
+  --ink-2:#5C5648;
+  --ink-3:#86806F;
+  --ink-4:#B5AE9C;
+  --accent: oklch(0.55 0.13 152);
+  --accent-soft: oklch(0.55 0.13 152 / .12);
+  --accent-line: oklch(0.55 0.13 152 / .35);
+  --gold: oklch(0.62 0.13 78);
+  --gold-soft: oklch(0.62 0.13 78 / .14);
+  --warn: oklch(0.58 0.16 40);
+  --warn-soft: oklch(0.58 0.16 40 / .14);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Geist",ui-sans-serif,system-ui,sans-serif;font-feature-settings:"ss01","cv11";font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer;padding:0}
+input,textarea{font-family:inherit;color:inherit;background:none;border:none;outline:none}
+.serif{font-family:"Instrument Serif",ui-serif,Georgia,serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:"Geist Mono",ui-monospace,monospace;font-feature-settings:"ss02";letter-spacing:-0.01em}
 
-// ─── HOOK: useLocalStorage ────────────────────────────────────────────────────
+/* Layout */
+.app{display:grid;grid-template-columns:248px 1fr 380px;height:100vh;overflow:hidden}
+.app.compact{grid-template-columns:64px 1fr 380px}
+.app.no-right{grid-template-columns:248px 1fr}
+
+/* ===== Sidebar — Roster ===== */
+.roster{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.brand{display:flex;align-items:center;gap:10px;padding:18px 18px 14px;border-bottom:1px solid var(--line)}
+.brand-mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),oklch(0.62 0.13 175));display:grid;place-items:center;color:#0a0a0a;font-weight:700;font-size:13px;letter-spacing:-0.04em}
+.brand-name{font-weight:600;letter-spacing:-0.02em;font-size:14px}
+.brand-sub{font-size:11px;color:var(--ink-3);letter-spacing:0.02em;text-transform:uppercase;margin-top:2px}
+.app.compact .brand-name,.app.compact .brand-sub{display:none}
+
+.nav-section{padding:14px 12px 6px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3)}
+.app.compact .nav-section{display:none}
+.nav-list{display:flex;flex-direction:column;gap:1px;padding:0 8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;color:var(--ink-2);font-size:13px;cursor:pointer;transition:.12s}
+.nav-item:hover{background:var(--surface-2);color:var(--ink)}
+.nav-item.active{background:var(--surface-2);color:var(--ink)}
+.nav-icon{width:14px;height:14px;flex:0 0 14px}
+
+.app.compact .nav-item span:not(.nav-icon-w){display:none}
+.app.compact .nav-item{justify-content:center;padding:9px 0}
+
+.roster-scroll{flex:1;overflow-y:auto;padding:6px 8px 16px}
+.roster-scroll::-webkit-scrollbar{width:6px}
+.roster-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+
+.agent-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;position:relative;transition:.12s}
+.agent-row:hover{background:var(--surface-2)}
+.agent-row.active{background:var(--surface-2)}
+.agent-row.busy::before{content:"";position:absolute;left:-8px;top:50%;width:3px;height:18px;border-radius:2px;background:var(--accent);transform:translateY(-50%);box-shadow:0 0 16px var(--accent)}
+.app.compact .agent-row{justify-content:center;padding:6px 0}
+.app.compact .agent-row .agent-meta{display:none}
+
+.avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600;letter-spacing:0;flex:0 0 30px;position:relative;color:#0a0a0a}
+.avatar.busy{box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--accent),0 0 24px var(--accent-soft)}
+.avatar.done{box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--accent-line)}
+.avatar-status{position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--surface);background:var(--ink-4)}
+.avatar-status.busy{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.avatar-status.done{background:var(--accent-line)}
+.avatar-status.web{background:var(--gold);box-shadow:0 0 6px var(--gold)}
+
+.agent-meta{flex:1;min-width:0}
+.agent-name{font-size:12.5px;font-weight:500;letter-spacing:-0.01em;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.agent-title{font-size:10.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+
+.roster-foot{padding:12px 14px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.app.compact .roster-foot .user-meta{display:none}
+.user-dot{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#3a3528,#1a1812);display:grid;place-items:center;color:var(--ink);font-size:11px;font-weight:600;border:1px solid var(--line-2)}
+.user-meta{flex:1;min-width:0}
+.user-name{font-size:12px;color:var(--ink);font-weight:500}
+.user-org{font-size:10.5px;color:var(--ink-3)}
+
+/* ===== Center — Studio ===== */
+.studio{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.studio-head{display:flex;align-items:center;justify-content:space-between;padding:12px 22px;border-bottom:1px solid var(--line);min-height:54px;gap:14px}
+.studio-head-l{display:flex;align-items:center;gap:14px;min-width:0}
+.icon-btn{width:32px;height:32px;border-radius:6px;display:grid;place-items:center;color:var(--ink-2);transition:.12s}
+.icon-btn:hover{background:var(--surface-2);color:var(--ink)}
+.thread-title{font-size:14px;font-weight:500;letter-spacing:-0.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thread-meta{font-size:11px;color:var(--ink-3);margin-top:1px;font-family:"Geist Mono",monospace;letter-spacing:0}
+.studio-head-r{display:flex;align-items:center;gap:6px}
+.lang-toggle{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:2px;font-size:11px}
+.lang-toggle button{padding:4px 10px;border-radius:4px;color:var(--ink-3);font-weight:500}
+.lang-toggle button.on{background:var(--surface-2);color:var(--ink);box-shadow:0 1px 0 var(--line-2) inset}
+
+/* Conversation */
+.thread{flex:1;overflow-y:auto;padding:30px 0 200px;scroll-behavior:smooth}
+.thread::-webkit-scrollbar{width:8px}
+.thread::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+.thread-inner{max-width:780px;margin:0 auto;padding:0 30px}
+
+.msg{margin-bottom:32px}
+.msg-user{display:flex;justify-content:flex-end}
+.msg-user-bubble{background:var(--surface-2);border:1px solid var(--line);border-radius:14px 14px 4px 14px;padding:12px 16px;max-width:560px;font-size:13.5px;color:var(--ink);line-height:1.55}
+
+/* Orchestrator card */
+.orch-card{background:linear-gradient(180deg,var(--surface) 0%,var(--surface-2) 100%);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.orch-head{display:flex;align-items:center;gap:12px;padding:14px 16px 12px;border-bottom:1px dashed var(--line)}
+.orch-mark{width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,var(--accent),oklch(0.62 0.13 175));display:grid;place-items:center;color:#0a0a0a;font-weight:700;font-size:11px}
+.orch-title{font-size:12px;letter-spacing:-0.01em;color:var(--ink);font-weight:500}
+.orch-sub{font-size:10.5px;color:var(--ink-3);font-family:"Geist Mono",monospace;margin-top:1px}
+.orch-pill{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:99px;font-size:10.5px;font-family:"Geist Mono",monospace;letter-spacing:.02em;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-line)}
+
+/* Workflow plan visual */
+.plan{padding:18px 18px 6px}
+.plan-rows{display:flex;flex-direction:column;gap:12px}
+.plan-row{display:flex;align-items:stretch;gap:10px}
+.plan-step{font-family:"Geist Mono",monospace;font-size:10px;color:var(--ink-3);width:48px;flex:0 0 48px;padding-top:6px;letter-spacing:.05em}
+.plan-cells{flex:1;display:flex;gap:8px;flex-wrap:wrap}
+.plan-cell{display:flex;align-items:center;gap:8px;padding:7px 11px 7px 7px;border:1px solid var(--line);border-radius:99px;background:var(--bg);transition:.2s}
+.plan-cell.busy{border-color:var(--accent-line);background:var(--accent-soft)}
+.plan-cell.done{border-color:var(--line-2);opacity:.85}
+.plan-cell .avatar{width:20px;height:20px;font-size:9px;flex:0 0 20px}
+.plan-cell .avatar.busy{box-shadow:0 0 0 1.5px var(--bg),0 0 0 2.5px var(--accent),0 0 14px var(--accent-soft)}
+.plan-cell-name{font-size:11.5px;color:var(--ink-2);font-weight:500}
+.plan-cell.busy .plan-cell-name{color:var(--ink)}
+.plan-cell-task{font-size:10.5px;color:var(--ink-3);font-family:"Geist Mono",monospace;margin-left:2px}
+
+.plan-conn{display:flex;align-items:center;justify-content:center;color:var(--ink-4);font-size:11px;padding:0 4px}
+
+/* Reply blocks */
+.agent-reply{margin-top:14px;padding:14px 18px 16px;border-top:1px solid var(--line)}
+.agent-reply-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.agent-reply-head .avatar{width:24px;height:24px;font-size:10px;flex:0 0 24px}
+.agent-reply-name{font-size:12.5px;font-weight:500;color:var(--ink)}
+.agent-reply-role{font-size:10.5px;color:var(--ink-3);font-family:"Geist Mono",monospace}
+.agent-reply-time{margin-left:auto;font-size:10.5px;color:var(--ink-3);font-family:"Geist Mono",monospace}
+
+.agent-content{font-size:13px;line-height:1.6;color:var(--ink-2)}
+.agent-content strong{color:var(--ink);font-weight:600}
+.agent-content h4{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin:14px 0 6px;font-weight:500}
+.agent-content ul{margin:6px 0;padding-left:18px}
+.agent-content li{margin:3px 0}
+
+/* Data table */
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:10px 0 4px}
+.kpi-cell{background:var(--surface-2);padding:11px 13px}
+.kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-family:"Geist Mono",monospace}
+.kpi-val{font-size:18px;font-weight:500;letter-spacing:-0.02em;color:var(--ink);margin-top:4px;font-family:"Instrument Serif",serif;line-height:1.1}
+.kpi-delta{font-size:10.5px;color:var(--accent);font-family:"Geist Mono",monospace;margin-top:2px}
+.kpi-delta.neg{color:var(--warn)}
+.kpi-delta.neutral{color:var(--ink-3)}
+
+/* Citation chips */
+.cites{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.cite{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line);font-size:10.5px;color:var(--ink-2);font-family:"Geist Mono",monospace;cursor:pointer;transition:.12s}
+.cite:hover{border-color:var(--accent-line);color:var(--ink)}
+.cite-num{color:var(--accent);font-weight:500}
+
+/* Synthesis card */
+.synth{margin:18px 0 0;background:var(--surface-2);border:1px solid var(--line-2);border-radius:10px;padding:16px 18px}
+.synth-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.synth-mark{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+.synth-title{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);font-weight:500}
+.synth-body{font-size:13.5px;line-height:1.6;color:var(--ink)}
+.synth-body em{font-style:normal;color:var(--accent)}
+
+.actions-list{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.action-item{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:var(--bg);border:1px solid var(--line);border-radius:8px;font-size:12.5px}
+.action-prio{font-family:"Geist Mono",monospace;font-size:10px;padding:2px 6px;border-radius:4px;letter-spacing:.05em;flex:0 0 auto;margin-top:1px}
+.action-prio.p1{background:var(--warn-soft);color:var(--warn)}
+.action-prio.p2{background:var(--gold-soft);color:var(--gold)}
+.action-prio.p3{background:var(--accent-soft);color:var(--accent)}
+.action-text{flex:1;color:var(--ink-2);line-height:1.5}
+.action-text strong{color:var(--ink)}
+.action-owner{font-family:"Geist Mono",monospace;font-size:10px;color:var(--ink-3);white-space:nowrap}
+
+/* Composer */
+.composer-wrap{position:absolute;left:248px;right:380px;bottom:0;padding:0 30px 22px;background:linear-gradient(180deg,transparent 0%,var(--bg) 28%);pointer-events:none}
+.app.compact .composer-wrap{left:64px}
+.app.no-right .composer-wrap{right:0}
+.composer{max-width:780px;margin:0 auto;background:var(--surface);border:1px solid var(--line-2);border-radius:14px;padding:12px 14px 10px;pointer-events:auto;box-shadow:0 8px 32px rgba(0,0,0,.35)}
+.composer:focus-within{border-color:var(--accent-line);box-shadow:0 8px 32px rgba(0,0,0,.4),0 0 0 3px var(--accent-soft)}
+.composer-input{width:100%;background:transparent;color:var(--ink);font-size:13.5px;line-height:1.55;resize:none;min-height:22px;max-height:140px;font-family:inherit;border:none;padding:4px 0}
+.composer-input::placeholder{color:var(--ink-3)}
+.composer-tools{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+.tool-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;font-size:11px;color:var(--ink-3);border:1px solid transparent;cursor:pointer;transition:.12s}
+.tool-chip:hover{background:var(--surface-2);color:var(--ink-2)}
+.tool-chip.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-line)}
+.send-btn{margin-left:auto;background:var(--ink);color:var(--bg);padding:7px 14px;border-radius:99px;font-weight:500;font-size:12px;display:inline-flex;align-items:center;gap:6px;letter-spacing:-0.01em}
+.send-btn:hover{background:var(--accent);color:#0a0a0a}
+.send-btn:disabled{opacity:.4;cursor:not-allowed;background:var(--ink-4);color:var(--ink-3)}
+
+/* Quick prompts */
+.quick-prompts{max-width:780px;margin:0 auto 8px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:auto}
+.qp{padding:5px 11px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);font-size:11.5px;cursor:pointer;transition:.12s}
+.qp:hover{background:var(--surface-2);color:var(--ink);border-color:var(--line-2)}
+
+/* ===== Right pane — Context ===== */
+.context{background:var(--surface);border-left:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.ctx-tabs{display:flex;border-bottom:1px solid var(--line);padding:0 14px}
+.ctx-tab{padding:14px 12px;font-size:12px;color:var(--ink-3);position:relative;cursor:pointer;font-weight:500;letter-spacing:-0.01em}
+.ctx-tab.on{color:var(--ink)}
+.ctx-tab.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:var(--accent)}
+.ctx-tab .ct-count{display:inline-block;margin-left:6px;font-size:10px;color:var(--ink-3);font-family:"Geist Mono",monospace}
+
+.ctx-scroll{flex:1;overflow-y:auto;padding:14px}
+.ctx-scroll::-webkit-scrollbar{width:6px}
+.ctx-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+
+.ctx-section{margin-bottom:18px}
+.ctx-section-title{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px;font-weight:500}
+
+/* Workflow timeline */
+.timeline{position:relative;padding-left:18px}
+.timeline::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:1px;background:var(--line-2)}
+.tl-item{position:relative;padding:6px 0;font-size:11.5px}
+.tl-item::before{content:"";position:absolute;left:-18px;top:11px;width:11px;height:11px;border-radius:50%;background:var(--surface);border:2px solid var(--ink-4)}
+.tl-item.done::before{border-color:var(--accent);background:var(--accent)}
+.tl-item.busy::before{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px var(--accent-soft);animation:pulse 1.6s infinite}
+.tl-item.pending::before{border-color:var(--ink-4)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px var(--accent-soft)}50%{box-shadow:0 0 0 6px var(--accent-soft)}}
+.tl-name{color:var(--ink);font-weight:500;font-size:12px}
+.tl-task{color:var(--ink-3);font-size:11px;margin-top:1px}
+.tl-time{font-family:"Geist Mono",monospace;font-size:10px;color:var(--ink-3);margin-top:2px;letter-spacing:.02em}
+.tl-item.busy .tl-name::after{content:"●";color:var(--accent);margin-left:6px;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.3}}
+
+/* Documents */
+.doc-row{display:flex;gap:10px;align-items:center;padding:8px;border-radius:6px;cursor:pointer;transition:.1s}
+.doc-row:hover{background:var(--surface-2)}
+.doc-icon{width:28px;height:32px;border-radius:4px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;font-size:11px;color:var(--ink-3);font-family:"Geist Mono",monospace;flex:0 0 28px}
+.doc-meta{flex:1;min-width:0}
+.doc-name{font-size:12px;color:var(--ink);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-info{font-size:10.5px;color:var(--ink-3);font-family:"Geist Mono",monospace;margin-top:1px}
+.doc-status{font-size:9.5px;padding:2px 6px;border-radius:4px;font-family:"Geist Mono",monospace;letter-spacing:.04em}
+.doc-status.indexed{background:var(--accent-soft);color:var(--accent)}
+
+/* Cost meter */
+.meter{padding:14px;background:var(--bg);border:1px solid var(--line);border-radius:8px}
+.meter-row{display:flex;align-items:baseline;justify-content:space-between;font-size:11px;color:var(--ink-3);margin-bottom:6px;font-family:"Geist Mono",monospace}
+.meter-row strong{color:var(--ink);font-weight:500;font-family:"Geist",sans-serif;font-size:13px}
+.meter-bar{height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden;margin-top:10px}
+.meter-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:2px;transition:.5s}
+.meter-foot{display:flex;justify-content:space-between;font-family:"Geist Mono",monospace;font-size:10px;color:var(--ink-3);margin-top:6px}
+
+/* Empty/loading shimmer in agent body */
+.shimmer{height:10px;border-radius:3px;background:linear-gradient(90deg,var(--surface),var(--surface-2),var(--surface));background-size:200% 100%;animation:shimmer 1.4s infinite;margin:6px 0}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.shimmer.s60{width:60%}
+.shimmer.s40{width:40%}
+
+/* Stream cursor */
+.cursor{display:inline-block;width:6px;height:14px;background:var(--accent);vertical-align:-2px;margin-left:2px;animation:blink 1s infinite}
+
+/* SVG inline icons */
+.i{width:14px;height:14px;stroke:currentColor;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+/* ===== Page (non-studio views) ===== */
+.page{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;padding:24px 36px 18px;border-bottom:1px solid var(--line);gap:20px}
+.page-title{font-family:"Instrument Serif",serif;font-size:32px;line-height:1;letter-spacing:-0.02em;color:var(--ink)}
+.page-sub{font-size:12.5px;color:var(--ink-3);margin-top:6px;font-family:"Geist Mono",monospace}
+.page-body{flex:1;overflow-y:auto;padding:28px 36px 60px}
+.page-body::-webkit-scrollbar{width:8px}
+.page-body::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+.page-actions{display:flex;gap:8px}
+.btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:500;border:1px solid var(--line-2);color:var(--ink-2);background:var(--surface);transition:.12s}
+.btn:hover{color:var(--ink);border-color:var(--ink-3)}
+.btn-primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn-primary:hover{background:var(--accent);color:#0a0a0a;border-color:var(--accent)}
+
+/* Dashboard */
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden}
+.tile-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-family:"Geist Mono",monospace}
+.tile-val{font-family:"Instrument Serif",serif;font-size:42px;line-height:1.05;letter-spacing:-0.02em;color:var(--ink);margin-top:10px}
+.tile-foot{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:11px;color:var(--ink-3);font-family:"Geist Mono",monospace}
+.tile-spark{position:absolute;right:16px;bottom:16px;opacity:.65}
+.tile-delta{display:inline-flex;align-items:center;gap:3px;color:var(--accent)}
+.tile-delta.neg{color:var(--warn)}
+
+.col-2{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-bottom:24px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.panel-head{padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.panel-title{font-size:13px;font-weight:500;letter-spacing:-0.01em;color:var(--ink)}
+.panel-body{padding:8px 0}
+
+/* Calendar list */
+.cal-row{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line);transition:.1s}
+.cal-row:last-child{border-bottom:none}
+.cal-row:hover{background:var(--surface-2)}
+.cal-date{font-family:"Instrument Serif",serif;font-size:24px;line-height:1;letter-spacing:-0.02em;color:var(--ink);width:54px;flex:0 0 54px;text-align:center}
+.cal-date small{display:block;font-family:"Geist Mono",monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:3px}
+.cal-meta{flex:1;min-width:0}
+.cal-name{font-size:12.5px;color:var(--ink);font-weight:500}
+.cal-info{font-size:11px;color:var(--ink-3);margin-top:1px}
+.cal-tag{font-size:10px;padding:3px 7px;border-radius:99px;font-family:"Geist Mono",monospace;letter-spacing:.04em;border:1px solid var(--line-2);color:var(--ink-3)}
+.cal-tag.urgent{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+
+/* Conversation list */
+.conv-row{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--line);cursor:pointer;transition:.1s}
+.conv-row:last-child{border-bottom:none}
+.conv-row:hover{background:var(--surface-2)}
+.conv-text{flex:1;min-width:0}
+.conv-title{font-size:12.5px;color:var(--ink);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-info{font-size:10.5px;color:var(--ink-3);margin-top:1px;font-family:"Geist Mono",monospace}
+.conv-stack{display:flex;margin-left:8px}
+.conv-stack .avatar{margin-left:-6px;border:2px solid var(--surface)}
+
+/* Activity bars */
+.act-list{padding:6px 20px 16px;display:flex;flex-direction:column;gap:8px}
+.act-row{display:flex;align-items:center;gap:12px;font-size:11.5px}
+.act-name{width:100px;color:var(--ink);font-weight:500}
+.act-bar{flex:1;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.act-fill{height:100%;border-radius:3px}
+.act-num{font-family:"Geist Mono",monospace;font-size:10.5px;color:var(--ink-3);width:36px;text-align:right}
+
+/* Documents page */
+.search-bar{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:var(--ink-3);margin-bottom:14px}
+.search-bar input{flex:1;font-size:13px;color:var(--ink)}
+.tab-pills{display:flex;gap:6px;margin-bottom:18px}
+.pill{padding:7px 14px;border-radius:99px;font-size:12px;color:var(--ink-3);background:var(--surface);border:1px solid var(--line);cursor:pointer;transition:.12s}
+.pill.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pill .pill-count{margin-left:6px;font-family:"Geist Mono",monospace;font-size:10px;opacity:.7}
+
+.doc-table{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.doc-th, .doc-tr{display:grid;grid-template-columns:36px 1.6fr 1fr 90px 80px 90px 110px 30px;gap:14px;align-items:center;padding:11px 18px;border-bottom:1px solid var(--line)}
+.doc-th{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-family:"Geist Mono",monospace;background:var(--surface-2)}
+.doc-tr:last-child{border-bottom:none}
+.doc-tr:hover{background:var(--surface-2)}
+.doc-fname{font-size:12.5px;color:var(--ink);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-fagent{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-2)}
+.doc-cell{font-size:11px;color:var(--ink-3);font-family:"Geist Mono",monospace}
+.lang-flag{font-family:"Geist Mono",monospace;font-size:10px;padding:2px 6px;border-radius:4px;background:var(--bg);border:1px solid var(--line);color:var(--ink-3)}
+
+/* Pipeline */
+.pipe-flow{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:24px;position:relative}
+.pipe-stage{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;position:relative;z-index:1}
+.pipe-stage + .pipe-stage{margin-left:-1px;border-left:1px dashed var(--line-2)}
+.pipe-stage:first-child{border-radius:12px 0 0 12px}
+.pipe-stage:last-child{border-radius:0 12px 12px 0}
+.pipe-stage:not(:first-child):not(:last-child){border-radius:0}
+.pipe-stage-tag{font-family:"Geist Mono",monospace;font-size:10px;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase}
+.pipe-stage-name{font-size:15px;color:var(--ink);margin-top:6px;font-weight:500;letter-spacing:-0.01em}
+.pipe-stage-tech{font-size:11px;color:var(--ink-3);margin-top:4px;font-family:"Geist Mono",monospace}
+.pipe-metrics{display:flex;gap:16px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+.pipe-metric small{display:block;font-size:9.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;font-family:"Geist Mono",monospace}
+.pipe-metric strong{display:block;font-size:18px;font-weight:500;color:var(--ink);margin-top:4px;font-family:"Instrument Serif",serif;letter-spacing:-0.01em;line-height:1}
+.pipe-arrow{position:absolute;top:50%;transform:translateY(-50%);right:-9px;width:18px;height:18px;background:var(--bg);border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;color:var(--accent);z-index:2;font-size:10px}
+
+/* Governance */
+.gov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.gov-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.gov-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.gov-name{font-size:14px;color:var(--ink);font-weight:500;letter-spacing:-0.01em}
+.gov-status{font-size:10px;padding:3px 8px;border-radius:99px;font-family:"Geist Mono",monospace;letter-spacing:.04em}
+.gov-status.ok{background:var(--accent-soft);color:var(--accent)}
+.gov-status.warn{background:var(--warn-soft);color:var(--warn)}
+.gov-progress{height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden;margin-bottom:12px}
+.gov-progress > div{height:100%;background:var(--accent);border-radius:2px}
+.gov-list{display:flex;flex-direction:column;gap:8px;font-size:11.5px}
+.gov-item{display:flex;align-items:flex-start;gap:8px;color:var(--ink-2)}
+.gov-check{flex:0 0 14px;width:14px;height:14px;border-radius:50%;display:grid;place-items:center;font-size:9px;margin-top:2px}
+.gov-check.ok{background:var(--accent-soft);color:var(--accent)}
+.gov-check.warn{background:var(--warn-soft);color:var(--warn)}
+.gov-check.todo{background:var(--surface-2);color:var(--ink-3);border:1px solid var(--line-2)}
+
+/* Team */
+.team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.team-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:10px;transition:.12s}
+.team-card:hover{border-color:var(--line-2)}
+.team-head{display:flex;align-items:center;gap:12px}
+.team-name{font-size:14px;font-weight:500;color:var(--ink);letter-spacing:-0.01em}
+.team-role{font-size:11px;color:var(--ink-3);margin-top:1px}
+.team-domain{font-size:11.5px;color:var(--ink-2);line-height:1.5;border-top:1px dashed var(--line);padding-top:10px}
+.team-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:8px;border-top:1px dashed var(--line)}
+.team-model{font-size:10.5px;color:var(--ink-3);font-family:"Geist Mono",monospace}
+.team-edit{font-size:11px;color:var(--accent)}
+
+/* Settings */
+.set-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px}
+.set-h{font-size:13px;color:var(--ink);font-weight:500;letter-spacing:-0.01em;margin-bottom:4px}
+.set-sub{font-size:11.5px;color:var(--ink-3);margin-bottom:14px}
+.set-input{width:100%;background:var(--bg);border:1px solid var(--line-2);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--ink);font-family:"Geist Mono",monospace}
+.set-input:focus{border-color:var(--accent-line);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.set-row{display:grid;grid-template-columns:200px 1fr 110px;gap:14px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line)}
+.set-row:last-child{border-bottom:none}
+.set-row .agent-name{font-size:12px}
+.set-select{background:var(--bg);border:1px solid var(--line-2);border-radius:6px;padding:6px 10px;font-size:11.5px;color:var(--ink-2);font-family:"Geist Mono",monospace;cursor:pointer}
+
+/* Responsive — collapse right pane */
+@media (max-width: 1180px){
+  .app{grid-template-columns:248px 1fr}
+  .composer-wrap{right:0}
+  .context{display:none}
+}
+/* ─── Additional animations ─── */
+.avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:"Geist Mono",monospace;font-weight:600;letter-spacing:-0.02em;flex:0 0 30px;color:#0a0a0a;font-size:10.5px;position:relative}
+.avatar.busy{box-shadow:0 0 0 1.5px var(--bg),0 0 0 2.5px var(--accent),0 0 14px oklch(0.74 0.13 152 / .4)}
+.avatar-status{position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;border:1.5px solid var(--surface)}
+.avatar-status.busy{background:var(--accent);animation:statusPulse 1.4s ease-in-out infinite}
+.avatar-status.done{background:oklch(0.74 0.13 152)}
+.avatar-status.web{background:var(--gold)}
+.agent-row{display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:default;transition:.1s;border-left:2px solid transparent}
+.agent-row:hover{background:var(--surface-2)}
+.agent-row.busy{border-left-color:var(--accent);background:var(--accent-soft)}
+.roster-scroll::-webkit-scrollbar{width:4px}
+.roster-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px}
+.tab-pills{display:flex;gap:6px;margin-bottom:18px}
+.pill{padding:6px 14px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);font-size:12px;cursor:pointer;transition:.12s}
+.pill.on{background:var(--surface-2);color:var(--ink);border-color:var(--line-2)}
+.pill-count{margin-left:6px;font-size:10px;color:var(--ink-3);font-family:"Geist Mono",monospace}
+.doc-table{display:flex;flex-direction:column;gap:2px}
+.doc-th{display:grid;grid-template-columns:36px 1fr 120px 80px 60px 50px 80px 30px;gap:8px;padding:6px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-family:"Geist Mono",monospace}
+.doc-tr{display:grid;grid-template-columns:36px 1fr 120px 80px 60px 50px 80px 30px;gap:8px;padding:8px 12px;border-radius:6px;align-items:center;font-size:12px;transition:.1s}
+.doc-tr:hover{background:var(--surface-2)}
+.doc-fname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;color:var(--ink)}
+.doc-fagent{display:flex;align-items:center;gap:6px;color:var(--ink-2);font-size:11.5px}
+.doc-cell{color:var(--ink-3);font-family:"Geist Mono",monospace;font-size:11px}
+.lang-flag{font-size:10px;padding:2px 5px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-3);font-family:"Geist Mono",monospace}
+.gov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.gov-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.gov-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.gov-name{font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-0.01em}
+.gov-status{font-size:10px;padding:3px 8px;border-radius:99px;font-family:"Geist Mono",monospace;letter-spacing:.05em}
+.gov-status.ok{background:var(--accent-soft);color:var(--accent)}
+.gov-status.warn{background:var(--warn-soft);color:var(--warn)}
+.gov-progress{height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden;margin-bottom:8px}
+.gov-progress div{height:100%;border-radius:2px}
+.gov-list{display:flex;flex-direction:column;gap:6px}
+.gov-item{display:flex;align-items:flex-start;gap:8px;font-size:11.5px;color:var(--ink-2)}
+.gov-check{width:16px;flex:0 0 16px;font-size:10px;font-family:"Geist Mono",monospace}
+.gov-check.ok{color:var(--accent)}
+.gov-check.warn{color:var(--warn)}
+.gov-check.todo{color:var(--ink-4)}
+.team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.team-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.team-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.team-name{font-size:13px;font-weight:500;color:var(--ink)}
+.team-role{font-size:11px;color:var(--ink-3)}
+.team-domain{font-size:11px;color:var(--ink-3);margin-bottom:14px;font-family:"Geist Mono",monospace}
+.team-foot{display:flex;align-items:center;justify-content:space-between}
+.team-model{font-size:10px;color:var(--ink-4);font-family:"Geist Mono",monospace}
+.team-edit{font-size:11px;color:var(--accent);cursor:pointer;background:none;border:none;padding:0}
+.set-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px 24px;margin-bottom:16px}
+.set-h{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:5px}
+.set-sub{font-size:11.5px;color:var(--ink-3);margin-bottom:14px;font-family:"Geist Mono",monospace}
+.set-input{width:100%;background:var(--bg);border:1px solid var(--line-2);border-radius:8px;padding:9px 12px;color:var(--ink);font-size:13px;font-family:inherit;outline:none;transition:.12s}
+.set-input:focus{border-color:var(--accent-line)}
+.set-row{display:grid;grid-template-columns:1fr 220px 80px;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink-2)}
+.set-row:last-child{border-bottom:none}
+.set-select{background:var(--bg);border:1px solid var(--line-2);border-radius:6px;padding:5px 10px;color:var(--ink-2);font-size:11.5px;font-family:"Geist Mono",monospace;outline:none;cursor:pointer}
+.pipe-flow{display:flex;align-items:stretch;gap:0;margin-bottom:24px;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.pipe-stage{flex:1;padding:20px;position:relative}
+.pipe-stage:not(:last-child){border-right:1px solid var(--line)}
+.pipe-stage-tag{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-family:"Geist Mono",monospace;margin-bottom:6px}
+.pipe-stage-name{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:4px}
+.pipe-stage-tech{font-size:11px;color:var(--ink-3);font-family:"Geist Mono",monospace;margin-bottom:12px}
+.pipe-metrics{display:flex;flex-direction:column;gap:4px}
+.pipe-metric{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px}
+.pipe-metric small{color:var(--ink-3);font-family:"Geist Mono",monospace;font-size:10px}
+.pipe-metric strong{color:var(--ink);font-weight:500}
+.pipe-arrow{display:none}
+@keyframes statusPulse{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes agentGlow{0%,100%{transform:scale(1)}50%{transform:scale(1.05);filter:brightness(1.15)}}
+`;
+
+
+
+const STUDIO_T: Record<string,any> = {
+  fr: {
+    nav_studio:"Studio", nav_dashboard:"Tableau de bord", nav_docs:"Documents", nav_pipeline:"Pipeline RAG",
+    nav_governance:"Gouvernance", nav_agents:"Équipe", nav_settings:"Paramètres",
+    sec_workspace:"Espace de travail", sec_team:"Équipe CPA virtuelle",
+    thread_title:"Orchestration Studio", thread_meta:"Prêt",
+    placeholder:"Posez une question, déposez un document, ou lancez une analyse…",
+    quick:["Diagnostic financier complet","Subventions disponibles 2026","Revue conformité Loi 25","Vérifier admissibilité RS&DE"],
+    web_on:"Recherche web", rag_on:"RAG documents", send:"Envoyer", attach:"Joindre",
+    sources:"Sources", workflow:"Workflow", artifacts:"Artefacts", cost:"Coût session",
+    docs_title:"Documents indexés", agents_active:"agents actifs",
+  },
+  en: {
+    nav_studio:"Studio", nav_dashboard:"Dashboard", nav_docs:"Documents", nav_pipeline:"RAG Pipeline",
+    nav_governance:"Governance", nav_agents:"Team", nav_settings:"Settings",
+    sec_workspace:"Workspace", sec_team:"Virtual CPA Team",
+    thread_title:"Orchestration Studio", thread_meta:"Ready",
+    placeholder:"Ask a question, drop a document, or run an analysis…",
+    quick:["Full financial diagnostic","Available grants 2026","Law 25 compliance review","Check SR&ED eligibility"],
+    web_on:"Web search", rag_on:"RAG documents", send:"Send", attach:"Attach",
+    sources:"Sources", workflow:"Workflow", artifacts:"Artifacts", cost:"Session cost",
+    docs_title:"Indexed documents", agents_active:"agents working",
+  }
+};
+
+
+
+// tweaks-panel.jsx
+// Reusable Tweaks shell + form-control helpers.
+//
+// Owns the host protocol (listens for __activate_edit_mode / __deactivate_edit_mode,
+// posts __edit_mode_available / __edit_mode_set_keys / __edit_mode_dismissed) so
+// individual prototypes don't re-roll it. Ships a consistent set of controls so you
+// don't hand-draw <input type="range">, segmented radios, steppers, etc.
+//
+// Usage (in an HTML file that loads React + Babel):
+//
+//   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+//     "primaryColor": "#D97757",
+//     "palette": ["#D97757", "#29261b", "#f6f4ef"],
+//     "fontSize": 16,
+//     "density": "regular",
+//     "dark": false
+//   }/*EDITMODE-END*/;
+//
+//   function App() {
+//     const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+//     return (
+//       <div style={{ fontSize: t.fontSize, color: t.primaryColor }}>
+//         Hello
+//         <TweaksPanel>
+//           <TweakSection label="Typography" />
+//           <TweakSlider label="Font size" value={t.fontSize} min={10} max={32} unit="px"
+//                        onChange={(v) => setTweak('fontSize', v)} />
+//           <TweakRadio  label="Density" value={t.density}
+//                        options={['compact', 'regular', 'comfy']}
+//                        onChange={(v) => setTweak('density', v)} />
+//           <TweakSection label="Theme" />
+//           <TweakColor  label="Primary" value={t.primaryColor}
+//                        options={['#D97757', '#2A6FDB', '#1F8A5B', '#7A5AE0']}
+//                        onChange={(v) => setTweak('primaryColor', v)} />
+//           <TweakColor  label="Palette" value={t.palette}
+//                        options={[['#D97757', '#29261b', '#f6f4ef'],
+//                                  ['#475569', '#0f172a', '#f1f5f9']]}
+//                        onChange={(v) => setTweak('palette', v)} />
+//           <TweakToggle label="Dark mode" value={t.dark}
+//                        onChange={(v) => setTweak('dark', v)} />
+//         </TweaksPanel>
+//       </div>
+//     );
+//   }
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
+
+// tweaks-panel.jsx
+// Reusable Tweaks shell + form-control helpers.
+//
+// Owns the host protocol (listens for __activate_edit_mode / __deactivate_edit_mode,
+// posts __edit_mode_available / __edit_mode_set_keys / __edit_mode_dismissed) so
+// individual prototypes don't re-roll it. Ships a consistent set of controls so you
+// don't hand-draw <input type="range">, segmented radios, steppers, etc.
+//
+// Usage (in an HTML file that loads React + Babel):
+//
+//   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+//     "primaryColor": "#D97757",
+//     "palette": ["#D97757", "#29261b", "#f6f4ef"],
+//     "fontSize": 16,
+//     "density": "regular",
+//     "dark": false
+//   }/*EDITMODE-END*/;
+//
+//   function App() {
+//     const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+//     return (
+//       <div style={{ fontSize: t.fontSize, color: t.primaryColor }}>
+//         Hello
+//         <TweaksPanel>
+//           <TweakSection label="Typography" />
+//           <TweakSlider label="Font size" value={t.fontSize} min={10} max={32} unit="px"
+//                        onChange={(v) => setTweak('fontSize', v)} />
+//           <TweakRadio  label="Density" value={t.density}
+//                        options={['compact', 'regular', 'comfy']}
+//                        onChange={(v) => setTweak('density', v)} />
+//           <TweakSection label="Theme" />
+//           <TweakColor  label="Primary" value={t.primaryColor}
+//                        options={['#D97757', '#2A6FDB', '#1F8A5B', '#7A5AE0']}
+//                        onChange={(v) => setTweak('primaryColor', v)} />
+//           <TweakColor  label="Palette" value={t.palette}
+//                        options={[['#D97757', '#29261b', '#f6f4ef'],
+//                                  ['#475569', '#0f172a', '#f1f5f9']]}
+//                        onChange={(v) => setTweak('palette', v)} />
+//           <TweakToggle label="Dark mode" value={t.dark}
+//                        onChange={(v) => setTweak('dark', v)} />
+//         </TweaksPanel>
+//       </div>
+//     );
+//   }
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
+const __TWEAKS_STYLE = `
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
+    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    transform:scale(var(--dc-inv-zoom,1));transform-origin:bottom right;
+    background:rgba(250,249,247,.78);color:#29261b;
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 12px 40px rgba(0,0,0,.18);
+    font:11.5px/1.4 ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 8px 10px 14px;cursor:move;user-select:none}
+  .twk-hd b{font-size:12px;font-weight:600;letter-spacing:.01em}
+  .twk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.55);
+    width:22px;height:22px;border-radius:6px;cursor:default;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(0,0,0,.06);color:#29261b}
+  .twk-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px;
+    overflow-y:auto;overflow-x:hidden;min-height:0;
+    scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
+  .twk-body::-webkit-scrollbar{width:8px}
+  .twk-body::-webkit-scrollbar-track{background:transparent;margin:2px}
+  .twk-body::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px;
+    border:2px solid transparent;background-clip:content-box}
+  .twk-body::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.25);
+    border:2px solid transparent;background-clip:content-box}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;
+    color:rgba(41,38,27,.72)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-val{color:rgba(41,38,27,.5);font-variant-numeric:tabular-nums}
+
+  .twk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(41,38,27,.45);padding:10px 0 0}
+  .twk-sect:first-child{padding-top:0}
+
+  .twk-field{appearance:none;width:100%;height:26px;padding:0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;
+    background:rgba(255,255,255,.6);color:inherit;font:inherit;outline:none}
+  .twk-field:focus{border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)}
+  select.twk-field{padding-right:22px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='rgba(0,0,0,.5)' d='M0 0h10L5 6z'/></svg>");
+    background-repeat:no-repeat;background-position:right 8px center}
+
+  .twk-slider{appearance:none;-webkit-appearance:none;width:100%;height:4px;margin:6px 0;
+    border-radius:999px;background:rgba(0,0,0,.12);outline:none}
+  .twk-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+    width:14px;height:14px;border-radius:50%;background:#fff;
+    border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+  .twk-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;
+    background:#fff;border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+
+  .twk-seg{position:relative;display:flex;padding:2px;border-radius:8px;
+    background:rgba(0,0,0,.06);user-select:none}
+  .twk-seg-thumb{position:absolute;top:2px;bottom:2px;border-radius:6px;
+    background:rgba(255,255,255,.9);box-shadow:0 1px 2px rgba(0,0,0,.12);
+    transition:left .15s cubic-bezier(.3,.7,.4,1),width .15s}
+  .twk-seg.dragging .twk-seg-thumb{transition:none}
+  .twk-seg button{appearance:none;position:relative;z-index:1;flex:1;border:0;
+    background:transparent;color:inherit;font:inherit;font-weight:500;min-height:22px;
+    border-radius:6px;cursor:default;padding:4px 6px;line-height:1.2;
+    overflow-wrap:anywhere}
+
+  .twk-toggle{position:relative;width:32px;height:18px;border:0;border-radius:999px;
+    background:rgba(0,0,0,.15);transition:background .15s;cursor:default;padding:0}
+  .twk-toggle[data-on="1"]{background:#34c759}
+  .twk-toggle i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+  .twk-toggle[data-on="1"] i{transform:translateX(14px)}
+
+  .twk-num{display:flex;align-items:center;height:26px;padding:0 0 0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;background:rgba(255,255,255,.6)}
+  .twk-num-lbl{font-weight:500;color:rgba(41,38,27,.6);cursor:ew-resize;
+    user-select:none;padding-right:8px}
+  .twk-num input{flex:1;min-width:0;height:100%;border:0;background:transparent;
+    font:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:0 8px 0 0;
+    outline:none;color:inherit;-moz-appearance:textfield}
+  .twk-num input::-webkit-inner-spin-button,.twk-num input::-webkit-outer-spin-button{
+    -webkit-appearance:none;margin:0}
+  .twk-num-unit{padding-right:8px;color:rgba(41,38,27,.45)}
+
+  .twk-btn{appearance:none;height:26px;padding:0 12px;border:0;border-radius:7px;
+    background:rgba(0,0,0,.78);color:#fff;font:inherit;font-weight:500;cursor:default}
+  .twk-btn:hover{background:rgba(0,0,0,.88)}
+  .twk-btn.secondary{background:rgba(0,0,0,.06);color:inherit}
+  .twk-btn.secondary:hover{background:rgba(0,0,0,.1)}
+
+  .twk-swatch{appearance:none;-webkit-appearance:none;width:56px;height:22px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:6px;padding:0;cursor:default;
+    background:transparent;flex-shrink:0}
+  .twk-swatch::-webkit-color-swatch-wrapper{padding:0}
+  .twk-swatch::-webkit-color-swatch{border:0;border-radius:5.5px}
+  .twk-swatch::-moz-color-swatch{border:0;border-radius:5.5px}
+
+  .twk-chips{display:flex;gap:6px}
+  .twk-chip{position:relative;appearance:none;flex:1;min-width:0;height:46px;
+    padding:0;border:0;border-radius:6px;overflow:hidden;cursor:default;
+    box-shadow:0 0 0 .5px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.06);
+    transition:transform .12s cubic-bezier(.3,.7,.4,1),box-shadow .12s}
+  .twk-chip:hover{transform:translateY(-1px);
+    box-shadow:0 0 0 .5px rgba(0,0,0,.18),0 4px 10px rgba(0,0,0,.12)}
+  .twk-chip[data-on="1"]{box-shadow:0 0 0 1.5px rgba(0,0,0,.85),
+    0 2px 6px rgba(0,0,0,.15)}
+  .twk-chip>span{position:absolute;top:0;bottom:0;right:0;width:34%;
+    display:flex;flex-direction:column;box-shadow:-1px 0 0 rgba(0,0,0,.1)}
+  .twk-chip>span>i{flex:1;box-shadow:0 -1px 0 rgba(0,0,0,.1)}
+  .twk-chip>span>i:first-child{box-shadow:none}
+  .twk-chip svg{position:absolute;top:6px;left:6px;width:13px;height:13px;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
+`;
+
+// ── useTweaks ───────────────────────────────────────────────────────────────
+// Single source of truth for tweak values. setTweak persists via the host
+// (__edit_mode_set_keys → host rewrites the EDITMODE block on disk).
+function useTweaks(defaults: any) {
+  const [values, setValues] = React.useState(defaults);
+  // Accepts either setTweak('key', value) or setTweak({ key: value, ... }) so a
+  // useState-style call doesn't write a "[object Object]" key into the persisted
+  // JSON block.
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null
+      ? keyOrEdits : { [keyOrEdits]: val };
+    setValues((prev) => ({ ...prev, ...edits }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+    // Same-window signal so in-page listeners (deck-stage rail thumbnails)
+    // can react — the parent message only reaches the host, not peers.
+    window.dispatchEvent(new CustomEvent('tweakchange', { detail: edits }));
+  }, []);
+  return [values, setTweak];
+}
+
+// ── TweaksPanel ─────────────────────────────────────────────────────────────
+// Floating shell. Registers the protocol listener BEFORE announcing
+// availability — if the announce ran first, the host's activate could land
+// before our handler exists and the toolbar toggle would silently no-op.
+// The close button posts __edit_mode_dismissed so the host's toolbar toggle
+// flips off in lockstep; the host echoes __deactivate_edit_mode back which
+// is what actually hides the panel.
+function TweaksPanel({ title = 'Tweaks', noDeckControls = false, children }: any) {
+  const [open, setOpen] = React.useState(false);
+  const dragRef = React.useRef(null);
+  // Auto-inject a rail toggle when a <deck-stage> is on the page. The
+  // toggle drives the deck's per-viewer _railVisible via window message;
+  // state is mirrored from the same localStorage key the deck reads so
+  // the control reflects reality across reloads. The mechanism is the
+  // message — authors who want custom placement can post it directly
+  // and pass noDeckControls to suppress this one.
+  const hasDeckStage = React.useMemo(
+    () => typeof document !== 'undefined' && !!document.querySelector('deck-stage'),
+    [],
+  );
+  // Hide the toggle until the host has actually enabled the rail (the
+  // __omelette_rail_enabled window message, posted only when the
+  // omelette_deck_rail_enabled flag is on for this user). The initial read
+  // covers TweaksPanel mounting after the message already arrived; the
+  // listener covers the common case of mounting first.
+  const [railEnabled, setRailEnabled] = React.useState(
+    () => hasDeckStage && !!document.querySelector('deck-stage')?._railEnabled,
+  );
+  React.useEffect(() => {
+    if (!hasDeckStage || railEnabled) return undefined;
+    const onMsg = (e) => {
+      if (e.data && e.data.type === '__omelette_rail_enabled') setRailEnabled(true);
+    };
+    window.addEventListener('message', onMsg);
+    return () => window.removeEventListener('message', onMsg);
+  }, [hasDeckStage, railEnabled]);
+  const [railVisible, setRailVisible] = React.useState(() => {
+    try { return localStorage.getItem('deck-stage.railVisible') !== '0'; } catch (e) { return true; }
+  });
+  const toggleRail = (on) => {
+    setRailVisible(on);
+    window.postMessage({ type: '__deck_rail_visible', on }, '*');
+  };
+  const offsetRef = React.useRef({ x: 16, y: 16 });
+  const PAD = 16;
+
+  const clampToViewport = React.useCallback(() => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const w = panel.offsetWidth, h = panel.offsetHeight;
+    const maxRight = Math.max(PAD, window.innerWidth - w - PAD);
+    const maxBottom = Math.max(PAD, window.innerHeight - h - PAD);
+    offsetRef.current = {
+      x: Math.min(maxRight, Math.max(PAD, offsetRef.current.x)),
+      y: Math.min(maxBottom, Math.max(PAD, offsetRef.current.y)),
+    };
+    panel.style.right = offsetRef.current.x + 'px';
+    panel.style.bottom = offsetRef.current.y + 'px';
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    clampToViewport();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', clampToViewport);
+      return () => window.removeEventListener('resize', clampToViewport);
+    }
+    const ro = new ResizeObserver(clampToViewport);
+    ro.observe(document.documentElement);
+    return () => ro.disconnect();
+  }, [open, clampToViewport]);
+
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      const t = e?.data?.type;
+      if (t === '__activate_edit_mode') setOpen(true);
+      else if (t === '__deactivate_edit_mode') setOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const dismiss = () => {
+    setOpen(false);
+    window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
+  };
+
+  const onDragStart = (e) => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const r = panel.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const startRight = window.innerWidth - r.right;
+    const startBottom = window.innerHeight - r.bottom;
+    const move = (ev) => {
+      offsetRef.current = {
+        x: startRight - (ev.clientX - sx),
+        y: startBottom - (ev.clientY - sy),
+      };
+      clampToViewport();
+    };
+    const up = () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
+
+  if (!open) return null;
+  return (
+    <>
+      <style>{__TWEAKS_STYLE}</style>
+      <div ref={dragRef} className="twk-panel" data-noncommentable=""
+           style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
+        <div className="twk-hd" onMouseDown={onDragStart}>
+          <b>{title}</b>
+          <button className="twk-x" aria-label="Close tweaks"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={dismiss}>✕</button>
+        </div>
+        <div className="twk-body">
+          {children}
+          {hasDeckStage && railEnabled && !noDeckControls && (
+            <TweakSection label="Deck">
+              <TweakToggle label="Thumbnail rail" value={railVisible} onChange={toggleRail} />
+            </TweakSection>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── Layout helpers ──────────────────────────────────────────────────────────
+
+function TweakSection({ label, children }: any) {
+  return (
+    <>
+      <div className="twk-sect">{label}</div>
+      {children}
+    </>
+  );
+}
+
+function TweakRow({ label, value, children, inline = false }: any) {
+  return (
+    <div className={inline ? 'twk-row twk-row-h' : 'twk-row'}>
+      <div className="twk-lbl">
+        <span>{label}</span>
+        {value != null && <span className="twk-val">{value}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ── Controls ────────────────────────────────────────────────────────────────
+
+function TweakSlider({ label, value, min = 0, max = 100, step = 1, unit = '', onChange }: any) {
+  return (
+    <TweakRow label={label} value={`${value}${unit}`}>
+      <input type="range" className="twk-slider" min={min} max={max} step={step}
+             value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </TweakRow>
+  );
+}
+
+function TweakToggle({ label, value, onChange }: any) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <button type="button" className="twk-toggle" data-on={value ? '1' : '0'}
+              role="switch" aria-checked={!!value}
+              onClick={() => onChange(!value)}><i /></button>
+    </div>
+  );
+}
+
+function TweakRadio({ label, value, options, onChange }: any) {
+  const trackRef = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
+  // The active value is read by pointer-move handlers attached for the lifetime
+  // of a drag — ref it so a stale closure doesn't fire onChange for every move.
+  const valueRef = React.useRef(value);
+  valueRef.current = value;
+
+  // Segments wrap mid-word once per-segment width runs out. The track is
+  // ~248px (280 panel − 28 body pad − 4 seg pad), each button loses 12px
+  // to its own padding, and 11.5px system-ui averages ~6.3px/char — so 2
+  // options fit ~16 chars each, 3 fit ~10. Past that (or >3 options), fall
+  // back to a dropdown rather than wrap.
+  const labelLen = (o) => String(typeof o === 'object' ? o.label : o).length;
+  const maxLen = options.reduce((m, o) => Math.max(m, labelLen(o)), 0);
+  const fitsAsSegments = maxLen <= ({ 2: 16, 3: 10 }[options.length] ?? 0);
+  if (!fitsAsSegments) {
+    // <select> emits strings — map back to the original option value so the
+    // fallback stays type-preserving (numbers, booleans) like the segment path.
+    const resolve = (s) => {
+      const m = options.find((o) => String(typeof o === 'object' ? o.value : o) === s);
+      return m === undefined ? s : typeof m === 'object' ? m.value : m;
+    };
+    return <TweakSelect label={label} value={value} options={options}
+                        onChange={(s) => onChange(resolve(s))} />;
+  }
+  const opts = options.map((o) => (typeof o === 'object' ? o : { value: o, label: o }));
+  const idx = Math.max(0, opts.findIndex((o) => o.value === value));
+  const n = opts.length;
+
+  const segAt = (clientX) => {
+    const r = trackRef.current.getBoundingClientRect();
+    const inner = r.width - 4;
+    const i = Math.floor(((clientX - r.left - 2) / inner) * n);
+    return opts[Math.max(0, Math.min(n - 1, i))].value;
+  };
+
+  const onPointerDown = (e) => {
+    setDragging(true);
+    const v0 = segAt(e.clientX);
+    if (v0 !== valueRef.current) onChange(v0);
+    const move = (ev) => {
+      if (!trackRef.current) return;
+      const v = segAt(ev.clientX);
+      if (v !== valueRef.current) onChange(v);
+    };
+    const up = () => {
+      setDragging(false);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  return (
+    <TweakRow label={label}>
+      <div ref={trackRef} role="radiogroup" onPointerDown={onPointerDown}
+           className={dragging ? 'twk-seg dragging' : 'twk-seg'}>
+        <div className="twk-seg-thumb"
+             style={{ left: `calc(2px + ${idx} * (100% - 4px) / ${n})`,
+                      width: `calc((100% - 4px) / ${n})` }} />
+        {opts.map((o) => (
+          <button key={o.value} type="button" role="radio" aria-checked={o.value === value}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakSelect({ label, value, options, onChange }: any) {
+  return (
+    <TweakRow label={label}>
+      <select className="twk-field" value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map((o) => {
+          const v = typeof o === 'object' ? o.value : o;
+          const l = typeof o === 'object' ? o.label : o;
+          return <option key={v} value={v}>{l}</option>;
+        })}
+      </select>
+    </TweakRow>
+  );
+}
+
+function TweakText({ label, value, placeholder, onChange }: any) {
+  return (
+    <TweakRow label={label}>
+      <input className="twk-field" type="text" value={value} placeholder={placeholder}
+             onChange={(e) => onChange(e.target.value)} />
+    </TweakRow>
+  );
+}
+
+function TweakNumber({ label, value, min, max, step = 1, unit = '', onChange }: any) {
+  const clamp = (n) => {
+    if (min != null && n < min) return min;
+    if (max != null && n > max) return max;
+    return n;
+  };
+  const startRef = React.useRef({ x: 0, val: 0 });
+  const onScrubStart = (e) => {
+    e.preventDefault();
+    startRef.current = { x: e.clientX, val: value };
+    const decimals = (String(step).split('.')[1] || '').length;
+    const move = (ev) => {
+      const dx = ev.clientX - startRef.current.x;
+      const raw = startRef.current.val + dx * step;
+      const snapped = Math.round(raw / step) * step;
+      onChange(clamp(Number(snapped.toFixed(decimals))));
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+  return (
+    <div className="twk-num">
+      <span className="twk-num-lbl" onPointerDown={onScrubStart}>{label}</span>
+      <input type="number" value={value} min={min} max={max} step={step}
+             onChange={(e) => onChange(clamp(Number(e.target.value)))} />
+      {unit && <span className="twk-num-unit">{unit}</span>}
+    </div>
+  );
+}
+
+// Relative-luminance contrast pick — checkmarks drawn over a swatch need to
+// read on both #111 and #fafafa without per-option configuration. Hex input
+// only (#rgb / #rrggbb); named or rgb()/hsl() colors fall through to "light".
+function __twkIsLight(hex) {
+  const h = String(hex).replace('#', '');
+  const x = h.length === 3 ? h.replace(/./g, (c) => c + c) : h.padEnd(6, '0');
+  const n = parseInt(x.slice(0, 6), 16);
+  if (Number.isNaN(n)) return true;
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return r * 299 + g * 587 + b * 114 > 148000;
+}
+
+const __TwkCheck = ({ light }) => (
+  <svg viewBox="0 0 14 14" aria-hidden="true">
+    <path d="M3 7.2 5.8 10 11 4.2" fill="none" strokeWidth="2.2"
+          strokeLinecap="round" strokeLinejoin="round"
+          stroke={light ? 'rgba(0,0,0,.78)' : '#fff'} />
+  </svg>
+);
+
+// TweakColor — curated color/palette picker. Each option is either a single
+// hex string or an array of 1-5 hex strings; the card adapts — a lone color
+// renders solid, a palette renders colors[0] as the hero (left ~2/3) with the
+// rest stacked in a sharp column on the right. onChange emits the
+// option in the shape it was passed (string stays string, array stays array).
+// Without options it falls back to the native color input for back-compat.
+function TweakColor({ label, value, options, onChange }: any) {
+  if (!options || !options.length) {
+    return (
+      <div className="twk-row twk-row-h">
+        <div className="twk-lbl"><span>{label}</span></div>
+        <input type="color" className="twk-swatch" value={value}
+               onChange={(e) => onChange(e.target.value)} />
+      </div>
+    );
+  }
+  // Native <input type=color> emits lowercase hex per the HTML spec, so
+  // compare case-insensitively. String() guards JSON.stringify(undefined),
+  // which returns the primitive undefined (no .toLowerCase).
+  const key = (o) => String(JSON.stringify(o)).toLowerCase();
+  const cur = key(value);
+  return (
+    <TweakRow label={label}>
+      <div className="twk-chips" role="radiogroup">
+        {options.map((o, i) => {
+          const colors = Array.isArray(o) ? o : [o];
+          const [hero, ...rest] = colors;
+          const sup = rest.slice(0, 4);
+          const on = key(o) === cur;
+          return (
+            <button key={i} type="button" className="twk-chip" role="radio"
+                    aria-checked={on} data-on={on ? '1' : '0'}
+                    aria-label={colors.join(', ')} title={colors.join(' · ')}
+                    style={{ background: hero }}
+                    onClick={() => onChange(o)}>
+              {sup.length > 0 && (
+                <span>
+                  {sup.map((c, j) => <i key={j} style={{ background: c }} />)}
+                </span>
+              )}
+              {on && <__TwkCheck light={__twkIsLight(hero)} />}
+            </button>
+          );
+        })}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakButton({ label, onClick, secondary = false }: any) {
+  return (
+    <button type="button" className={secondary ? 'twk-btn secondary' : 'twk-btn'}
+            onClick={onClick}>{label}</button>
+  );
+}
+
+
+
 function useLocalStorage(key, initial) {
   const [val, setVal] = useState(() => { try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : initial; } catch { return initial; } });
   const set = useCallback(v => { setVal(prev => { const next = typeof v === "function" ? v(prev) : v; try { localStorage.setItem(key, JSON.stringify(next)); } catch {} return next; }); }, [key]);
@@ -754,7 +1850,7 @@ async function extractTextPreview(file) {
     return new Promise(resolve => {
       const r = new FileReader();
       r.onload = e => {
-        const full = (e.target?.result as string) || "";
+        const full = e.target.result || "";
         resolve({ text: full.slice(0, 600), words: full.split(/\s+/).filter(w=>w.length>1).length, source:"client" });
       };
       r.onerror = () => resolve(null);
@@ -767,7 +1863,7 @@ async function extractTextPreview(file) {
       const r = new FileReader();
       r.onload = e => {
         try {
-          const s = (e.target?.result as string) || "";
+          const s = e.target.result || "";
           // Extract visible text between BT...ET markers and parentheses
           const parens = (s.match(/\(([^)]{3,80})\)/g) || []).map(m => m.slice(1,-1)).filter(t => /[a-zA-ZÀ-ÿ]{3}/.test(t));
           const text = parens.join(" ").replace(/\\n/g," ").replace(/\s{2,}/g," ").slice(0,600);
@@ -821,13 +1917,13 @@ function uploadStageLabel(progress) {
 
 // ─── SHARED UTILS ─────────────────────────────────────────────────────────────
 const fmtSize = b => { if(!b) return "—"; const m=b/1048576; return m>=1?m.toFixed(1)+" MB":Math.round(b/1024)+" KB"; };
-const fmtTime = (iso: string) => { const d=Math.floor((Date.now()-new Date(iso).getTime())/60000); if(d<1)return"À l'instant";if(d<60)return`${d} min`;if(d<1440)return`${Math.floor(d/60)}h`;if(d<2880)return"Hier";return new Date(iso).toLocaleDateString("fr-CA",{day:"numeric",month:"short"}); };
+const fmtTime = iso => { const d=Math.floor((Date.now()-new Date(iso))/60000); if(d<1)return"À l'instant";if(d<60)return`${d} min`;if(d<1440)return`${Math.floor(d/60)}h`;if(d<2880)return"Hier";return new Date(iso).toLocaleDateString("fr-CA",{day:"numeric",month:"short"}); };
 const genTitle = msg => { const w=msg.replace(/[*#_]/g,"").trim().split(" "); return w.slice(0,7).join(" ")+(w.length>7?"...":""); };
 // Aucune limite de taille — tous les fichiers acceptés sans restriction
 const validateFile = () => null;
 
 const T = {
-  fr: { nav:{dashboard:"Dashboard",chat:"Chat IA",documents:"Documents",pipeline:"Pipeline RAG",governance:"Gouvernance",agents:"Agents",settings:"Paramètres",sandbox:"Sandbox IA"}, lang:"FR", langToggle:"EN",
+  fr: { nav:{dashboard:"Dashboard",chat:"Chat IA",documents:"Documents",pipeline:"Pipeline RAG",governance:"Gouvernance",agents:"Agents",settings:"Paramètres"}, lang:"FR", langToggle:"EN",
     dash:{title:"Tableau de bord",updated:"Mis à jour",activity:"Activité récente",calendar:"Calendrier fiscal 2025"},
     docs:{title:"Gestion documentaire RAG",knowledge:"Sources de connaissance métier",client:"Documents client",upload:"Glissez vos fichiers ici",sub:"Cliquez pour parcourir · Dossier entier · Jusqu'à 500 MB/fichier · Stockage RAG illimité · Tous types",indexed:"✓ Indexé",staServerOnly:"Extraction côté serveur"},
     chat:{new:"Nouvelle conversation",send:"Envoyer",copy:"Copier",copied:"Copié !",export:"Exporter",retry:"Réessayer",routing:"Détection agent...",noConv:"Aucune conversation\nCommencez par envoyer un message",resume:"Conversation reprise",autoRouted:"Auto-routé vers"},
@@ -835,7 +1931,7 @@ const T = {
     pipeline:{title:"Pipeline RAG — Observabilité",availability:"Disponibilité",latency:"Latence",errors:"Erreurs",sla:"SLA",lastRun:"Dernier run"},
     governance:{title:"Gouvernance & Conformité",policies:"Politiques actives",catalog:"Catalogue données",owner:"Responsable",lastReview:"Dernière revue",nextAudit:"Prochain audit",status:{compliant:"Conforme",review:"À réviser",noncompliant:"Non conforme"}},
   },
-  en: { nav:{dashboard:"Dashboard",chat:"AI Chat",documents:"Documents",pipeline:"RAG Pipeline",governance:"Governance",agents:"Agents",settings:"Settings",sandbox:"AI Sandbox"}, lang:"EN", langToggle:"FR",
+  en: { nav:{dashboard:"Dashboard",chat:"AI Chat",documents:"Documents",pipeline:"RAG Pipeline",governance:"Governance",agents:"Agents",settings:"Settings"}, lang:"EN", langToggle:"FR",
     dash:{title:"Dashboard",updated:"Updated",activity:"Recent activity",calendar:"Fiscal calendar 2025"},
     docs:{title:"RAG Document Management",knowledge:"Business knowledge sources",client:"Client documents",upload:"Drag your files here",sub:"Click to browse · Folder upload · Up to 500 MB/file · Unlimited RAG storage · All types",indexed:"✓ Indexed",staServerOnly:"Server-side extraction"},
     chat:{new:"New conversation",send:"Send",copy:"Copy",copied:"Copied!",export:"Export",retry:"Retry",routing:"Detecting agent...",noConv:"No conversations\nStart by sending a message",resume:"Conversation resumed",autoRouted:"Auto-routed to"},
@@ -878,12 +1974,68 @@ async function callClaudeWithWebSearch(system, messages) {
 // Route to correct API based on agent type and available key
 const WEB_SEARCH_AGENTS = new Set(["VeilleAgent","SubventionsAgent"]);
 
+function detectAgentFromFile(filename, previewText = "") {
+  const s = (filename + " " + previewText).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  if (/t1|t2|tps|tvq|gst|hst|impot|tax|cra|fiscal|revenu.quebec|declaration|amortissement|deduction/.test(s)) return "TaxAgent";
+  if (/audit|ifrs|aspe|verification|controle.interne|cpa|materialite|norme/.test(s)) return "AuditAgent";
+  if (/tresorerie|cash|liquidite|flux|budget|prevision|bfr/.test(s)) return "CashFlowAgent";
+  if (/conformite|loi.25|casl|pipeda|politique|donnees.personnelles|consentement|efvp/.test(s)) return "ComplianceAgent";
+  if (/ratio|analyse.financiere|benchmark|baiia|ebitda|marge|solvabilite|etats.financiers/.test(s)) return "FinancialAgent";
+  if (/investissement|roi|tir|van|dcf|portefeuille|acquisition/.test(s)) return "InvestmentAgent";
+  if (/scan|ocr|photo|facture.num|releve.num|manuscrit/.test(s)) return "OCRAgent";
+  if (/veille|actualite|mise.a.jour|bulletin|circulaire|nouveaute/.test(s)) return "VeilleAgent";
+  if (/subvention|aide.financiere|programme|grant|bourse|sred|irap/.test(s)) return "SubventionsAgent";
+  return "FinancialAgent";
+}
 
-// ─── ORCHESTRATOR SYSTEM ──────────────────────────────────────────────────────
-// The orchestrator is the brain of the virtual CPA firm.
-// It analyzes each request, determines the optimal workflow (single/parallel/sequential),
-// assigns the right specialists, coordinates execution, and synthesizes results.
+// Inspired by VectDocs — lightweight language detection (no external lib)
+function detectLanguage(text) {
+  if (!text || text.length < 30) return "unknown";
+  const fr = (text.match(/\b(les|des|dans|pour|avec|sur|est|sont|une|qui|que|mais|par|nous|vous|ils|elles|cette|votre|notre)\b/gi)||[]).length;
+  const en = (text.match(/\b(the|and|for|with|that|this|are|from|have|been|will|your|their|not|can|all|been|more)\b/gi)||[]).length;
+  return fr > en ? "fr" : en > fr ? "en" : "unknown";
+}
 
+// Estimate chunks before server processes (VectDocs-inspired schema enrichment)
+function uploadStageLabel(progress) {
+  if (progress < 15) return "Lecture...";
+  if (progress < 35) return "Extraction texte...";
+  if (progress < 60) return "Chunking (500 tok)...";
+  if (progress < 85) return "Embedding HF...";
+  if (progress < 100) return "Stockage pgvector...";
+  return null;
+}
+
+// ─── SHARED UTILS ─────────────────────────────────────────────────────────────
+async function callClaude(system, messages) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1200, system, messages: messages.map(m=>({role:m.role,content:m.content})) })
+  });
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  const d = await res.json();
+  return d.content?.[0]?.text || "Erreur inattendue.";
+}
+
+// Web-search-enabled call — VeilleAgent + SubventionsAgent
+// Uses Anthropic web_search tool for real-time information
+async function callClaudeWithWebSearch(system, messages) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      model:"claude-sonnet-4-20250514", max_tokens:2000, system,
+      tools:[{ type:"web_search_20250305", name:"web_search" }],
+      messages: messages.map(m=>({role:m.role,content:m.content}))
+    })
+  });
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  const d = await res.json();
+  // Collect all text blocks (may be multiple after tool use)
+  const textBlocks = (d.content||[]).filter(b=>b.type==="text").map(b=>b.text);
+  return textBlocks.join("\n\n") || "Erreur inattendue.";
+}
+
+// Route to correct API based on agent type and available key
 const ORCHESTRATOR_PROMPT = {
   fr: `Tu es l'Orchestrateur du Bureau CPA Virtuel — le directeur coordinateur qui dirige une équipe de 9 spécialistes CPA.
 
@@ -1244,6 +2396,200 @@ const DATA_QUALITY = [
 ];
 
 // ─── ENHANCED UPLOAD ZONE (VectDocs-inspired) ──────────────────────────────
+
+
+// ─── ORCHESTRATOR SYSTEM ──────────────────────────────────────────────────────
+// The orchestrator is the brain of the virtual CPA firm.
+// It analyzes each request, determines the optimal workflow (single/parallel/sequential),
+// assigns the right specialists, coordinates execution, and synthesizes results.
+
+async function analyzeWorkflow(query, historyMsgs, lang, openrouterKey) {
+  const system = ORCHESTRATOR_PROMPT[lang] || ORCHESTRATOR_PROMPT.fr;
+  const msgs = [
+    ...historyMsgs.slice(-4).filter(m=>m.role!=="system"),
+    { role:"user", content: `Analyse cette demande et retourne le plan de workflow JSON :\n\n"${query}"` }
+  ];
+  try {
+    let raw;
+    if (openrouterKey) {
+      raw = await callOpenRouter(DEFAULT_AGENT_MODEL, system, msgs, openrouterKey, false);
+    } else {
+      raw = await callClaude(system, msgs);
+    }
+    // Extract JSON from response
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const plan = JSON.parse(jsonMatch[0]);
+      // Validate agents exist
+      if (plan.agents) plan.agents = plan.agents.filter(id => AGENTS_DEF.find(a=>a.id===id));
+      return plan;
+    }
+  } catch(e) { console.warn("Orchestrator parse error:", e); }
+  // Fallback: fast route
+  const fast = fastRoute(query);
+  return { type:"single", priority:"normal", agents:[fast||"FinancialAgent"],
+    reason:"Routing automatique", user_message:"", estimated_seconds:10, synthesis_needed:false };
+}
+
+// Execute a workflow plan — returns array of {agentId, name, reply, status}
+async function executeWorkflow(plan, query, historyMsgs, agentSettings, openrouterKey, lang, onProgress) {
+  const baseMessages = historyMsgs.slice(-6).filter(m=>m.role!=="system");
+  const userMsg = { role:"user", content:query };
+
+  const runOne = async (agentId, contextExtra="") => {
+    const def = agentById(agentId);
+    const prompt = agentSettings[agentId]?.prompt || def.defaultPrompt[lang];
+    const model  = agentSettings[agentId]?.model;
+    const msgs = [...baseMessages, userMsg];
+    if (contextExtra) msgs.push({ role:"user", content: contextExtra });
+    onProgress?.(agentId, "working");
+    try {
+      const reply = await callAgent(agentId, prompt, msgs, openrouterKey, model);
+      onProgress?.(agentId, "done");
+      return { agentId, name:agentName(agentId, lang), title:agentTitle(agentId, lang), reply, status:"done" };
+    } catch(e) {
+      onProgress?.(agentId, "error");
+      return { agentId, name:agentName(agentId, lang), title:agentTitle(agentId, lang), reply:`Erreur : ${e.message}`, status:"error" };
+    }
+  };
+
+  if (plan.type === "single") {
+    const result = await runOne(plan.agents[0]);
+    return [result];
+  }
+
+  if (plan.type === "parallel") {
+    return await Promise.all(plan.agents.map(id => runOne(id)));
+  }
+
+  if (plan.type === "sequential") {
+    const results = [];
+    let context = "";
+    for (const agentId of plan.agents) {
+      const result = await runOne(agentId, context);
+      results.push(result);
+      const n = agentName(agentId, lang);
+      context = lang==="fr"
+        ? `\n\n[Analyse préalable de ${n} :]:\n${result.reply}\n\n[Suite de la demande originale :]`
+        : `\n\n[Prior analysis by ${n}:]:\n${result.reply}\n\n[Continuation of original request:]`;
+    }
+    return results;
+  }
+
+  if (plan.type === "hybrid" && plan.phases) {
+    const results = [];
+    let prevContext = "";
+    for (const phase of plan.phases) {
+      if (phase.type === "parallel") {
+        const phaseResults = await Promise.all(phase.agents.map(id => runOne(id, prevContext)));
+        results.push(...phaseResults);
+        prevContext = phaseResults.map(r => `[${r.name}]: ${r.reply}`).join("\n\n");
+      } else {
+        for (const agentId of phase.agents) {
+          const result = await runOne(agentId, prevContext);
+          results.push(result);
+          prevContext = `[${result.name}]: ${result.reply}`;
+        }
+      }
+    }
+    return results;
+  }
+
+  return [await runOne(plan.agents?.[0] || "FinancialAgent")];
+}
+
+// Synthesize multiple agent results into a unified response
+async function synthesizeResults(results, query, plan, lang, openrouterKey, agentSettings) {
+  if (results.length <= 1) return null;
+  const synthPrompt = lang === "fr"
+    ? `Tu es l'Orchestrateur du Bureau CPA Virtuel. Plusieurs spécialistes ont analysé la demande suivante en parallèle ou en séquence. Tu dois maintenant synthétiser leurs analyses en une réponse unifiée, structurée et directement actionnable pour le client.
+
+INSTRUCTIONS :
+- Commence par un résumé exécutif de 3-5 points clés
+- Intègre les recommandations complémentaires de chaque spécialiste sans répétition
+- Mets en évidence les points de convergence et les tensions éventuelles entre analyses
+- Termine par un plan d'action priorisé (URGENT / ÉLEVÉ / NORMAL) avec responsable suggéré
+- Sois direct, pratique et orienté décision — pas de théorie
+- Indique quel spécialiste a produit chaque analyse (prénom seulement)`
+    : `You are the Virtual CPA Firm Orchestrator. Multiple specialists have analyzed the following request in parallel or sequentially. Synthesize their analyses into a unified, structured, directly actionable response.
+
+INSTRUCTIONS:
+- Start with a 3-5 point executive summary
+- Integrate complementary recommendations without repetition
+- Highlight convergence points and potential tensions
+- End with a prioritized action plan (URGENT / HIGH / NORMAL) with suggested owner
+- Be direct, practical, decision-oriented — no theory
+- Indicate which specialist produced each analysis (first name only)`;
+
+  const combined = results.map(r => `### ${r.name} — ${r.title}\n${r.reply}`).join("\n\n---\n\n");
+  const msgs = [{ role:"user", content:`Demande originale :\n"${query}"\n\n${combined}` }];
+  try {
+    if (openrouterKey) return await callOpenRouter(DEFAULT_AGENT_MODEL, synthPrompt, msgs, openrouterKey, false);
+    return await callClaude(synthPrompt, msgs);
+  } catch { return null; }
+}
+
+async function callOpenRouter(model, system, messages, apiKey, useWebSearch = false) {
+  const body = {
+    model,
+    messages: [{ role:"system", content:system }, ...messages.map(m=>({role:m.role,content:m.content}))],
+    max_tokens: useWebSearch ? 2000 : 1400,
+    ...(useWebSearch ? { plugins:[{ id:"web", max_results:5 }] } : {}),
+  };
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":`Bearer ${apiKey}`,
+      "HTTP-Referer":"https://z12cfo.zakiai.com",
+      "X-Title":"Z12 AI CFO Suite",
+    },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err?.error?.message || `OpenRouter ${res.status}`);
+  }
+  const d = await res.json();
+  return d.choices?.[0]?.message?.content || "Erreur inattendue.";
+}
+
+async function callAgent(agentId, system, messages, openrouterKey, agentModel) {
+  const useWeb = WEB_SEARCH_AGENTS.has(agentId);
+  // Priority: OpenRouter key → Anthropic direct
+  if (openrouterKey) {
+    const model = agentModel || DEFAULT_AGENT_MODEL;
+    return callOpenRouter(model, system, messages, openrouterKey, useWeb);
+  }
+  // Fallback: Anthropic API direct (no web search for free tier)
+  return useWeb
+    ? callClaudeWithWebSearch(system, messages)
+    : callClaude(system, messages);
+}
+
+function fastRoute(msg) {
+  const m = msg.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  if (/t1|t2|tps|tvq|gst|hst|fiscal|impot|cra|revenu.quebec|deduction|amortissement/.test(m)) return "TaxAgent";
+  if (/audit|ifrs|aspe|verification|controle.interne|cpa|materialite/.test(m)) return "AuditAgent";
+  if (/tresorerie|cash.flow|liquidite|flux.de|budget|prevision.de.caisse|bfr/.test(m)) return "CashFlowAgent";
+  if (/loi.25|casl|pipeda|conformite|donnees.personnelles|consentement|efvp/.test(m)) return "ComplianceAgent";
+  if (/ratio|analyse.financiere|benchmark|baiia|ebitda|marge|solvabilite/.test(m)) return "FinancialAgent";
+  if (/investissement|roi|tir|van|dcf|portefeuille|acquisition/.test(m)) return "InvestmentAgent";
+  if (/scan|ocr|photo|facture.scan|releve.scan|manuscrit/.test(m)) return "OCRAgent";
+  if (/veille|actualite|mise.a.jour|nouveaute|changement.recent|derniere.loi|nouvelle.norme|bulletin|circulaire|nouvelles.fiscales/.test(m)) return "VeilleAgent";
+  if (/subvention|aide.financiere|programme.financement|grant|bourse|sred|irap|pari|investissement.quebec|cld|mrc|financement.gouvern|non.gouvern|fondation|accelerateur/.test(m)) return "SubventionsAgent";
+  return null;
+}
+
+async function routeViaAPI(msg) {
+  try {
+    const r = await callClaude("You are a routing agent. Given a user message, return ONLY the agent name — one of: TaxAgent, AuditAgent, CashFlowAgent, ComplianceAgent, FinancialAgent, InvestmentAgent, OCRAgent. Return nothing else.", [{role:"user",content:msg}]);
+    const name = r.trim().replace(/[^a-zA-Z]/g,"");
+    return AGENTS_DEF.find(a=>a.id===name)?.id || "FinancialAgent";
+  } catch { return "FinancialAgent"; }
+}
+
+// ─── MOCK DATA ────────────────────────────────────────────────────────────────
 function UploadZone({ color, lang, t, onAdd }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag]   = useState(false);
@@ -1417,115 +2763,690 @@ function UploadZone({ color, lang, t, onAdd }) {
   );
 }
 
-// ─── SIDEBAR ──────────────────────────────────────────────────────────────────
-function Sidebar({ view, setView, darkMode, setDarkMode, lang, setLang, t, P, open, setOpen }) {
-  const nav = [
-    {id:"dashboard",icon:"⬛",key:"dashboard"},
-    {id:"chat",     icon:"💬",key:"chat"},
-    {id:"documents",icon:"📁",key:"documents"},
-    {id:"pipeline", icon:"🔄",key:"pipeline"},
-    {id:"governance",icon:"🛡️",key:"governance"},
-    {id:"agents",   icon:"🤖",key:"agents"},
-    {id:"settings", icon:"⚙️",key:"settings"},
+
+
+// ─── STUDIO AGENTS MAP (for Avatar short codes) ──────────────────────────────
+// Maps AGENTS_DEF ids to studio avatar short codes
+const AGENTS_STUDIO = AGENTS_DEF.map(a => ({
+  id: a.id,
+  name: a.personName?.fr || a.id,
+  short: (a.personName?.fr || a.id).split(" ").map((w: string) => w[0]).join("").slice(0,2).toUpperCase(),
+  color: a.color,
+}));
+
+// Map agent IDs to studio agents for Avatar
+const A_STUDIO: Record<string,any> = Object.fromEntries(AGENTS_STUDIO.map(a => [a.id, a]));
+
+// ─── AVATAR COMPONENT ────────────────────────────────────────────────────────
+function Avatar({ agent, size=30, status }: any) {
+  return (
+    <div className={"avatar " + (status==="busy"?"busy":status==="done"?"done":"")}
+         style={{width:size,height:size,fontSize:size*0.34,background:agent?.color||"var(--accent)",flex:`0 0 ${size}px`,flexShrink:0}}>
+      {agent?.short||"?"}
+      {status && <span className={"avatar-status " + status}/>}
+    </div>
+  );
+}
+
+// ─── ROSTER SIDEBAR ──────────────────────────────────────────────────────────
+function Roster({ lang, busyIds, doneIds, activeNav, setNav, compact, setCompact, darkMode, setDarkMode, tweaks, setTweak }: any) {
+  const navItems: [string,string,any][] = [
+    ["studio",   lang==="fr"?"Studio":"Studio",               <svg viewBox="0 0 16 16" className="i"><path d="M2 4h12M2 8h12M2 12h7"/></svg>],
+    ["dashboard",lang==="fr"?"Tableau de bord":"Dashboard",   <svg viewBox="0 0 16 16" className="i"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>],
+    ["docs",     lang==="fr"?"Documents":"Documents",          <svg viewBox="0 0 16 16" className="i"><path d="M4 2h6l3 3v9H4z"/><path d="M10 2v3h3"/></svg>],
+    ["pipeline", lang==="fr"?"Pipeline RAG":"RAG Pipeline",   <svg viewBox="0 0 16 16" className="i"><circle cx="3" cy="8" r="2"/><circle cx="13" cy="8" r="2"/><path d="M5 8h6"/></svg>],
+    ["governance",lang==="fr"?"Gouvernance":"Governance",      <svg viewBox="0 0 16 16" className="i"><path d="M8 2l5 2v4c0 3-2 5.5-5 6-3-.5-5-3-5-6V4z"/></svg>],
+    ["team",     lang==="fr"?"Équipe":"Team",                  <svg viewBox="0 0 16 16" className="i"><circle cx="6" cy="6" r="2.5"/><circle cx="11.5" cy="7" r="2"/><path d="M2 14c0-2 2-3.5 4-3.5s4 1.5 4 3.5M9 13c0-1.6 1.5-2.5 3-2.5s3 .9 3 2.5"/></svg>],
+    ["settings", lang==="fr"?"Paramètres":"Settings",          <svg viewBox="0 0 16 16" className="i"><circle cx="8" cy="8" r="2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M3 13l1.5-1.5M11.5 4.5L13 3"/></svg>],
+    ["sandbox",  lang==="fr"?"Sandbox IA":"AI Sandbox",        <svg viewBox="0 0 16 16" className="i"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8h6M8 5v6"/></svg>],
   ];
 
-  const W = open ? 210 : 52;
-
   return (
-    <div style={{width:W,minWidth:W,background:P.sb,borderRight:`1px solid ${P.border}`,display:"flex",flexDirection:"column",flexShrink:0,transition:"width .22s cubic-bezier(.4,0,.2,1), min-width .22s cubic-bezier(.4,0,.2,1)",overflow:"hidden"}}>
-
-      {/* ── Header: logo + hamburger ── */}
-      <div style={{padding:"14px 10px 12px",display:"flex",alignItems:"center",justifyContent:open?"space-between":"center",borderBottom:`1px solid ${P.border}`,flexShrink:0}}>
-        {open && (
-          <div style={{paddingLeft:6}}>
-            <div style={{fontSize:14,fontWeight:700,color:P.accent,letterSpacing:"0.12em",lineHeight:1}}>Z12</div>
-            <div style={{fontSize:9,color:P.t3,marginTop:2,whiteSpace:"nowrap"}}>AI CFO Suite</div>
+    <aside className="roster">
+      <div className="brand">
+        <div className="brand-mark">Z</div>
+        {!compact && (
+          <div style={{minWidth:0,flex:1}}>
+            <div className="brand-name">Z12 CFO Suite</div>
+            <div className="brand-sub">ZAKI OS · v3.2</div>
           </div>
         )}
-        <button
-          onClick={()=>setOpen(o=>!o)}
-          title={open?"Réduire le menu":"Agrandir le menu"}
-          style={{width:30,height:30,borderRadius:8,border:`1px solid ${P.border}`,background:"transparent",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,flexShrink:0,color:P.t2,transition:"background .15s"}}
-        >
-          {/* Hamburger → X animation */}
-          <span style={{display:"block",width:14,height:1.5,background:P.t2,borderRadius:2,transition:"all .22s",transform:open?"rotate(45deg) translate(2px,4px)":"none"}}/>
-          <span style={{display:"block",width:14,height:1.5,background:P.t2,borderRadius:2,transition:"all .22s",opacity:open?0:1}}/>
-          <span style={{display:"block",width:14,height:1.5,background:P.t2,borderRadius:2,transition:"all .22s",transform:open?"rotate(-45deg) translate(2px,-4px)":"none"}}/>
+        <button onClick={()=>setCompact((v: boolean)=>!v)}
+          style={{width:28,height:28,borderRadius:6,border:"1px solid var(--line)",background:"transparent",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,flexShrink:0,marginLeft:"auto"}}>
+          <span style={{display:"block",width:12,height:1.5,background:"var(--ink-3)",borderRadius:2,transition:"all .22s",transform:compact?"none":"rotate(45deg) translate(2px,3px)"}}/>
+          <span style={{display:"block",width:12,height:1.5,background:"var(--ink-3)",borderRadius:2,transition:"all .22s",opacity:compact?1:0}}/>
+          <span style={{display:"block",width:12,height:1.5,background:"var(--ink-3)",borderRadius:2,transition:"all .22s",transform:compact?"none":"rotate(-45deg) translate(2px,-3px)"}}/>
         </button>
       </div>
 
-      {/* ── Nav items ── */}
-      <div style={{flex:1,paddingTop:6,overflowY:"auto",overflowX:"hidden"}}>
-        {nav.map(n=>(
-          <button
-            key={n.id}
-            onClick={()=>setView(n.id)}
-            title={!open ? t.nav[n.key] : undefined}
-            style={{
-              width:"100%",background:view===n.id?`${P.accent}18`:"transparent",
-              border:"none",borderLeft:`2px solid ${view===n.id?P.accent:"transparent"}`,
-              color:view===n.id?P.accent:P.t2,
-              padding:open?"9px 16px":"9px 0",
-              textAlign:"left",cursor:"pointer",
-              display:"flex",alignItems:"center",
-              justifyContent:open?"flex-start":"center",
-              gap:open?10:0,
-              fontSize:13,fontWeight:view===n.id?500:400,
-              transition:"all .15s",whiteSpace:"nowrap",
-            }}
-          >
-            <span style={{fontSize:15,flexShrink:0}}>{n.icon}</span>
-            {open && <span style={{opacity:1,transition:"opacity .15s"}}>{t.nav[n.key]}</span>}
-          </button>
+      {!compact && <div className="nav-section">{lang==="fr"?"Espace de travail":"Workspace"}</div>}
+      <div className="nav-list">
+        {navItems.slice(0,2).map(([id,label,icon])=>(
+          <div key={id} className={"nav-item " + (activeNav===id?"active":"")} onClick={()=>setNav(id)} title={compact?label:undefined}>
+            <span className="nav-icon-w">{icon}</span><span>{label}</span>
+          </div>
         ))}
       </div>
 
-      {/* ── Footer controls ── */}
-      <div style={{padding:open?"10px 12px":"10px 6px",borderTop:`1px solid ${P.border}`,display:"flex",flexDirection:"column",gap:6,flexShrink:0}}>
-        {open ? (
-          <>
-            <div style={{display:"flex",gap:5}}>
-              <button onClick={()=>setLang(l=>l==="fr"?"en":"fr")} style={{flex:1,background:`${P.accent}15`,border:`1px solid ${P.accent}35`,borderRadius:7,padding:"5px 0",color:P.accent,fontSize:11,fontWeight:600,cursor:"pointer"}}>{t.langToggle}</button>
-              <button onClick={()=>setDarkMode(d=>!d)} style={{flex:1,background:P.border,border:`1px solid ${P.border}`,borderRadius:7,padding:"5px 0",color:P.t2,fontSize:13,cursor:"pointer"}}>{darkMode?"☀️":"🌙"}</button>
+      {!compact && <div className="nav-section" style={{marginTop:6}}>{lang==="fr"?"Outils":"Tools"}</div>}
+      <div className="nav-list">
+        {navItems.slice(2).map(([id,label,icon])=>(
+          <div key={id} className={"nav-item " + (activeNav===id?"active":"")} onClick={()=>setNav(id)} title={compact?label:undefined}>
+            <span className="nav-icon-w">{icon}</span><span>{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {!compact && <div className="nav-section" style={{marginTop:6}}>{lang==="fr"?"Équipe CPA virtuelle":"Virtual CPA Team"}</div>}
+      <div className="roster-scroll" style={{flex:1,overflowY:"auto" as any}}>
+        {AGENTS_STUDIO.map((a: any) => {
+          const status = busyIds.has(a.id) ? "busy" : doneIds.has(a.id) ? "done" : null;
+          const def = AGENTS_DEF.find((d: any) => d.id === a.id);
+          return (
+            <div key={a.id} className={"agent-row " + (busyIds.has(a.id)?"busy":"")} title={a.name}>
+              <Avatar agent={a} size={28} status={status}/>
+              {!compact && (
+                <div className="agent-meta">
+                  <div className="agent-name">{a.name}</div>
+                  <div className="agent-title">{def?.personTitle?.fr||""}</div>
+                </div>
+              )}
             </div>
-            <div style={{fontSize:8,color:P.t3,textAlign:"center"}}>v3.2 · ZAKI OS</div>
-          </>
-        ) : (
-          <div style={{display:"flex",flexDirection:"column",gap:5,alignItems:"center"}}>
-            <button onClick={()=>setLang(l=>l==="fr"?"en":"fr")} title={t.langToggle} style={{width:32,height:24,background:`${P.accent}15`,border:`1px solid ${P.accent}35`,borderRadius:6,color:P.accent,fontSize:9,fontWeight:700,cursor:"pointer"}}>{t.langToggle}</button>
-            <button onClick={()=>setDarkMode(d=>!d)} title={darkMode?"Light mode":"Dark mode"} style={{width:32,height:24,background:P.border,border:`1px solid ${P.border}`,borderRadius:6,color:P.t2,fontSize:12,cursor:"pointer"}}>{darkMode?"☀️":"🌙"}</button>
+          );
+        })}
+      </div>
+
+      <div className="roster-foot">
+        <div className="user-dot">ZB</div>
+        {!compact && (
+          <div className="user-meta">
+            <div className="user-name">Zaki Belmokhtar</div>
+            <div className="user-org">Z12 AI CFO Suite</div>
           </div>
         )}
+        {!compact && (
+          <button onClick={()=>setDarkMode((v: boolean)=>!v)}
+            style={{marginLeft:"auto",width:26,height:26,borderRadius:6,border:"1px solid var(--line)",background:"transparent",cursor:"pointer",color:"var(--ink-3)",fontSize:12}}>
+            {darkMode?"☀":"🌙"}
+          </button>
+        )}
+      </div>
+    </aside>
+  );
+}
+
+
+function PlanCell({ agent, task, status }) {
+  return (
+    <div className={"plan-cell " + (status||"")}>
+      <Avatar agent={agent} size={20} status={status==="busy"?"busy":null}/>
+      <span className="plan-cell-name">{agent.short==="JF"?"JF Lebel":agent.name.split(" ")[0]}</span>
+      <span className="plan-cell-task">— {task}</span>
+    </div>
+  );
+}
+
+
+function PhasePlan({ lang, t, phaseStatus, taskStatus }: any) {
+  const ph = (n: number) => WORKFLOW_STUDIO.filter((w: any)=>w.phase===n);
+  const phaseLabel = ["","PHASE 1","PHASE 2","PHASE 3"];
+  return (
+    <div className="plan">
+      <div className="plan-rows">
+        {[1,2,3].map(n => (
+          <div className="plan-row" key={n}>
+            <div className="plan-step">{phaseLabel[n]}</div>
+            <div className="plan-cells">
+              {ph(n).map((w: any) => {
+                const sa = AGENTS_STUDIO.find((a: any)=>a.id===w.agent)||AGENTS_STUDIO[0];
+                const status = taskStatus[w.id]||"";
+                return (
+                  <div key={w.id} className={`plan-cell ${status==="busy"?"busy":status==="done"?"done":""}`}>
+                    <Avatar agent={sa} size={20} status={status==="busy"?"busy":null}/>
+                    <span className="plan-cell-name">{sa.name.split(" ")[0]}</span>
+                    <span className="plan-cell-task">— {w.task[lang]}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-// ─── DASHBOARD ────────────────────────────────────────────────────────────────
-function Dashboard({ t, P, lang }) {
-  const kpis = [{label:lang==="fr"?"Revenus Q1 2025":"Revenue Q1 2025",value:"$847 320",change:"+12.4%",up:true,icon:"💹"},{label:lang==="fr"?"Obligations fiscales":"Tax obligations",value:"$124 580",change:"Éch. 30 avr.",up:false,icon:"🏛️"},{label:lang==="fr"?"Cash flow net":"Net cash flow",value:"$203 445",change:"+8.2%",up:true,icon:"💧"},{label:lang==="fr"?"Score conformité":"Compliance score",value:"94/100",change:"Excellent",up:true,icon:"🛡️"}];
-  const acts = [{time:"2h",agent:"TaxAgent",text:lang==="fr"?"Analyse T2 — déduction amortissement paragraphe 13":"T2 analysis — paragraph 13 amortization deduction",color:P.accent},{time:"5h",agent:"CashFlowAgent",text:lang==="fr"?"Prévision 13 sem. — risque liquidité semaine 8":"13-week forecast — week 8 liquidity risk",color:P.violet},{time:"1j",agent:"VeilleAgent",text:lang==="fr"?"Veille ARC — nouvelles directives crédit d'impôt RS&DE publiées":"CRA Watch — new SR&ED tax credit guidelines published",color:"#14B8A6"},{time:"1j",agent:"SubventionsAgent",text:lang==="fr"?"3 nouvelles subventions PME tech Québec identifiées — PARI + Essor + CLD":"3 new Quebec tech SME grants identified — PARI + Essor + CLD",color:"#A855F7"},{time:"2j",agent:"AuditAgent",text:lang==="fr"?"Contrôles internes Q4 — 3 points d'attention":"Q4 internal controls — 3 attention points",color:P.blue},{time:"3j",agent:"InvestmentAgent",text:lang==="fr"?"DCF Laval — TRI 18.4% · GO":"Laval DCF — IRR 18.4% · GO",color:P.pink}];
-  const cal = [{d:"28 fév.",l:lang==="fr"?"T4 — Feuillets employés":"T4 — Employee slips",u:false},{d:"30 avr.",l:lang==="fr"?"T1 particuliers":"T1 personal returns",u:true},{d:"15 juin",l:lang==="fr"?"Acompte provisionnel Q2":"Q2 instalment",u:false},{d:"30 juin",l:lang==="fr"?"T2 — 6 mois après fin exercice":"T2 — 6 months after year-end",u:false}];
+function StreamingText({ text, speed=8, onDone }: any) {
+  const [out, setOut] = useState("");
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    let i = 0; setOut(""); setDone(false);
+    const id = setInterval(() => {
+      i += speed;
+      if (i >= text.length) { setOut(text); setDone(true); clearInterval(id); onDone?.(); }
+      else setOut(text.slice(0, i));
+    }, 28);
+    return () => clearInterval(id);
+  }, [text]);
+  return <span dangerouslySetInnerHTML={{__html: out + (done?"":"<span class=\'cursor\'></span>")}}/>;
+}
+
+// ─── DEMO WORKFLOW (for non-active state visual) ─────────────────────────────
+const WORKFLOW_STUDIO = [
+  { id:"jf-extract", agent:"OCRAgent",      phase:1, task:{fr:"Extraire P&L · 3 ans",     en:"Extract P&L · 3yr"},     dur:1400 },
+  { id:"marc-norm",  agent:"FinancialAgent", phase:2, task:{fr:"BAIIA normalisé",           en:"Normalize EBITDA"},       dur:2200 },
+  { id:"sarah-dcf",  agent:"InvestmentAgent",phase:2, task:{fr:"Modèle DCF + comparables",  en:"DCF + comparables"},      dur:2400 },
+  { id:"sophie-tax", agent:"TaxAgent",       phase:3, task:{fr:"Diagnostic fiscal + CDAE",  en:"Tax diagnostic + CDAE"},  dur:1800 },
+];
+
+const PageHead = ({title, sub, actions}: any) => (
+  <header className="page-head">
+    <div><div className="page-title serif">{title}</div><div className="page-sub">{sub}</div></div>
+    <div className="page-actions">{actions}</div>
+  </header>
+);
+
+const Spark = ({color="var(--accent)"}: any) => (
+  <svg className="tile-spark" width="80" height="32" viewBox="0 0 80 32"><polyline fill="none" stroke={color} strokeWidth="1.5" points="0,24 12,20 24,22 36,14 48,16 60,8 72,10 80,4"/></svg>
+);
+
+const A: Record<string,any> = Object.fromEntries(AGENTS_STUDIO.map((a: any) => [a.id, a]));
+
+function DashboardView({lang, t}) {
+  const fr = lang === "fr";
   return (
-    <div style={{padding:26,overflowY:"auto",flex:1}}>
-      <h1 style={{fontSize:20,fontWeight:600,color:P.t1,fontFamily:"'Playfair Display',Georgia,serif",marginBottom:4}}>{t.dash.title}</h1>
-      <p style={{fontSize:13,color:P.t2,marginBottom:18}}>{t.dash.updated} aujourd'hui 09:32 · PME Québec · Exercice 2025</p>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:12,marginBottom:18}}>
-        {kpis.map((k,i)=>(<div key={i} style={{...card(P),padding:"14px 16px"}}><div style={{fontSize:20,marginBottom:8}}>{k.icon}</div><div style={{fontSize:22,fontWeight:600,color:P.t1,fontFamily:"'DM Mono',monospace"}}>{k.value}</div><div style={{fontSize:12,color:P.t2,marginTop:3}}>{k.label}</div><div style={{fontSize:11,color:k.up?P.accent:P.gold,marginTop:5,fontWeight:500}}>{k.change}</div></div>))}
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-        <div style={{...card(P),padding:"16px 18px"}}>
-          <div style={{fontSize:13,fontWeight:500,color:P.t1,marginBottom:14}}>{t.dash.activity}</div>
-          {acts.map((a,i)=>(<div key={i} style={{display:"flex",gap:8,paddingBottom:10,marginBottom:10,borderBottom:i<acts.length-1?`1px solid ${P.border}`:"none"}}><div style={{width:6,height:6,borderRadius:"50%",background:a.color,marginTop:4,flexShrink:0}}/><div style={{flex:1}}><div style={{fontSize:12,color:P.t1,lineHeight:1.4}}>{a.text}</div><div style={{fontSize:10,color:P.t3,marginTop:2}}>{typeof a.agent==="object"?(a.agent as any).name:a.agent} · Il y a {a.time}</div></div></div>))}
+    <main className="page" data-screen-label="Dashboard">
+      <PageHead title={fr?"Tableau de bord":"Dashboard"} sub={fr?"Aperçu — Cabinet Belmokhtar CPA · 14 mai 2026":"Overview — Belmokhtar CPA · May 14, 2026"}
+        actions={<><button className="btn">{fr?"Exporter":"Export"}</button><button className="btn btn-primary">+ {fr?"Nouvelle analyse":"New analysis"}</button></>}/>
+      <div className="page-body">
+        <div className="dash-grid">
+          <div className="tile"><div className="tile-label">{fr?"Conversations":"Conversations"}</div><div className="tile-val">147</div><div className="tile-foot"><span className="tile-delta">↑ 23%</span><span>· {fr?"30 derniers jours":"last 30 days"}</span></div><Spark/></div>
+          <div className="tile"><div className="tile-label">{fr?"Documents indexés":"Indexed documents"}</div><div className="tile-val">412</div><div className="tile-foot"><span className="tile-delta">↑ 8</span><span>· {fr?"cette semaine":"this week"}</span></div><Spark color="var(--gold)"/></div>
+          <div className="tile"><div className="tile-label">{fr?"Workflows · mai":"Workflows · May"}</div><div className="tile-val">52</div><div className="tile-foot"><span style={{color:"var(--ink-3)"}}>{fr?"38 hybrid · 14 single":"38 hybrid · 14 single"}</span></div><Spark/></div>
+          <div className="tile"><div className="tile-label">{fr?"Coût · mai":"Cost · May"}</div><div className="tile-val">38,40 $</div><div className="tile-foot"><span className="tile-delta neg">↑ 12%</span><span>· vs avril</span></div><Spark color="var(--warn)"/></div>
         </div>
-        <div style={{...card(P),padding:"16px 18px"}}>
-          <div style={{fontSize:13,fontWeight:500,color:P.t1,marginBottom:14}}>{t.dash.calendar}</div>
-          {cal.map((d,i)=>(<div key={i} style={{background:d.u?`${P.red}12`:`${P.border}50`,borderRadius:8,padding:"9px 12px",marginBottom:8,border:`1px solid ${d.u?P.red+"40":P.border}`}}><div style={{fontSize:12,fontWeight:600,color:d.u?P.red:P.gold,fontFamily:"'DM Mono',monospace"}}>{d.d}</div><div style={{fontSize:12,color:P.t2,marginTop:2}}>{d.l}</div></div>))}
+
+        <div className="col-2">
+          <div className="panel">
+            <div className="panel-head"><div className="panel-title">{fr?"Calendrier fiscal — prochaines échéances":"Tax calendar — upcoming deadlines"}</div><span className="cal-tag">5</span></div>
+            <div className="panel-body">
+              {[
+                {d:"31",m:fr?"MAI":"MAY",name:fr?"Acompte trimestriel T2 — SPCC":"Quarterly T2 instalment — CCPC",info:fr?"Trois clients concernés · 14 jours":"3 clients · 14 days",t:"urgent",tag:"T2"},
+                {d:"15",m:"JUN",name:fr?"Remise TPS/TVQ — déclarants mensuels":"GST/QST remittance — monthly filers",info:fr?"7 clients · 29 jours":"7 clients · 29 days",t:"",tag:"TPS"},
+                {d:"30",m:"JUN",name:fr?"T2 — fin d'exercice 31 décembre":"T2 — Dec 31 year-end",info:fr?"2 clients · 44 jours":"2 clients · 44 days",t:"",tag:"T2"},
+                {d:"31",m:fr?"JUL":"JUL",name:fr?"RS&DE T661 — délai 18 mois":"SR&ED T661 — 18-month deadline",info:fr?"1 client · 75 jours · ~85 K$":"1 client · 75 days · ~$85K",t:"",tag:"R&D"},
+                {d:"15",m:fr?"AOÛ":"AUG",name:fr?"Acompte T1 personnel":"Personal T1 instalment",info:fr?"4 clients · 90 jours":"4 clients · 90 days",t:"",tag:"T1"},
+              ].map((r,i)=>(
+                <div className="cal-row" key={i}>
+                  <div className="cal-date">{r.d}<small>{r.m}</small></div>
+                  <div className="cal-meta"><div className="cal-name">{r.name}</div><div className="cal-info">{r.info}</div></div>
+                  <span className={"cal-tag " + r.t}>{r.tag}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel-head"><div className="panel-title">{fr?"Activité agents · 30 j":"Agent activity · 30d"}</div></div>
+            <div className="act-list">
+              {[
+                ["sophie",84],["marc",72],["sarah",58],["natalie",46],
+                ["alex",38],["isabelle",32],["patrick",28],["emilie",22],["jf",18],
+              ].map(([id,n])=>{
+                const a = AGENTS_STUDIO.find((x:any)=>x.id===id);
+                return (
+                  <div className="act-row" key={id}>
+                    <span className="act-name">{a.name.split(" ")[0]}</span>
+                    <div className="act-bar"><div className="act-fill" style={{width:n+"%",background:a.color}}/></div>
+                    <span className="act-num">{n}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panel-head"><div className="panel-title">{fr?"Conversations récentes":"Recent conversations"}</div><button className="btn">{fr?"Tout voir":"See all"}</button></div>
+          <div className="panel-body">
+            {[
+              {title:fr?"Évaluation acquisition — Atelier Boréal inc.":"Acquisition assessment — Atelier Boréal inc.", info:"#4521 · hybrid · 5 agents · 38s", agents:["jf","marc","sarah","sophie","natalie"]},
+              {title:fr?"Subventions IA — startup techno Drummondville":"AI grants — Drummondville tech startup", info:"#4520 · sequential · 3 agents · 12s", agents:["emilie","patrick","sophie"]},
+              {title:fr?"Diagnostic Loi 25 — application RH":"Law 25 review — HR application", info:"#4519 · single · 1 agent · 6s", agents:["isabelle"]},
+              {title:fr?"Audit ASPE 2025 — Constructions Lévis ltée":"ASPE 2025 audit — Constructions Lévis ltd", info:"#4518 · parallel · 2 agents · 18s", agents:["alex","marc"]},
+              {title:fr?"Rolling forecast 13 sem. — distribution Québec":"13-wk rolling forecast — Quebec distribution", info:"#4517 · single · 1 agent · 8s", agents:["natalie"]},
+            ].map((c,i)=>(
+              <div className="conv-row" key={i}>
+                <div className="conv-text"><div className="conv-title">{c.title}</div><div className="conv-info">{c.info}</div></div>
+                <div className="conv-stack">{c.agents.map(id=><Avatar key={id} agent={A[id]} size={22}/>)}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
+    </main>
+  );
+}
+
+
+function PipelineView({lang, t}) {
+  const fr = lang === "fr";
+  const stages = [
+    {tag:"BRONZE", name:fr?"Ingestion":"Ingestion", tech:"FastAPI · S3 ca-central-1", m:[["latence","1,2 s"],["sla","99,8%"],["files","412"]]},
+    {tag:"SILVER", name:fr?"Traitement":"Processing", tech:"PyPDF2 · python-docx · NLP", m:[["latence","3,8 s"],["sla","99,5%"],["chunks","8 412"]]},
+    {tag:"GOLD",   name:"Embedding",                tech:"HF e5-large · 1024d",       m:[["latence","2,1 s"],["sla","99,9%"],["vectors","8 412"]]},
+    {tag:"READY",  name:fr?"Requête":"Query",       tech:"pgvector · cosine",         m:[["latence","0,4 s"],["sla","100%"],["queries","2,1k"]]},
+  ];
+  return (
+    <main className="page" data-screen-label="RAG Pipeline">
+      <PageHead title={fr?"Pipeline RAG":"RAG Pipeline"} sub={fr?"Bronze → Silver → Gold → Ready · Loi 25 conforme":"Bronze → Silver → Gold → Ready · Law 25 compliant"}
+        actions={<button className="btn">{fr?"Voir logs":"View logs"}</button>}/>
+      <div className="page-body">
+        <div className="pipe-flow">
+          {stages.map((s,i)=>(
+            <div className="pipe-stage" key={s.tag}>
+              <div className="pipe-stage-tag">{s.tag}</div>
+              <div className="pipe-stage-name">{s.name}</div>
+              <div className="pipe-stage-tech">{s.tech}</div>
+              <div className="pipe-metrics">{s.m.map(([k,v])=>(<div className="pipe-metric" key={k}><small>{k}</small><strong>{v}</strong></div>))}</div>
+              {i<3 && <div className="pipe-arrow">→</div>}
+            </div>
+          ))}
+        </div>
+
+        <div className="col-2">
+          <div className="panel">
+            <div className="panel-head"><div className="panel-title">{fr?"Throughput · 24 h":"Throughput · 24h"}</div><span className="cal-tag">{fr?"temps réel":"live"}</span></div>
+            <div style={{padding:"18px 20px"}}>
+              <svg viewBox="0 0 320 120" width="100%" height="120" style={{display:"block"}}>
+                <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--accent)" stopOpacity="0.3"/><stop offset="1" stopColor="var(--accent)" stopOpacity="0"/></linearGradient></defs>
+                <polyline fill="none" stroke="var(--accent)" strokeWidth="2" points="0,90 24,84 48,72 72,76 96,60 120,68 144,46 168,54 192,38 216,44 240,28 264,32 288,20 320,26"/>
+                <polygon fill="url(#g1)" points="0,90 24,84 48,72 72,76 96,60 120,68 144,46 168,54 192,38 216,44 240,28 264,32 288,20 320,26 320,120 0,120"/>
+              </svg>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var(--ink-3)",fontFamily:"Geist Mono",marginTop:6}}>
+                <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>NOW</span>
+              </div>
+            </div>
+          </div>
+          <div className="panel">
+            <div className="panel-head"><div className="panel-title">{fr?"Recherches RAG récentes":"Recent RAG searches"}</div></div>
+            <div className="panel-body">
+              {[
+                ["BAIIA normalisé secteur 333","8 chunks · 0.84 cos","Marc"],
+                ["RS&DE admissibilité salaires R&D","12 chunks · 0.78 cos","Sophie"],
+                ["IFRS 16 contrats location","6 chunks · 0.81 cos","Alex"],
+                ["DSO benchmark distribution QC","4 chunks · 0.72 cos","Natalie"],
+              ].map((r,i)=>(
+                <div className="conv-row" key={i}>
+                  <div className="conv-text"><div className="conv-title mono" style={{fontSize:11.5}}>{r[0]}</div><div className="conv-info">{r[1]}</div></div>
+                  <span className="cal-tag">{r[2]}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+
+function GovernanceView({lang, t}) {
+  const fr = lang === "fr";
+  const cards = [
+    {name:"Loi 25", sub:"L.Q. 2021, c.25 · QC", st:"ok", stl:fr?"Conforme":"Compliant", pct:92, items:[
+      ["ok",fr?"CPO nommé · Zaki Belmokhtar":"CPO appointed · Zaki Belmokhtar"],
+      ["ok",fr?"Hébergement S3 ca-central-1":"S3 ca-central-1 hosting"],
+      ["ok",fr?"Registre incidents (PI-1)":"Incident register (PI-1)"],
+      ["warn",fr?"EFVP à compléter — collecte RP":"DPIA to complete — PI collection"],
+      ["ok",fr?"Audit trail immutable":"Immutable audit trail"],
+    ]},
+    {name:"PIPEDA", sub:"L.C. 2000, c.5 · Federal", st:"ok", stl:fr?"Conforme":"Compliant", pct:88, items:[
+      ["ok",fr?"10 principes équitables documentés":"10 Fair Information Principles"],
+      ["ok",fr?"Notification atteintes DORS/2018-64":"Breach notification SOR/2018-64"],
+      ["ok","Privacy by Design"],
+      ["todo",fr?"Suivi Projet C-27":"Bill C-27 monitoring"],
+    ]},
+    {name:"CASL", sub:"L.C. 2010, c.23 · CRTC", st:"warn", stl:fr?"Action requise":"Action needed", pct:74, items:[
+      ["ok",fr?"Double opt-in courriel":"Double opt-in email"],
+      ["ok",fr?"Désabonnement < 10 j":"Unsubscribe < 10 days"],
+      ["warn",fr?"Logs consentement à archiver 36 mois":"Consent logs — 36mo retention"],
+      ["todo",fr?"Revue templates marketing 2026":"2026 marketing template review"],
+    ]},
+  ];
+  return (
+    <main className="page" data-screen-label="Governance">
+      <PageHead title={fr?"Gouvernance & conformité":"Governance & compliance"} sub={fr?"Cadres canadiens · suivi par Isabelle Roy · LL.M., DPO":"Canadian frameworks · monitored by Isabelle Roy · LL.M., DPO"}
+        actions={<><button className="btn">{fr?"Exporter rapport":"Export report"}</button><button className="btn btn-primary">{fr?"Lancer EFVP":"Start DPIA"}</button></>}/>
+      <div className="page-body">
+        <div className="gov-grid">
+          {cards.map(c=>(
+            <div className="gov-card" key={c.name}>
+              <div className="gov-head">
+                <div><div className="gov-name">{c.name}</div><div className="page-sub" style={{marginTop:2}}>{c.sub}</div></div>
+                <span className={"gov-status " + c.st}>{c.stl}</span>
+              </div>
+              <div className="gov-progress"><div style={{width:c.pct+"%",background:c.st==="ok"?"var(--accent)":"var(--warn)"}}/></div>
+              <div style={{fontSize:10.5,color:"var(--ink-3)",fontFamily:"Geist Mono",marginBottom:10}}>{c.pct}% · {c.items.filter(i=>i[0]==="ok").length}/{c.items.length} {fr?"contrôles":"controls"}</div>
+              <div className="gov-list">
+                {c.items.map((i,k)=>(
+                  <div className="gov-item" key={k}>
+                    <span className={"gov-check " + i[0]}>{i[0]==="ok"?"✓":i[0]==="warn"?"!":"·"}</span>
+                    <span>{i[1]}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="panel">
+          <div className="panel-head"><div className="panel-title">{fr?"Journal d'audit · accès données personnelles":"Audit log · personal data access"}</div><span className="cal-tag">{fr?"30 jours":"30 days"}</span></div>
+          <div className="panel-body">
+            {[
+              {who:"isabelle",a:"Read",res:"Releve1_Equipe_Tech_2024.pdf",t:"il y a 12 min"},
+              {who:"sophie",a:"Read",res:"T2_Levis_Constructions_2024.pdf",t:"il y a 38 min"},
+              {who:"sarah",a:"Query",res:"vector://acquisition-due-diligence",t:"il y a 2 h"},
+              {who:"jf",a:"Extract",res:"Bilan_Boreal_2025.xlsx",t:"il y a 4 h"},
+            ].map((r,i)=>(
+              <div className="conv-row" key={i}>
+                <Avatar agent={A[r.who]} size={22}/>
+                <div className="conv-text">
+                  <div className="conv-title"><span className="mono" style={{color:"var(--ink-3)",marginRight:8}}>{r.a.toUpperCase()}</span>{r.res}</div>
+                  <div className="conv-info">{A[r.who].name} · {r.t}</div>
+                </div>
+                <span className="cal-tag">SHA-256 ✓</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+
+function TeamView({lang, t}) {
+  const fr = lang === "fr";
+  return (
+    <main className="page" data-screen-label="Team">
+      <PageHead title={fr?"Équipe CPA virtuelle":"Virtual CPA Team"} sub={fr?"9 spécialistes · prompts éditables · Claude Sonnet 4.5":"9 specialists · editable prompts · Claude Sonnet 4.5"}
+        actions={<button className="btn">{fr?"Diagramme d'équipe":"Team diagram"}</button>}/>
+      <div className="page-body">
+        <div className="team-grid">
+          {AGENTS_STUDIO.map((a:any)=>(
+            <div className="team-card" key={a.id}>
+              <div className="team-head">
+                <Avatar agent={a} size={40}/>
+                <div><div className="team-name">{a.name}</div><div className="team-role">{a.role[lang]}</div></div>
+              </div>
+              <div className="team-domain">{a.domain[lang]}</div>
+              <div className="team-foot">
+                <span className="team-model">{a.web?"sonnet-4-5 + 🌐":"sonnet-4-5"}</span>
+                <button className="team-edit">{fr?"Éditer prompt →":"Edit prompt →"}</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+
+
+function SettingsView({ lang, t, openrouterKey, agentSettings }: any) {
+  const fr = lang === "fr";
+  const [key, setKey] = useLocalStorage<string>("z12-openrouter-key", "");
+  const [settings, setSettings] = useLocalStorage<any>("z12-agent-settings", {});
+  const [testResult, setTestResult] = React.useState<string>("");
+  const [testing, setTesting] = React.useState(false);
+
+  const testConnection = async () => {
+    setTesting(true); setTestResult("");
+    try {
+      const r = await fetch("https://openrouter.ai/api/v1/models",{headers:{Authorization:`Bearer ${key}`}});
+      if (r.ok) setTestResult(fr?"✅ Connexion réussie":"✅ Connection successful");
+      else setTestResult(fr?"❌ Clé invalide":"❌ Invalid key");
+    } catch { setTestResult(fr?"❌ Erreur réseau":"❌ Network error"); }
+    setTesting(false);
+  };
+
+  const resetAgent = (agentId: string) => {
+    const next = {...settings};
+    delete next[agentId];
+    setSettings(next);
+  };
+
+  return (
+    <main className="page" data-screen-label="Settings">
+      <header className="page-head">
+        <div>
+          <div className="page-title">{fr?"Paramètres":"Settings"}</div>
+          <div className="page-sub">{fr?"OpenRouter · 27 modèles · 9 fournisseurs":"OpenRouter · 27 models · 9 providers"}</div>
+        </div>
+      </header>
+      <div className="page-body" style={{maxWidth:880}}>
+        <div className="set-card">
+          <div className="set-h">{fr?"Clé API OpenRouter":"OpenRouter API key"}</div>
+          <div className="set-sub">{fr?"Stockée dans z12-openrouter-key. Prioritaire sur Anthropic direct.":"Stored in z12-openrouter-key. Takes priority over direct Anthropic."}</div>
+          <input className="set-input" value={key} onChange={(e: any)=>setKey(e.target.value)} type="password" placeholder="sk-or-v1-…"/>
+          <div style={{display:"flex",gap:8,marginTop:12,alignItems:"center"}}>
+            <button className="btn btn-primary" onClick={testConnection} disabled={testing}>
+              {testing?(fr?"Test…":"Testing…"):(fr?"Tester connexion":"Test connection")}
+            </button>
+            <button className="btn" onClick={()=>setKey("")}>{fr?"Effacer":"Clear"}</button>
+            {testResult && <span style={{fontSize:12.5,color:"var(--ink-2)"}}>{testResult}</span>}
+          </div>
+        </div>
+
+        <div className="set-card">
+          <div className="set-h">{fr?"Modèle assigné par agent":"Model assigned per agent"}</div>
+          <div className="set-sub">{fr?"Claude Sonnet 4.5 par défaut. Override individuel ci-dessous.":"Claude Sonnet 4.5 default. Override per agent below."}</div>
+          {AGENTS_DEF.map((a: any) => {
+            const sa = AGENTS_STUDIO.find((x: any)=>x.id===a.id)||AGENTS_STUDIO[0];
+            const cur = settings[a.id]?.model || "anthropic/claude-sonnet-4-5";
+            return (
+              <div className="set-row" key={a.id}>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <Avatar agent={sa} size={26}/>
+                  <div className="agent-name">{sa.name}</div>
+                </div>
+                <select className="set-select" value={cur} onChange={(e: any)=>setSettings({...settings,[a.id]:{...settings[a.id],model:e.target.value}})}>
+                  {OPENROUTER_MODELS.map((m: any)=><option key={m.id} value={m.id}>{m.id.split("/").pop()}</option>)}
+                </select>
+                <button className="btn" onClick={()=>resetAgent(a.id)}>{fr?"Reset":"Reset"}</button>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="set-card">
+          <div className="set-h">{fr?"Préférences":"Preferences"}</div>
+          <div className="set-row"><div>{fr?"Région données":"Data region"}</div><div className="set-select">S3 ca-central-1</div><div></div></div>
+          <div className="set-row"><div>{fr?"Modèle orchestrateur":"Orchestrator model"}</div><div className="set-select">anthropic/claude-haiku-4-5</div><div></div></div>
+          <div className="set-row"><div>{fr?"RAG — seuil cosinus":"RAG — cosine threshold"}</div><div className="set-select">0.6</div><div></div></div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+
+// ─── ENHANCED UPLOAD ZONE (VectDocs-inspired) ──────────────────────────────
+function UploadZone({ color, lang, t, onAdd }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [drag, setDrag]   = useState(false);
+  const [queue, setQueue] = useState([]);
+  const EXT_PILLS = ["PDF","Word","Excel","PowerPoint","CSV","TXT","JSON","Images","ZIP","Email","Audio","Vidéo","et plus"];
+
+  const processFiles = useCallback(async files => {
+    const arr = Array.from(files);
+    const items = arr.map((f: any) => ({
+      id: Date.now() + Math.random(),
+      name: f.name,
+      rawFile: f,
+      size: fmtSize(f.size),
+      ext: f.name.split(".").pop().toLowerCase(),
+      progress: 0,
+      stage: "Lecture...",
+      error: validateFile(),
+      preview: null,
+      detectedAgent: detectAgentFromFile(f.name),
+      words: 0,
+      estChunks: 0,
+      language: "unknown",
+      overrideAgent: null,
+    }));
+    setQueue(prev => [...items, ...prev].slice(0, 15));
+
+    // VectDocs-inspired: extract text preview instantly BEFORE server indexing
+    for (const item of items) {
+      if (item.error) continue;
+      // Async extraction in parallel
+      extractTextPreview(item.rawFile).then((result: any) => {
+        const detected = detectAgentFromFile(item.name, result?.text || "");
+        const lang_d   = detectLanguage(result?.text || "");
+        const words_d  = result?.words || 0;
+        setQueue(prev => prev.map(q => q.id === item.id ? {
+          ...q,
+          preview: result?.text || "",
+          words: words_d,
+          estChunks: estimateChunks(words_d),
+          language: lang_d,
+          detectedAgent: detected,
+          source: result?.source,
+        } : q));
+      });
+
+      // Simulate server pipeline stages
+      let p = 0;
+      const iv = setInterval(() => {
+        p += Math.random() * 14 + 5;
+        if (p >= 100) { p = 100; clearInterval(iv); }
+        const stage = uploadStageLabel(p);
+        setQueue(prev => prev.map(q => q.id === item.id ? {...q, progress:Math.round(p), stage} : q));
+        if (p === 100 && onAdd) {
+          const agent = item.overrideAgent || detectAgentFromFile(item.name);
+          onAdd({ id:"u_"+Date.now()+Math.random(), name:item.name, agent, size:item.size,
+            date:new Date().toISOString().slice(0,10), chunks:estimateChunks(item.words||30),
+            type:item.ext, words:item.words||0, language:item.language||"fr",
+            preview:item.preview||"", desc:"Document uploadé" });
+        }
+      }, 220);
+    }
+  }, [onAdd]);
+
+  // VectDocs-inspired folder picker (showDirectoryPicker API)
+  const pickFolder = useCallback(async () => {
+    if (!(window as any).showDirectoryPicker) {
+      alert("Folder picker requires Chrome/Edge. Use the file button instead.");
+      return;
+    }
+    try {
+      const dirHandle = await (window as any).showDirectoryPicker();
+      const files = [];
+      for await (const [, handle] of dirHandle.entries()) {
+        if (handle.kind === "file") files.push(await handle.getFile());
+      }
+      if (files.length > 0) processFiles(files);
+    } catch(e) { if (e.name !== "AbortError") console.error(e); }
+  }, [processFiles]);
+
+  const langFlag = l => l === "fr" ? "🇫🇷" : l === "en" ? "🇬🇧" : "";
+
+  return (
+    <div style={{marginTop:14}}>
+      {/* Drop zone */}
+      <div onDrop={e=>{e.preventDefault();setDrag(false);processFiles(e.dataTransfer.files);}}
+        onDragOver={e=>{e.preventDefault();setDrag(true);}} onDragLeave={()=>setDrag(false)}
+        onClick={()=>inputRef.current?.click()}
+        style={{background:drag?`${color}12`:"var(--bg-card)",border:`2px dashed ${drag?color:"var(--bg-border)"}`,borderRadius:14,padding:"22px 20px",textAlign:"center",cursor:"pointer",transition:"all .2s"}}>
+        <div style={{fontSize:28,marginBottom:8}}>{drag?"📂":"📤"}</div>
+        <div style={{fontSize:14,fontWeight:500,color:drag?color:"var(--t2)",marginBottom:5}}>{t.docs.upload}</div>
+        <div style={{fontSize:12,color:"var(--t3)",marginBottom:12}}>{t.docs.sub}</div>        <div style={{display:"flex",flexWrap:"wrap",gap:4,justifyContent:"center",marginBottom:12}}>
+          {EXT_PILLS.map(e=><span key={e} style={{fontSize:10,padding:"2px 8px",borderRadius:20,background:`${color}15`,color,border:`1px solid ${color}35`,fontWeight:500}}>{e}</span>)}
+        </div>
+        <input ref={inputRef} type="file" multiple accept="*/*" style={{display:"none"}} onChange={e=>processFiles(e.target.files)}/>
+      </div>
+
+      {/* Folder picker button */}
+      <button onClick={pickFolder} style={{width:"100%",marginTop:8,background:"transparent",border:`1px solid var(--bg-border)`,borderRadius:10,padding:"8px 0",color:"var(--t2)",fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+        📁 {lang==="fr"?"Uploader un dossier entier (Chrome/Edge)":"Upload entire folder (Chrome/Edge)"}
+      </button>
+
+      {/* Queue with VectDocs-inspired preview */}
+      {queue.length > 0 && (
+        <div style={{background:"var(--bg-card)",border:"1px solid var(--bg-border)",borderRadius:12,overflow:"hidden",marginTop:10}}>
+          <div style={{padding:"9px 14px",borderBottom:"1px solid var(--bg-border)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:12,fontWeight:500,color:"var(--t2)"}}>
+              {lang==="fr"?"File d'indexation":"Indexing queue"} ({queue.length})
+            </span>
+            <button onClick={()=>setQueue([])} style={{background:"transparent",border:"none",color:"var(--t3)",fontSize:11,cursor:"pointer"}}>✕ {lang==="fr"?"Effacer":"Clear"}</button>
+          </div>
+
+          {queue.map(f => (
+            <div key={f.id} style={{padding:"11px 14px",borderBottom:"1px solid var(--bg-border)"}}>
+              <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+                <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{typeIcon(f.ext)}</span>
+                <div style={{flex:1,minWidth:0}}>
+                  {/* File name + size + language */}
+                  <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+                    <span style={{fontSize:12,color:"var(--t1)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{f.name}</span>
+                    <span style={{fontSize:10,color:"var(--t3)",flexShrink:0}}>{f.size}</span>
+                    {f.language !== "unknown" && <span style={{fontSize:12}}>{langFlag(f.language)}</span>}
+                  </div>
+
+                  {/* VectDocs-inspired: detected agent badge (overrideable) */}
+                  {!f.error && (
+                    <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:6,flexWrap:"wrap"}}>
+                      <span style={{fontSize:10,color:"var(--t3)"}}>{lang==="fr"?"Agent détecté :":"Detected agent:"}</span>
+                      <select
+                        value={f.overrideAgent || f.detectedAgent}
+                        onChange={e => setQueue(prev=>prev.map(q=>q.id===f.id?{...q,overrideAgent:e.target.value}:q))}
+                        onClick={e=>e.stopPropagation()}
+                        style={{fontSize:10,background:"var(--bg-input)",border:`1px solid ${agentColor(f.overrideAgent||f.detectedAgent)}50`,borderRadius:6,padding:"2px 6px",color:agentColor(f.overrideAgent||f.detectedAgent),cursor:"pointer",fontWeight:500}}>
+                        {AGENTS_DEF.map(a=><option key={a.id} value={a.id}>{a.icon} {a.personName?.[lang]?.split(" ")[0]||a.id.replace("Agent","")}</option>)}
+                      </select>
+                      {f.words > 0 && <span style={{fontSize:10,color:"var(--t3)"}}>{f.words.toLocaleString()} mots · ~{f.estChunks} chunks</span>}
+                    </div>
+                  )}
+
+                  {/* VectDocs-inspired: instant text preview */}
+                  {f.preview && f.progress < 100 && (
+                    <div style={{fontSize:10,color:"var(--t3)",background:"var(--bg-input)",borderRadius:6,padding:"5px 8px",marginBottom:6,lineHeight:1.4,overflow:"hidden",maxHeight:40,textOverflow:"ellipsis",fontStyle:"italic"}}>
+                      "{f.preview.slice(0,120)}{f.preview.length>120?"...":""}"
+                    </div>
+                  )}
+                  {f.source === "server-only" && f.progress < 100 && (
+                    <div style={{fontSize:10,color:"var(--t3)",marginBottom:5}}>📡 {t.docs.staServerOnly}</div>
+                  )}
+
+                  {/* Progress bar with stage label */}
+                  {f.error
+                    ? <div style={{fontSize:11,color:"#EF4444",fontWeight:500}}>{f.error}</div>
+                    : f.progress < 100
+                      ? <div>
+                          <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                            <span style={{fontSize:10,color:color}}>{f.stage}</span>
+                            <span style={{fontSize:10,color:"var(--t3)"}}>{f.progress}%</span>
+                          </div>
+                          <div style={{height:3,background:"var(--bg-border)",borderRadius:2}}>
+                            <div style={{height:"100%",width:`${f.progress}%`,background:color,borderRadius:2,transition:"width .3s"}}/>
+                          </div>
+                        </div>
+                      : <div style={{fontSize:11,color:"#10B981",fontWeight:500}}>✓ {t.docs.indexed} — {f.ext.toUpperCase()} · {f.estChunks} chunks</div>
+                  }
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+
 
 // ─── DOCUMENTS (VectDocs-enhanced) ───────────────────────────────────────────
 function Documents({ t, P, lang }) {
@@ -1718,488 +3639,6 @@ function Documents({ t, P, lang }) {
   );
 }
 
-// ─── CHAT ─────────────────────────────────────────────────────────────────────
-function Chat({ t, P, lang, agentSettings, onStartConvWithAgent, openrouterKey }) {
-  const [convs, setConvs]       = useLocalStorage("z12-conversations", []);
-  const [activeId, setActiveId] = useLocalStorage("z12-active-conv", null);
-  const [agentId, setAgentId]   = useState(AGENTS_DEF[0].id);
-  const [msgs, setMsgs]         = useState([]);
-  const [input, setInput]       = useState("");
-  const [loading, setLoading]   = useState(false);
-  const [routing, setRouting]   = useState(false);
-  const [showHist, setShowHist] = useState(true);
-  const [routedTo, setRoutedTo] = useState(null);
-  const [copied,   setCopied]   = useState(null);
-  const [workflow, setWorkflow] = useState(null);
-  const [wfSteps,  setWfSteps]  = useState([]);
-  const [synthesis,setSynthesis]= useState(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const inputRef  = useRef<HTMLTextAreaElement>(null);
-
-  const agent = useMemo(() => agentById(agentId), [agentId]);
-  const activeConv = useMemo(() => convs.find(c=>c.id===activeId), [convs, activeId]);
-  const sysPrompt = useMemo(() => agentSettings[agentId]?.prompt || agent.defaultPrompt[lang], [agentSettings, agentId, agent, lang]);
-
-  // ORCHESTRATOR IS THE ENTRY POINT — declared BEFORE useEffect that uses it
-  const orchestratorWelcome = useMemo(() => [{
-    role:"assistant", isOrchestrator:true, ts:Date.now(),
-    content: lang==="fr"
-      ? "🎯 **Orchestrateur — Bureau CPA Virtuel**\n\nBonjour ! Je coordonne une équipe de **9 spécialistes CPA** à votre service :\n\n👩\u200d💼 **Sophie** · Fiscaliste  |  👨\u200d💼 **Alexandre** · Auditeur  |  👩\u200d💻 **Natalie** · Trésorerie\n👩\u200d⚖️ **Isabelle** · Conformité  |  👨\u200d📊 **Marc** · Analyse financière  |  👩\u200d💹 **Sarah** · Investissement\n🧑\u200d🔬 **Jean-François** · OCR  |  👩\u200d💻 **Émilie** · Veille  |  👨\u200d💼 **Patrick** · Subventions\n\nDécrivez votre demande — j'analyse et j'assigne les spécialistes appropriés, en parallèle ou en séquence selon la complexité."
-      : "🎯 **Orchestrator — Virtual CPA Firm**\n\nHello! I coordinate a team of **9 CPA specialists** at your service:\n\n👩\u200d💼 **Sophie** · Tax  |  👨\u200d💼 **Alexandre** · Audit  |  👩\u200d💻 **Natalie** · Treasury\n👩\u200d⚖️ **Isabelle** · Compliance  |  👨\u200d📊 **Marc** · Financial analysis  |  👩\u200d💹 **Sarah** · Investment\n🧑\u200d🔬 **Jean-François** · OCR  |  👩\u200d💻 **Émilie** · Watch  |  👨\u200d💼 **Patrick** · Grants\n\nDescribe your request — I'll analyze and assign the most appropriate specialist(s), in parallel or sequence based on complexity."
-  }], [lang]);
-
-  const welcome = useCallback(() => orchestratorWelcome, [orchestratorWelcome]);
-
-  useEffect(() => { bottomRef.current?.scrollIntoView({behavior:"smooth"}); }, [msgs, loading]);
-  useEffect(() => { if(msgs.length===0) setMsgs(orchestratorWelcome); }, [orchestratorWelcome]);
-
-  const newConv = useCallback(() => {
-    setActiveId(null); setRoutedTo(null); setInput("");
-    setWorkflow(null); setSynthesis(null); setWfSteps([]);
-    setMsgs(welcome());
-    inputRef.current?.focus();
-  }, [welcome, setActiveId]);
-
-  const loadConv = useCallback((conv: any) => { setActiveId(conv.id); setAgentId(conv.agentId||AGENTS_DEF[0].id); setMsgs(conv.messages); setRoutedTo(null); setInput(""); }, [setActiveId]);
-  const switchAgent = useCallback((id: string) => { setAgentId(id); setRoutedTo(null); }, []);
-  const deleteConv = useCallback((id: string) => { setConvs((prev: any[])=>prev.filter((co: any)=>co.id!==id)); if(activeId===id){setActiveId(null);setMsgs(welcome() as any);} }, [activeId, welcome, setConvs, setActiveId]);
-
-  useEffect(() => { if(!activeId && msgs.length===0) setMsgs(welcome()); }, []); // eslint-disable-line
-
-  const copy = useCallback(async(text: string, i: number) => { try { await navigator.clipboard.writeText(text); setCopied(i); setTimeout(()=>setCopied(null),2000); } catch {} }, []);
-
-  const exportConv = useCallback(() => {
-    const data = JSON.stringify({title:activeConv?.title||"conv",agent:agentId,messages:msgs},null,2);
-    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([data],{type:"application/json"}));
-    a.download = `z12-${agentId}-${Date.now()}.json`; a.click();
-  }, [activeConv, agentId, msgs]);
-
-  const send = useCallback(async () => {
-    if (!input.trim() || loading) return;
-    const userMsg = {role:"user",content:input,ts:Date.now()};
-    const draft   = [...msgs, userMsg];
-    setMsgs(draft); setInput(""); setRoutedTo(null);
-    setWorkflow(null); setSynthesis(null); setWfSteps([]);
-
-    // STEP 1 — Orchestrator analyzes, decides workflow
-    setRouting(true);
-    const plan = await analyzeWorkflow(input, draft, lang, openrouterKey);
-    setRouting(false);
-    setWorkflow(plan);
-
-    const allIds  = plan.phases ? plan.phases.flatMap(p=>p.agents) : (plan.agents||[]);
-    const primary = allIds[0] || agentId;
-    setWfSteps(allIds.map(id => ({agentId:id, status:"pending"})));
-    if (primary !== agentId) { setAgentId(primary); setRoutedTo(primary); }
-
-    // STEP 2 — Execute workflow, steps light up as they work
-    setLoading(true);
-    let finalReply = ""; let results = [];
-    try {
-      results = await executeWorkflow(
-        plan, input, draft, agentSettings, openrouterKey, lang,
-        (id, status) => setWfSteps(prev => prev.map(s => s.agentId===id ? {...s,status} : s))
-      );
-      if (results.length > 1 && plan.synthesis_needed !== false) {
-        const synth = await synthesizeResults(results, input, plan, lang, openrouterKey, agentSettings);
-        setSynthesis(synth);
-        finalReply = synth || results.map(r=>`### ${r.name}\n${r.reply}`).join("\n\n---\n\n");
-      } else {
-        finalReply = results[0]?.reply || (lang==="fr"?"Aucune réponse.":"No response.");
-      }
-    } catch(e) { finalReply = `❌ ${lang==="fr"?"Erreur":"Error"}: ${e.message}`; }
-
-    const aiMsg = {role:"assistant",content:finalReply,agent:primary,ts:Date.now(),wfResults:results.length>1?results:null};
-    const final = [...draft, aiMsg];
-    setMsgs(final); setLoading(false);
-
-    const now = new Date().toISOString();
-    if (activeId) {
-      setConvs(prev=>prev.map(co=>co.id===activeId?{...co,messages:final,updatedAt:now,agentId:primary}:co));
-    } else {
-      const nc={id:"cv_"+Date.now(),title:genTitle(input),agentId:primary,messages:final,createdAt:now,updatedAt:now};
-      setConvs(prev=>[nc,...prev]); setActiveId(nc.id);
-    }
-  }, [input, loading, msgs, agentId, lang, agentSettings, activeId, openrouterKey, setConvs, setActiveId]);
-
-  const renderText = s => s.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br/>");
-
-  return (
-    <div style={{display:"flex",flex:1,overflow:"hidden"}}>
-      {showHist && (
-        <div style={{width:220,background:P.sb,borderRight:`1px solid ${P.border}`,display:"flex",flexDirection:"column",overflow:"hidden",flexShrink:0}}>
-          <div style={{padding:"12px 12px 8px",borderBottom:`1px solid ${P.border}`,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <span style={{fontSize:11,fontWeight:500,color:P.t3,textTransform:"uppercase",letterSpacing:"0.07em"}}>{lang==="fr"?"Historique":"History"}</span>
-            <button onClick={newConv} title={t.chat.new} style={{background:P.accent,border:"none",borderRadius:6,width:26,height:26,color:"#fff",fontSize:17,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>+</button>
-          </div>
-          <div style={{overflowY:"auto",flex:1,padding:"6px 8px"}}>
-            {!activeId && msgs.length>0 && <div style={{padding:"9px 10px",marginBottom:4,background:`${P.accent}15`,border:`1px solid ${P.accent}40`,borderRadius:8}}><div style={{fontSize:11,color:P.accent,fontWeight:500}}>✦ {t.chat.new}</div><div style={{fontSize:10,color:P.t3,marginTop:2}}>{agent.id.replace("Agent","")} · {lang==="fr"?"Non sauvegardée":"Unsaved"}</div></div>}
-            {convs.length===0&&!activeId&&<div style={{padding:"20px 10px",textAlign:"center",color:P.t3,fontSize:12,lineHeight:1.6,whiteSpace:"pre-line"}}>{t.chat.noConv}</div>}
-            {convs.map(c=>{const ca=agentById(c.agentId); return(
-              <div key={c.id} style={{position:"relative",marginBottom:3,borderRadius:8,background:activeId===c.id?`${ca.color}15`:"transparent",border:`1px solid ${activeId===c.id?ca.color+"50":"transparent"}`,transition:"all .15s"}}>
-                <div onClick={()=>loadConv(c)} style={{padding:"9px 26px 9px 10px",cursor:"pointer"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}><span style={{fontSize:12}}>{ca.icon}</span><span style={{fontSize:10,color:ca.color,fontWeight:500}}>{ca.personName?.[lang]||c.agentId?.replace("Agent","")}</span><span style={{fontSize:9,color:P.t3,marginLeft:"auto"}}>{c.messages?.length||0}</span></div>
-                  <div style={{fontSize:12,color:activeId===c.id?P.t1:P.t2,fontWeight:activeId===c.id?500:400,lineHeight:1.3,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.title}</div>
-                  <div style={{fontSize:10,color:P.t3}}>{fmtTime(c.updatedAt)}</div>
-                </div>
-                <button onClick={e=>{e.stopPropagation();deleteConv(c.id);}} style={{position:"absolute",top:6,right:6,background:"transparent",border:"none",color:P.t3,fontSize:11,cursor:"pointer"}}>✕</button>
-              </div>
-            );})}
-          </div>
-        </div>
-      )}
-
-      <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-        <div style={{padding:"9px 14px",borderBottom:`1px solid ${P.border}`,background:P.sb,display:"flex",alignItems:"center",gap:7,flexWrap:"wrap"}}>
-          <button onClick={()=>setShowHist(v=>!v)} style={{background:"transparent",border:`1px solid ${P.border}`,borderRadius:6,padding:"4px 8px",color:P.t2,cursor:"pointer",fontSize:12,flexShrink:0}}>{showHist?"◀":"▶"}</button>
-          <div style={{display:"flex",gap:5,overflowX:"auto",flex:1}}>
-            {AGENTS_DEF.map(a => {
-              const step    = wfSteps.find(s => s.agentId===a.id);
-              const working = step?.status==="working";
-              const done    = step?.status==="done";
-              const pending = step?.status==="pending";
-              return (
-                <button key={a.id} onClick={()=>switchAgent(a.id)}
-                  style={{
-                    position:"relative",
-                    background:working?`${a.color}35`:agentId===a.id?`${a.color}20`:"transparent",
-                    border:`2px solid ${working?a.color:done?a.color+"80":agentId===a.id?a.color+"55":P.border}`,
-                    borderRadius:8, padding:"4px 9px", cursor:"pointer",
-                    color:working||done?a.color:agentId===a.id?a.color:P.t3,
-                    fontSize:11, fontWeight:working||agentId===a.id?600:400,
-                    whiteSpace:"nowrap", flexShrink:0,
-                    boxShadow:working?`0 0 0 3px ${a.color}30, 0 0 14px ${a.color}50`:done?`0 0 5px ${a.color}35`:"none",
-                    animation:working?"agentGlow 1.4s ease-in-out infinite":"none",
-                    transition:"all .25s",
-                  }}>
-                  {a.icon} {a.short?.[lang]||a.id.replace("Agent","")}
-                  {(pending||working||done)&&(
-                    <span style={{position:"absolute",top:-3,right:-3,width:7,height:7,borderRadius:"50%",
-                      background:working?"#F59E0B":done?"#10B981":"#6366F155",
-                      border:"1.5px solid #0F1929",
-                      animation:working?"pulse 1s ease-in-out infinite":"none"}}/>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-          {activeConv && <button onClick={exportConv} style={{background:"transparent",border:`1px solid ${P.border}`,borderRadius:6,padding:"4px 8px",color:P.t2,cursor:"pointer",fontSize:11,flexShrink:0}}>⬇ {t.chat.export}</button>}
-          {WEB_SEARCH_AGENTS.has(agentId) && <span style={{fontSize:10,padding:"3px 10px",borderRadius:20,background:"#14B8A615",color:"#14B8A6",border:"1px solid #14B8A640",fontWeight:600,flexShrink:0,animation:"pulse 2s ease-in-out infinite"}}>🌐 {lang==="fr"?"Web Search actif":"Web Search active"}</span>}
-        </div>
-
-        {(activeConv||routedTo) && (
-          <div style={{padding:"7px 16px",background:`${agent.color}08`,borderBottom:`1px solid ${P.border}`,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",minHeight:32}}>
-            {routedTo && <span style={{fontSize:12,color:agent.color,fontWeight:500}}>⚡ {t.chat.autoRouted} <strong>{routedTo.replace("Agent","")}</strong></span>}
-            {activeConv && !routedTo && <span style={{fontSize:12,color:P.t2}}>🔄 {t.chat.resume} — <strong style={{color:P.t1}}>{activeConv.title}</strong> · {activeConv.messages?.length} msg</span>}
-            <button onClick={newConv} style={{marginLeft:"auto",background:"transparent",border:`1px solid ${P.border}`,borderRadius:6,padding:"2px 10px",color:P.t3,fontSize:11,cursor:"pointer"}}>+ {t.chat.new}</button>
-          </div>
-        )}
-
-        <div style={{flex:1,overflowY:"auto",padding:"14px 18px",display:"flex",flexDirection:"column",gap:10}}>
-          {msgs.map((m,i)=>{const ma=agentById(m.agent||agentId);return(
-            <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",alignItems:"flex-start",gap:8}}>
-              {m.role==="assistant" && (
-                m.isOrchestrator
-                  ? <div style={{width:32,height:32,borderRadius:"50%",background:"#6366F1",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0,marginTop:2,boxShadow:"0 0 10px #6366F155"}}>🎯</div>
-                  : <div style={{width:28,height:28,borderRadius:"50%",background:`${ma.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0,marginTop:2}}>{ma.icon}</div>
-              )}
-              <div style={{maxWidth:"82%"}}>
-                {/* Multi-agent contributions (collapsed by default) */}
-                {m.wfResults && m.wfResults.length > 1 && (
-                  <div style={{marginBottom:8}}>
-                    <div style={{fontSize:10,color:P.t3,marginBottom:5,display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
-                      <span>🎯 {lang==="fr"?"Analyses de :":"Analyses by:"}</span>
-                      {m.wfResults.map((r,ri)=>(
-                        <span key={ri} style={{padding:"2px 8px",borderRadius:20,background:`${agentById(r.agentId).color}15`,color:agentById(r.agentId).color,fontWeight:500,fontSize:10}}>
-                          {agentById(r.agentId).icon} {r.name?.split(" ")[0]}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <div style={{
-                  background:m.role==="user"?`${agent.color}22`:m.isOrchestrator?"#6366F10D":P.card,
-                  border:`1px solid ${m.role==="user"?agent.color+"50":m.isOrchestrator?"#6366F145":P.border}`,
-                  borderRadius:m.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",
-                  padding:"10px 14px",fontSize:13,lineHeight:1.65,color:P.t1,
-                }} dangerouslySetInnerHTML={{__html:renderText(m.content)}}/>
-                <div style={{display:"flex",alignItems:"center",gap:6,marginTop:3,justifyContent:m.role==="user"?"flex-end":"flex-start"}}>
-                  <span style={{fontSize:10,color:P.t3}}>{m.ts?fmtTime(new Date(m.ts).toISOString()):"—"}</span>
-                  <button onClick={()=>copy(m.content,i)} style={{background:"transparent",border:"none",color:copied===i?P.accent:P.t3,fontSize:10,cursor:"pointer",padding:0}}>{copied===i?t.chat.copied:t.chat.copy}</button>
-                  {m.role==="assistant" && !m.isOrchestrator && (
-                    <button onClick={()=>{navigator.clipboard.writeText(m.content).then(()=>{localStorage.setItem("z12-sandbox-prefill",m.content);window.dispatchEvent(new CustomEvent("z12-open-sandbox"));});}}
-                      title={lang==="fr"?"Visualiser dans le Sandbox":"Visualize in Sandbox"}
-                      style={{background:"transparent",border:"none",color:P.t3,fontSize:10,cursor:"pointer",padding:0}}>📊</button>
-                  )}
-                </div>
-              </div>
-            </div>
-          );})}
-          {(routing||loading) && (
-            <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <div style={{width:28,height:28,borderRadius:"50%",background:`${agent.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13}}>{agent.icon}</div>
-              <div style={{display:"flex",gap:5,padding:"9px 14px",background:P.card,border:`1px solid ${P.border}`,borderRadius:"16px 16px 16px 4px",alignItems:"center"}}>
-                {routing ? <span style={{fontSize:12,color:P.t2}}>{t.chat.routing}</span> : [0,1,2].map(i=><div key={i} style={{width:6,height:6,borderRadius:"50%",background:agent.color,animation:"pulse 1.2s ease-in-out infinite",animationDelay:`${i*0.2}s`}}/>)}
-              </div>
-            </div>
-          )}
-          <div ref={bottomRef}/>
-        </div>
-
-        {/* Orchestrator workflow triggers */}
-        {msgs.length<=1 && (
-          <div style={{padding:"6px 16px 0",borderTop:`1px solid ${P.border}`,display:"flex",gap:5,overflowX:"auto"}}>
-            {[
-              {fr:"🎯 Analyse complète de l'entreprise",  en:"🎯 Full company analysis",  trigger:true},
-              {fr:"📦 Évaluer une acquisition cible",     en:"📦 Evaluate an acquisition", trigger:true},
-              {fr:"🚀 Lancer un nouveau projet tech",     en:"🚀 Launch a new tech project",trigger:true},
-            ].map((q,i)=>(
-              <button key={i} onClick={()=>{setInput(q[lang]);inputRef.current?.focus();}}
-                style={{background:"#6366F115",border:"1px solid #6366F130",borderRadius:20,padding:"4px 11px",color:"#818CF8",fontSize:10,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,fontWeight:500}}>
-                {q[lang]}
-              </button>
-            ))}
-          </div>
-        )}
-        {msgs.length<=1 && agent.quickPrompts[lang] && (
-          <div style={{padding:"8px 16px",borderTop:`1px solid ${P.border}`,display:"flex",gap:6,overflowX:"auto"}}>
-            {agent.quickPrompts[lang].map((q,i)=><button key={i} onClick={()=>{setInput(q);inputRef.current?.focus();}} style={{background:`${agent.color}10`,border:`1px solid ${agent.color}30`,borderRadius:20,padding:"5px 12px",color:agent.color,fontSize:11,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,fontWeight:500}}>{q}</button>)}
-          </div>
-        )}
-
-        <div style={{padding:"10px 14px",borderTop:`1px solid ${P.border}`,background:P.sb}}>
-          <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
-            <textarea ref={inputRef} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
-              placeholder={t.chat.new+"..."} rows={2}
-              style={{flex:1,background:P.input,border:`1px solid ${P.border}`,borderRadius:10,color:P.t1,fontSize:13,padding:"9px 12px",resize:"none",outline:"none",fontFamily:"inherit",lineHeight:1.5}}/>
-            <button onClick={send} disabled={loading||routing||!input.trim()} style={{background:loading||routing||!input.trim()?P.border:agent.color,border:"none",borderRadius:10,padding:"10px 16px",cursor:loading||routing||!input.trim()?"not-allowed":"pointer",color:"#fff",fontSize:13,fontWeight:500,flexShrink:0,transition:"background .15s"}}>{t.chat.send}</button>
-          </div>
-          <div style={{fontSize:10,color:P.t3,marginTop:5}}>Enter = {t.chat.send.toLowerCase()} · Shift+Enter = saut de ligne · {activeId?lang==="fr"?"Sauvegardé automatiquement":"Auto-saved":lang==="fr"?"Sauvegardé au 1er envoi":"Saved on first send"}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── PIPELINE ─────────────────────────────────────────────────────────────────
-function Pipeline({ t, P, lang }) {
-  const sc = s => s==="active"?P.accent:s==="completed"?P.blue:P.t3;
-  const sl = s => s==="active"?(lang==="fr"?"Actif":"Active"):s==="completed"?(lang==="fr"?"Complété":"Completed"):(lang==="fr"?"Inactif":"Idle");
-  return (
-    <div style={{padding:26,overflowY:"auto",flex:1}}>
-      <h1 style={{fontSize:20,fontWeight:600,color:P.t1,fontFamily:"'Playfair Display',Georgia,serif",marginBottom:4}}>{t.pipeline.title}</h1>
-      <p style={{fontSize:13,color:P.t2,marginBottom:18}}>{lang==="fr"?"Suivi temps réel · Supabase pgvector · HF multilingual-e5-large · EVV 9/10":"Real-time monitoring · Supabase pgvector · HF multilingual-e5-large · EVV 9/10"}</p>
-      <div style={{...card(P),padding:"14px 18px",marginBottom:14,display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:12}}>
-        {[{icon:"✅",l:lang==="fr"?"Santé globale":"Global health",v:"100%",c:P.accent},{icon:"⚡",l:lang==="fr"?"Latence totale":"Total latency",v:"7.5s",c:P.blue},{icon:"📄",l:lang==="fr"?"Docs/heure":"Docs/hour",v:"142",c:P.violet},{icon:"🎯",l:"SLA compliance",v:"99.6%",c:P.gold}].map(s=>(
-          <div key={s.l}><div style={{fontSize:16,marginBottom:4}}>{s.icon}</div><div style={{fontSize:20,fontWeight:600,color:s.c,fontFamily:"'DM Mono',monospace"}}>{s.v}</div><div style={{fontSize:11,color:P.t2,marginTop:2}}>{s.l}</div></div>
-        ))}
-      </div>
-      <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
-        {PIPELINE_DATA.map(stage=>(
-          <div key={stage.id} style={{...card(P),padding:"14px 18px"}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-              <div style={{display:"flex",alignItems:"center",gap:10}}>
-                <div style={{width:34,height:34,borderRadius:8,background:`${sc(stage.status)}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{stage.icon}</div>
-                <div><div style={{fontSize:13,fontWeight:500,color:P.t1}}>{stage.label}</div><div style={{fontSize:11,color:P.t2,marginTop:1}}>{stage.desc}</div></div>
-              </div>
-              <div style={{display:"flex",alignItems:"center",gap:8}}>
-                <span style={{fontSize:10,padding:"3px 10px",borderRadius:20,background:`${sc(stage.status)}18`,color:sc(stage.status),fontWeight:500}}>{sl(stage.status)}</span>
-                <span style={{fontSize:10,color:P.t3}}>{stage.lastRun}</span>
-              </div>
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
-              {[{l:t.pipeline.availability,v:stage.metrics.availability},{l:t.pipeline.latency,v:stage.metrics.latency},{l:t.pipeline.errors,v:stage.metrics.errors},{l:t.pipeline.sla,v:stage.metrics.sla}].map(m=>(
-                <div key={m.l} style={{background:`${P.border}50`,borderRadius:8,padding:"7px 10px"}}>
-                  <div style={{fontSize:10,color:P.t3,marginBottom:2}}>{m.l}</div>
-                  <div style={{fontSize:14,fontWeight:600,color:m.v==="✓"?P.accent:P.t1,fontFamily:"'DM Mono',monospace"}}>{m.v}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div style={{...card(P),padding:"14px 18px"}}>
-        <div style={{fontSize:13,fontWeight:500,color:P.t1,marginBottom:12}}>{lang==="fr"?"Qualité documentaire (VectDocs-inspired schema)":"Document quality (VectDocs-inspired schema)"}</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10}}>
-          {DATA_QUALITY.map(q=>(
-            <div key={q.label[lang]} style={{background:`${P.border}50`,borderRadius:8,padding:"9px 12px"}}>
-              <div style={{fontSize:11,color:P.t2,marginBottom:4}}>{q.label[lang]}</div>
-              <div style={{fontSize:20,fontWeight:600,color:q.status==="improving"?P.accent:q.status==="declining"?P.red:P.t1,fontFamily:"'DM Mono',monospace"}}>{q.value}</div>
-              <div style={{fontSize:11,color:q.status==="improving"?P.accent:q.status==="declining"?P.red:P.t2,marginTop:2,fontWeight:500}}>{q.trend}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── GOVERNANCE ───────────────────────────────────────────────────────────────
-function Governance({ t, P, lang }) {
-  const sc = s => ({compliant:P.accent,review:P.gold,noncompliant:P.red}[s]||P.t3);
-  const sl = s => t.governance.status[s]||s;
-  return (
-    <div style={{padding:26,overflowY:"auto",flex:1}}>
-      <h1 style={{fontSize:20,fontWeight:600,color:P.t1,fontFamily:"'Playfair Display',Georgia,serif",marginBottom:4}}>{t.governance.title}</h1>
-      <p style={{fontSize:13,color:P.t2,marginBottom:18}}>Loi 25 · CASL · PIPEDA · IFRS Disclosure · {lang==="fr"?"Conformité ARC":"CRA Compliance"}</p>
-      <div style={{...card(P),padding:"14px 18px",marginBottom:14,display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:12}}>
-        {[{icon:"✅",l:lang==="fr"?"Conformes":"Compliant",v:GOV_POLICIES.filter(p=>p.status==="compliant").length,c:P.accent},{icon:"⚠️",l:lang==="fr"?"À réviser":"Needs review",v:GOV_POLICIES.filter(p=>p.status==="review").length,c:P.gold},{icon:"🗓️",l:lang==="fr"?"Audits ce mois":"Audits this month",v:"2",c:P.blue},{icon:"🛡️",l:lang==="fr"?"Score global":"Global score",v:"88%",c:P.violet}].map(s=>(
-          <div key={s.l}><div style={{fontSize:16,marginBottom:4}}>{s.icon}</div><div style={{fontSize:22,fontWeight:600,color:s.c,fontFamily:"'DM Mono',monospace"}}>{s.v}</div><div style={{fontSize:11,color:P.t2,marginTop:2}}>{s.l}</div></div>
-        ))}
-      </div>
-      <p style={{fontSize:11,fontWeight:500,color:P.t3,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:10}}>{t.governance.policies}</p>
-      <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
-        {GOV_POLICIES.map(p=>(
-          <div key={p.id} style={{...card(P),padding:"13px 18px",borderLeft:`3px solid ${sc(p.status)}`}}>
-            <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10}}>
-              <div style={{flex:1}}>
-                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}>
-                  <span style={{fontSize:14,fontWeight:500,color:P.t1}}>{p.name}</span>
-                  <span style={{fontSize:10,padding:"2px 9px",borderRadius:20,background:`${sc(p.status)}15`,color:sc(p.status),fontWeight:500,border:`1px solid ${sc(p.status)}40`}}>{sl(p.status)}</span>
-                </div>
-                <div style={{fontSize:12,color:P.t2,marginBottom:8,lineHeight:1.4}}>{p.desc}</div>
-                <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
-                  {[{l:t.governance.owner,v:p.owner},{l:t.governance.lastReview,v:p.lastReview},{l:t.governance.nextAudit,v:p.nextAudit}].map(f=>(
-                    <div key={f.l}><div style={{fontSize:10,color:P.t3}}>{f.l}</div><div style={{fontSize:12,color:P.t1,fontWeight:500,marginTop:1}}>{f.v}</div></div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── AGENTS ───────────────────────────────────────────────────────────────────
-function Agents({ t, P, lang, agentSettings, setAgentSettings, onStartConvWithAgent }) {
-  const [editing, setEditing]   = useState(null);
-  const [draftPrompt, setDraft] = useState("");
-  const [draftModel, setModel]  = useState("");
-  const startEdit = useCallback(a => { setEditing(a.id); setDraft(agentSettings[a.id]?.prompt||a.defaultPrompt[lang]); setModel(agentSettings[a.id]?.model||MODELS[0].id); }, [agentSettings, lang]);
-  const saveEdit  = useCallback(() => { setAgentSettings(prev=>({...prev,[editing]:{prompt:draftPrompt,model:draftModel}})); setEditing(null); }, [editing, draftPrompt, draftModel, setAgentSettings]);
-  return (
-    <div style={{padding:26,overflowY:"auto",flex:1}}>
-      <h1 style={{fontSize:20,fontWeight:600,color:P.t1,fontFamily:"'Playfair Display',Georgia,serif",marginBottom:4}}>{t.agents.title}</h1>
-      <p style={{fontSize:13,color:P.t2,marginBottom:20}}>{lang==="fr"?"Votre équipe CPA virtuelle — 9 spécialistes · 7 RAG + 2 avec Web Search temps réel · EVV 9/10":"Your virtual CPA team — 9 specialists · 7 RAG + 2 with real-time Web Search · EVV 9/10"}</p>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(285px,1fr))",gap:12}}>
-        {AGENTS_DEF.map(a=>{
-          const kC=KNOWLEDGE_DOCS_INIT.filter(d=>d.agent===a.id).length;
-          const cC=CLIENT_DOCS_INIT.filter(d=>d.agent===a.id).length;
-          return (
-            <div key={a.id} style={{...card(P),padding:"16px 18px",border:`1px solid ${editing===a.id?a.color:P.border}`,transition:"border-color .2s"}}>
-              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-                <div style={{width:38,height:38,borderRadius:9,background:`${a.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{a.icon}</div>
-                <div style={{flex:1}}>
-                  <div>
-                  <div style={{fontSize:14,fontWeight:600,color:a.color}}>{a.personName?.[lang]||a.id}</div>
-                  <div style={{fontSize:11,color:P.t2,marginTop:1}}>{a.personTitle?.[lang]||""}</div>
-                </div>
-                  <div style={{fontSize:10,color:P.t3,marginTop:1}}>{a.personTitle?.[lang]||""}</div><div style={{fontSize:9,color:P.t3}}>EVV 9/10 · {agentSettings[a.id]?.model?.split("/").pop()||"claude-sonnet"}</div>
-                </div>
-              </div>
-              <div style={{fontSize:12,color:P.t2,lineHeight:1.5,marginBottom:10}}>{a.domain[lang]}</div>
-              <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:12}}>
-                <span style={{fontSize:10,padding:"3px 8px",borderRadius:20,background:`${P.blue}15`,color:P.blue,border:`1px solid ${P.blue}30`}}>📚 {kC} {lang==="fr"?"src métier":"knowledge"}</span>
-                <span style={{fontSize:10,padding:"3px 8px",borderRadius:20,background:`${P.gold}15`,color:P.gold,border:`1px solid ${P.gold}30`}}>🏢 {cC} {lang==="fr"?"doc client":"client doc"}</span>
-                {a.webSearch && <span style={{fontSize:10,padding:"3px 8px",borderRadius:20,background:`${a.color}15`,color:a.color,border:`1px solid ${a.color}40`,fontWeight:600}}>🌐 Web Search temps réel</span>}
-              </div>
-              <div style={{display:"flex",gap:6}}>
-                <button onClick={()=>onStartConvWithAgent(a.id)} style={{flex:1,background:`${a.color}15`,border:`1px solid ${a.color}40`,borderRadius:8,padding:"7px 0",color:a.color,fontSize:12,fontWeight:500,cursor:"pointer"}}>💬 {t.agents.startConv}</button>
-                <button onClick={()=>editing===a.id?setEditing(null):startEdit(a)} style={{background:"transparent",border:`1px solid ${P.border}`,borderRadius:8,padding:"7px 10px",color:P.t2,fontSize:12,cursor:"pointer"}}>⚙️</button>
-              </div>
-              {editing===a.id && (
-                <div style={{marginTop:12,padding:"12px",background:P.input,borderRadius:8,border:`1px solid ${P.border}`}}>
-                  <div style={{fontSize:10,fontWeight:500,color:P.t3,marginBottom:5,textTransform:"uppercase",letterSpacing:"0.06em"}}>Modèle LLM</div>
-                  <select value={draftModel} onChange={e=>setModel(e.target.value)} style={{width:"100%",background:P.card,border:`1px solid ${P.border}`,borderRadius:6,padding:"6px 8px",color:P.t1,fontSize:12,marginBottom:10}}>
-                    {MODELS.map(m=><option key={m.id} value={m.id}>{m.label}</option>)}
-                  </select>
-                  <div style={{fontSize:10,fontWeight:500,color:P.t3,marginBottom:5,textTransform:"uppercase",letterSpacing:"0.06em"}}>Prompt système</div>
-                  <textarea value={draftPrompt} onChange={e=>setDraft(e.target.value)} rows={5} style={{width:"100%",background:P.card,border:`1px solid ${P.border}`,borderRadius:6,padding:"8px",color:P.t1,fontSize:11,fontFamily:"'DM Mono',monospace",lineHeight:1.5,resize:"vertical",outline:"none"}}/>
-                  <div style={{display:"flex",gap:6,marginTop:8}}>
-                    <button onClick={saveEdit} style={{flex:1,background:a.color,border:"none",borderRadius:6,padding:"7px",color:"#fff",fontSize:12,fontWeight:500,cursor:"pointer"}}>{t.agents.savePrompt}</button>
-                    <button onClick={()=>setEditing(null)} style={{background:"transparent",border:`1px solid ${P.border}`,borderRadius:6,padding:"7px 12px",color:P.t2,fontSize:12,cursor:"pointer"}}>{t.agents.cancel}</button>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-
-// ─── AI SANDBOX SYSTEM ────────────────────────────────────────────────────────
-// Generates interactive HTML visualizations (Chart.js + tables) from agent data.
-// Claude generates a complete self-contained HTML page rendered in a sandboxed iframe.
-// Downloads: Excel via SheetJS, PDF via window.print().
-
-const SANDBOX_VIZ_PROMPT = {
-  fr: `Tu es un expert en visualisation de données financières. Tu reçois des données ou une analyse financière d'un agent CPA et tu dois générer une page HTML COMPLÈTE et AUTO-SUFFISANTE avec :
-
-1. **Tableaux de données** : HTML tables bien formatées avec en-têtes, alternance de couleurs, totaux en gras
-2. **Graphiques interactifs** : Chart.js (chargé via CDN) — adapte le type selon les données :
-   - Barres : comparaisons, ratios, benchmarks
-   - Lignes : évolutions temporelles, prévisions trésorerie
-   - Secteurs/Donut : répartitions, structures de financement
-   - Combiné bar+ligne : BAIIA réel vs budget
-3. **Cartes KPI** : grandes métriques en évidence (chiffres colorés)
-4. **Design** : fond blanc, couleurs financières (#10B981 vert, #3B82F6 bleu, #F59E0B or, #EF4444 rouge), police système sans-serif, responsive
-5. **Bouton Excel** : bouton qui télécharge les données en .xlsx via SheetJS (CDN)
-6. **Bouton PDF** : bouton qui ouvre window.print() avec @media print optimisé
-
-IMPORTANT — Format de réponse :
-- Réponds UNIQUEMENT avec le code HTML, sans aucune explication avant ou après
-- Commence par <!DOCTYPE html> et termine par </html>
-- Chart.js : <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
-- SheetJS : <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
-- Toutes les données doivent être intégrées directement dans le HTML (pas d'appels API externes)
-- Le code JavaScript doit être complet et fonctionnel`,
-
-  en: `You are a financial data visualization expert. You receive data or a financial analysis from a CPA agent and must generate a COMPLETE, SELF-CONTAINED HTML page with:
-
-1. **Data tables**: Well-formatted HTML tables with headers, alternating colors, bold totals
-2. **Interactive charts**: Chart.js (loaded via CDN) — adapt type to data:
-   - Bar: comparisons, ratios, benchmarks
-   - Line: time series, treasury forecasts
-   - Pie/Donut: breakdowns, financing structures
-   - Combined bar+line: actual vs budget EBITDA
-3. **KPI cards**: Large key metrics highlighted with colored numbers
-4. **Design**: White background, financial colors (#10B981 green, #3B82F6 blue, #F59E0B gold, #EF4444 red), system sans-serif font, responsive
-5. **Excel button**: Downloads data as .xlsx via SheetJS (CDN)
-6. **PDF button**: Opens window.print() with optimized @media print
-
-IMPORTANT — Response format:
-- Respond ONLY with HTML code, no explanation before or after
-- Start with <!DOCTYPE html> and end with </html>
-- Chart.js: <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
-- SheetJS: <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
-- All data must be embedded directly in the HTML (no external API calls)
-- JavaScript must be complete and functional`
-};
-
-async function generateViz(dataText: string, lang: string, openrouterKey: string, agentSettings: any) {
-  const system = SANDBOX_VIZ_PROMPT[lang] || SANDBOX_VIZ_PROMPT.fr;
-  const msgs = [{ role:"user", content: dataText }];
-  // Use best model available for code generation
-  const model = openrouterKey
-    ? (agentSettings?.sandboxModel || "anthropic/claude-sonnet-4-5")
-    : null;
-  let raw = "";
-  try {
-    if (openrouterKey && model) {
-      raw = await callOpenRouter(model, system, msgs, openrouterKey, false);
-    } else {
-      raw = await callClaude(system, msgs);
-    }
-    // Extract HTML if wrapped in code blocks
-    const match = raw.match(/<!DOCTYPE html>[\s\S]*<\/html>/i);
-    return match ? match[0] : raw;
-  } catch(e) { return `<html><body style="font-family:sans-serif;padding:20px;color:#EF4444">Erreur: ${e.message}</body></html>`; }
-}
 
 // ─── SANDBOX COMPONENT ────────────────────────────────────────────────────────
 function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
@@ -2387,257 +3826,464 @@ function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
   );
 }
 
-// ─── SETTINGS PAGE ────────────────────────────────────────────────────────────
-function Settings({ t, P, lang, agentSettings, setAgentSettings, openrouterKey, setOpenrouterKey }) {
-  const [keyInput, setKeyInput]   = useState(openrouterKey || "");
-  const [keyVisible, setKeyVis]   = useState(false);
-  const [testStatus, setTest]     = useState(null); // null | "testing" | "ok" | "error"
-  const [saved, setSaved]         = useState(false);
-  const [expandedAgent, setExpanded] = useState(null);
 
-  // Per-agent draft state
-  const [drafts, setDrafts] = useState(() =>
-    Object.fromEntries(AGENTS_DEF.map(a => [a.id, {
-      model:  agentSettings[a.id]?.model  || DEFAULT_AGENT_MODEL,
-      prompt: agentSettings[a.id]?.prompt || a.defaultPrompt[lang],
-    }]))
-  );
 
-  const setDraft = useCallback((agentId, field, value) => {
-    setDrafts(prev => ({ ...prev, [agentId]: { ...prev[agentId], [field]: value } }));
+function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, activeId, setActiveId, setView }: any) {
+  const { useState: _s, useEffect: _e, useRef: _r, useMemo: _m, useCallback: _c } = React;
+
+  // ── Core state ──────────────────────────────────────────────────────────
+  const [msgs,      setMsgs]      = _s<any[]>([]);
+  const [input,     setInput]     = _s("");
+  const [loading,   setLoading]   = _s(false);
+  const [routing,   setRouting]   = _s(false);
+  const [workflow,  setWorkflow]  = _s<any>(null);
+  const [wfSteps,   setWfSteps]   = _s<any[]>([]);
+  const [synthesis, setSynthesis] = _s<string|null>(null);
+  const [agentId,   setAgentId]   = _s(AGENTS_DEF[0].id);
+  const [ctxTab,    setCtxTab]    = _s("workflow");
+  const [webOn,     setWebOn]     = _s(false);
+  const [ragOn,     setRagOn]     = _s(true);
+  const [showRight, setShowRight] = _s(true);
+  const [copied,    setCopied]    = _s<number|null>(null);
+  const threadRef  = _r<HTMLDivElement>(null);
+  const inputRef   = _r<HTMLTextAreaElement>(null);
+
+  // ── Orchestrator welcome ─────────────────────────────────────────────
+  const orchWelcome = _m(() => [{
+    role:"assistant", isOrchestrator:true, ts:Date.now(),
+    content: lang==="fr"
+      ? "🎯 **Orchestrateur — Bureau CPA Virtuel**\n\nBonjour ! Je coordonne une équipe de **9 spécialistes CPA** à votre service :\n\n👩\u200d💼 **Sophie** · Fiscaliste  |  👨\u200d💼 **Alexandre** · Auditeur  |  👩\u200d💻 **Natalie** · Trésorerie\n👩\u200d⚖️ **Isabelle** · Conformité  |  👨\u200d📊 **Marc** · Analyse financière  |  👩\u200d💹 **Sarah** · Investissement\n🧑\u200d🔬 **Jean-François** · OCR  |  👩\u200d💻 **Émilie** · Veille  |  👨\u200d💼 **Patrick** · Subventions\n\nDécrivez votre demande — j\'analyse et j\'assigne les spécialistes appropriés."
+      : "🎯 **Orchestrator — Virtual CPA Firm**\n\nHello! I coordinate a team of **9 CPA specialists** at your service:\n\n👩\u200d💼 **Sophie** · Tax  |  👨\u200d💼 **Alexandre** · Audit  |  👩\u200d💻 **Natalie** · Treasury\n👩\u200d⚖️ **Isabelle** · Compliance  |  👨\u200d📊 **Marc** · Financial analysis  |  👩\u200d💹 **Sarah** · Investment\n🧑\u200d🔬 **Jean-François** · OCR  |  👩\u200d💻 **Émilie** · Watch  |  👨\u200d💼 **Patrick** · Grants\n\nDescribe your request — I\'ll analyze and assign the most appropriate specialist(s)."
+  }], [lang]);
+
+  _e(() => { if(msgs.length===0) setMsgs(orchWelcome); }, [orchWelcome]);
+  _e(() => { threadRef.current?.scrollTo({top:99999,behavior:"smooth"}); }, [msgs, loading]);
+
+  // ── Send handler ─────────────────────────────────────────────────────
+  const send = _c(async () => {
+    if (!input.trim() || loading) return;
+    const userMsg = {role:"user", content:input, ts:Date.now()};
+    const draft   = [...msgs, userMsg];
+    setMsgs(draft); setInput(""); setWorkflow(null); setSynthesis(null); setWfSteps([]);
+
+    setRouting(true);
+    const plan = await analyzeWorkflow(input, draft, lang, openrouterKey);
+    setRouting(false);
+    setWorkflow(plan);
+
+    const allIds  = plan.phases ? plan.phases.flatMap((p: any) => p.agents) : (plan.agents || []);
+    const primary = allIds[0] || agentId;
+    setWfSteps(allIds.map((id: string) => ({agentId:id, status:"pending"})));
+    if (primary !== agentId) setAgentId(primary);
+
+    setLoading(true);
+    let finalReply = "", results: any[] = [];
+    try {
+      results = await executeWorkflow(
+        plan, input, draft, agentSettings, openrouterKey, lang,
+        (id: string, status: string) => setWfSteps((prev: any[]) => prev.map(s => s.agentId===id ? {...s,status} : s))
+      );
+      if (results.length > 1 && plan.synthesis_needed !== false) {
+        const synth = await synthesizeResults(results, input, plan, lang, openrouterKey, agentSettings);
+        setSynthesis(synth);
+        finalReply = synth || results.map((r: any) => `### ${r.name}\n${r.reply}`).join("\n\n---\n\n");
+      } else {
+        finalReply = results[0]?.reply || (lang==="fr" ? "Aucune réponse." : "No response.");
+      }
+    } catch(e: any) { finalReply = `❌ ${e.message}`; }
+
+    const aiMsg: any = {role:"assistant", content:finalReply, agent:primary, ts:Date.now(), wfResults:results.length>1?results:null};
+    const final = [...draft, aiMsg];
+    setMsgs(final); setLoading(false);
+
+    const now = new Date().toISOString();
+    if (activeId) {
+      setConvs((prev: any[]) => prev.map((co: any) => co.id===activeId ? {...co,messages:final,updatedAt:now,agentId:primary} : co));
+    } else {
+      const nc = {id:"cv_"+Date.now(), title:genTitle(input), agentId:primary, messages:final, createdAt:now, updatedAt:now};
+      setConvs((prev: any[]) => [nc,...prev]); setActiveId(nc.id);
+    }
+  }, [input, loading, msgs, agentId, lang, agentSettings, activeId, openrouterKey, setConvs, setActiveId]);
+
+  const copy = _c(async (text: string, i: number) => {
+    try { await navigator.clipboard.writeText(text); setCopied(i); setTimeout(()=>setCopied(null),2000); } catch {}
   }, []);
 
-  const resetAgent = useCallback((agentId) => {
-    const a = AGENTS_DEF.find(x => x.id === agentId);
-    setDrafts(prev => ({ ...prev, [agentId]: { model:DEFAULT_AGENT_MODEL, prompt:a.defaultPrompt[lang] } }));
-  }, [lang]);
+  // ── Render helpers ───────────────────────────────────────────────────
+  const renderText = (s: string) => s
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g,"<em>$1</em>")
+    .replace(/^###\s(.+)$/gm,"<h4>$1</h4>")
+    .replace(/^##\s(.+)$/gm,"<h3>$1</h3>")
+    .replace(/^-\s(.+)$/gm,"<li>$1</li>")
+    .replace(/(<li>.*<\/li>)/s,"<ul>$1</ul>")
+    .replace(/\n/g,"<br/>");
 
-  const saveAll = useCallback(() => {
-    setOpenrouterKey(keyInput.trim());
-    const newSettings = {};
-    AGENTS_DEF.forEach(a => { newSettings[a.id] = { ...drafts[a.id] }; });
-    setAgentSettings(newSettings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
-  }, [keyInput, drafts, setOpenrouterKey, setAgentSettings]);
+  // ── Compute busy/done sets for roster highlight ──────────────────────
+  const busyIds = _m(() => new Set(wfSteps.filter((s:any) => s.status==="working").map((s:any) => {
+    const def = AGENTS_DEF.find((a:any) => a.id === s.agentId);
+    return def?.id || s.agentId;
+  })), [wfSteps]);
+  const doneIds = _m(() => new Set(wfSteps.filter((s:any) => s.status==="done").map((s:any) => s.agentId)), [wfSteps]);
 
-  const testKey = useCallback(async () => {
-    if (!keyInput.trim()) return;
-    setTest("testing");
-    try {
-      const res = await fetch("https://openrouter.ai/api/v1/models", {
-        headers:{ "Authorization":`Bearer ${keyInput.trim()}` }
-      });
-      setTest(res.ok ? "ok" : "error");
-    } catch { setTest("error"); }
-    setTimeout(() => setTest(null), 4000);
-  }, [keyInput]);
-
-  const tierColor = tier => ({premium:"#10B981",fast:"#3B82F6",reasoning:"#8B5CF6",free:"#F59E0B"}[tier]||P.t3);
-  const tierLabel = tier => ({premium:"Premium",fast:"Rapide",reasoning:"Raisonnement",free:"Gratuit"}[tier]||tier);
-  const providerIcon = p => ({Anthropic:"🔴",OpenAI:"🟢",Google:"🔵",Meta:"🟣",Mistral:"🟠",DeepSeek:"🟡",Cohere:"⚪",xAI:"⚫",Alibaba:"🟤"}[p]||"●");
-  const providers = [...new Set(OPENROUTER_MODELS.map(m=>m.provider))];
+  // ── QUICK PROMPTS ────────────────────────────────────────────────────
+  const quickPrompts = lang==="fr" ? [
+    "🎯 Analyse complète de l\'entreprise",
+    "📊 Diagnostic financier PME",
+    "🏆 Subventions disponibles 2026",
+    "⚖️ Revue conformité Loi 25",
+    "📦 Évaluer une acquisition",
+  ] : [
+    "🎯 Full company analysis",
+    "📊 SME financial diagnostic",
+    "🏆 Available grants 2026",
+    "⚖️ Law 25 compliance review",
+    "📦 Evaluate an acquisition",
+  ];
 
   return (
-    <div style={{padding:26,overflowY:"auto",flex:1}}>
-      <h1 style={{fontSize:20,fontWeight:600,color:P.t1,fontFamily:"'Playfair Display',Georgia,serif",marginBottom:4}}>
-        {lang==="fr"?"Paramètres":"Settings"}
-      </h1>
-      <p style={{fontSize:13,color:P.t2,marginBottom:22}}>
-        {lang==="fr"?"Clé OpenRouter · Modèle IA par agent · Prompt système · 9 agents configurables":"OpenRouter key · AI model per agent · System prompt · 9 configurable agents"}
-      </p>
-
-      {/* ── OpenRouter API Key ─────────────────────────────────────────────── */}
-      <div style={{...card(P),padding:"20px 22px",marginBottom:20,border:`1px solid ${openrouterKey?P.accent+"60":P.border}`}}>
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
-          <span style={{fontSize:22}}>🔑</span>
-          <div>
-            <div style={{fontSize:15,fontWeight:600,color:P.t1}}>Clé API OpenRouter</div>
-            <div style={{fontSize:12,color:P.t2,marginTop:1}}>
-              {lang==="fr"?"Accès à 300+ modèles IA — Claude, GPT-4, Gemini, Llama, Mistral, DeepSeek, Grok...":"Access to 300+ AI models — Claude, GPT-4, Gemini, Llama, Mistral, DeepSeek, Grok..."}
+    <div style={{display:"flex",flex:1,overflow:"hidden",position:"relative"}}>
+      {/* ── CENTER: Thread + Composer ────────────────────────────────── */}
+      <div className="studio" style={{flex:1}}>
+        {/* Studio header */}
+        <header className="studio-head">
+          <div className="studio-head-l">
+            <div style={{minWidth:0}}>
+              <div className="thread-title">{lang==="fr"?"Orchestration Studio":"Orchestration Studio"}</div>
+              <div className="thread-meta">
+                {workflow ? `${workflow.type || "—"} · ${(workflow.agents||[]).length} agent${(workflow.agents||[]).length!==1?"s":""}` : (lang==="fr"?"Prêt — décrivez votre demande":"Ready — describe your request")}
+              </div>
             </div>
           </div>
-          {openrouterKey && <span style={{marginLeft:"auto",fontSize:11,padding:"4px 12px",borderRadius:20,background:`${P.accent}20`,color:P.accent,border:`1px solid ${P.accent}50`,fontWeight:600}}>✓ {lang==="fr"?"Configurée":"Configured"}</span>}
-        </div>
-
-        <div style={{display:"flex",gap:8,marginBottom:10}}>
-          <div style={{flex:1,position:"relative"}}>
-            <input
-              type={keyVisible?"text":"password"}
-              value={keyInput}
-              onChange={e=>setKeyInput(e.target.value)}
-              placeholder="sk-or-v1-..."
-              style={{width:"100%",background:P.input,border:`1px solid ${P.border}`,borderRadius:9,padding:"9px 40px 9px 12px",color:P.t1,fontSize:13,fontFamily:"'DM Mono',monospace",outline:"none"}}
-            />
-            <button onClick={()=>setKeyVis(v=>!v)} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",color:P.t3,cursor:"pointer",fontSize:14}}>
-              {keyVisible?"🙈":"👁️"}
+          <div className="studio-head-r">
+            <button className="icon-btn" title={showRight?"Hide panel":"Show panel"} onClick={()=>setShowRight(v=>!v)}>
+              <svg viewBox="0 0 16 16" className="i"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M10 3v10"/></svg>
             </button>
           </div>
-          <button onClick={testKey} disabled={!keyInput.trim()||testStatus==="testing"} style={{background:P.border,border:`1px solid ${P.border}`,borderRadius:9,padding:"9px 16px",color:P.t2,fontSize:12,cursor:"pointer",flexShrink:0,fontWeight:500,transition:"all .15s"}}>
-            {testStatus==="testing"?"..."
-             :testStatus==="ok"   ?<span style={{color:P.accent}}>✓ {lang==="fr"?"Valide":"Valid"}</span>
-             :testStatus==="error"?<span style={{color:P.red}}>✗ {lang==="fr"?"Invalide":"Invalid"}</span>
-             :lang==="fr"?"Tester":"Test"}
-          </button>
+        </header>
+
+        {/* Thread */}
+        <div className="thread" ref={threadRef}>
+          <div className="thread-inner">
+            {msgs.map((m: any, i: number) => {
+              const ma = agentById(m.agent || agentId);
+              const isOrch = m.isOrchestrator;
+              const studioAgent = AGENTS_STUDIO.find((a: any) => a.id === (m.agent || agentId)) || AGENTS_STUDIO[0];
+
+              if (m.role === "user") return (
+                <div className="msg msg-user" key={i}>
+                  <div className="msg-user-bubble" dangerouslySetInnerHTML={{__html:renderText(m.content)}}/>
+                </div>
+              );
+
+              return (
+                <div className="msg" key={i}>
+                  {/* Orchestrator card */}
+                  {isOrch ? (
+                    <div className="orch-card">
+                      <div className="orch-head">
+                        <div className="orch-mark">⌬</div>
+                        <div style={{minWidth:0}}>
+                          <div className="orch-title">{lang==="fr"?"Orchestrateur · Bureau CPA Virtuel":"Orchestrator · Virtual CPA Firm"}</div>
+                          <div className="orch-sub">9 {lang==="fr"?"spécialistes disponibles":"specialists available"}</div>
+                        </div>
+                      </div>
+                      <div style={{padding:"14px 18px",fontSize:13,lineHeight:1.65,color:"var(--ink-2)"}}
+                           dangerouslySetInnerHTML={{__html:renderText(m.content)}}/>
+                    </div>
+                  ) : (
+                    /* Agent reply card */
+                    <div className="orch-card">
+                      <div className="orch-head">
+                        <Avatar agent={studioAgent} size={24}/>
+                        <div style={{minWidth:0}}>
+                          <div className="orch-title">{agentName(m.agent||agentId, lang)}</div>
+                          <div className="orch-sub mono">{agentTitle(m.agent||agentId, lang)}</div>
+                        </div>
+                        <div style={{marginLeft:"auto",fontSize:10.5,color:"var(--ink-3)",fontFamily:"Geist Mono,monospace"}}>
+                          {m.ts ? fmtTime(new Date(m.ts).toISOString()) : "—"}
+                        </div>
+                      </div>
+                      {/* Multi-agent attribution */}
+                      {m.wfResults && m.wfResults.length > 1 && (
+                        <div style={{padding:"8px 18px 0",display:"flex",gap:6,flexWrap:"wrap" as any}}>
+                          {m.wfResults.map((r: any, ri: number) => {
+                            const sa = AGENTS_STUDIO.find((a: any) => a.id === r.agentId) || AGENTS_STUDIO[0];
+                            return (
+                              <span key={ri} style={{display:"inline-flex",alignItems:"center",gap:5,padding:"3px 9px",borderRadius:99,fontSize:10.5,fontFamily:"Geist Mono,monospace",background:"var(--surface-2)",border:"1px solid var(--line)",color:"var(--ink-2)"}}>
+                                <Avatar agent={sa} size={14}/>{sa.name.split(" ")[0]}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                      <div style={{padding:"12px 18px 16px",fontSize:13,lineHeight:1.65,color:"var(--ink-2)"}}
+                           dangerouslySetInnerHTML={{__html:renderText(m.content)}}/>
+                      {/* Copy button */}
+                      <div style={{padding:"0 18px 12px",display:"flex",gap:8}}>
+                        <button onClick={()=>copy(m.content,i)} style={{fontSize:10.5,color:"var(--ink-3)",background:"transparent",border:"none",cursor:"pointer",padding:0}}>
+                          {copied===i?(lang==="fr"?"Copié ✓":"Copied ✓"):(lang==="fr"?"Copier":"Copy")}
+                        </button>
+                        <button onClick={()=>{localStorage.setItem("z12-sandbox-prefill",m.content);setView("sandbox");}}
+                          style={{fontSize:10.5,color:"var(--ink-3)",background:"transparent",border:"none",cursor:"pointer",padding:0}}>
+                          📊 {lang==="fr"?"Sandbox":"Sandbox"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Orchestrator analyzing + workflow status */}
+            {(routing || loading) && (
+              <div className="msg">
+                <div className="orch-card">
+                  <div className="orch-head">
+                    <div className="orch-mark">⌬</div>
+                    <div style={{minWidth:0}}>
+                      <div className="orch-title">
+                        {routing ? (lang==="fr"?"Analyse de la demande…":"Analyzing request…") : (lang==="fr"?"Agents en cours…":"Agents working…")}
+                      </div>
+                      <div className="orch-sub mono">
+                        {workflow ? `${workflow.type} · ${workflow.reason||""}` : ""}
+                      </div>
+                    </div>
+                    {workflow?.priority==="urgent" && <div className="orch-pill" style={{background:"var(--warn-soft)",color:"var(--warn)",borderColor:"var(--warn)"}}>🔴 URGENT</div>}
+                    {workflow?.priority==="high"   && <div className="orch-pill" style={{background:"var(--gold-soft)",color:"var(--gold)",borderColor:"var(--gold)"}}>🟠 {lang==="fr"?"PRIORITAIRE":"HIGH"}</div>}
+                    {workflow && !workflow.priority?.match(/urgent|high/) && <div className="orch-pill">⚡ {workflow.type?.toUpperCase()}</div>}
+                  </div>
+                  {/* Phase plan */}
+                  {wfSteps.length > 0 && (
+                    <div style={{padding:"12px 18px 6px"}}>
+                      <div style={{display:"flex",gap:6,flexWrap:"wrap" as any}}>
+                        {wfSteps.map((step: any, i: number) => {
+                          const sa = AGENTS_STUDIO.find((a: any) => a.id === step.agentId) || AGENTS_STUDIO[0];
+                          const working = step.status==="working";
+                          const done    = step.status==="done";
+                          const pend    = step.status==="pending";
+                          return (
+                            <div key={i} className={`plan-cell ${working?"busy":done?"done":""}`} style={{position:"relative" as any}}>
+                              <Avatar agent={sa} size={20} status={working?"busy":done?"done":undefined}/>
+                              <span className="plan-cell-name">{sa.name.split(" ")[0]}</span>
+                              <span className="plan-cell-task">
+                                {working?"— ⋯":done?"— ✓":pend?"— ○":""}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  {/* Shimmer lines */}
+                  {loading && (
+                    <div style={{padding:"10px 18px 14px"}}>
+                      <div className="shimmer s60"/><div className="shimmer s40"/><div className="shimmer" style={{width:"75%"}}/>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            <div ref={undefined} style={{height:200}}/>
+          </div>
         </div>
 
-        <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          <div style={{fontSize:11,color:P.t3}}>
-            {lang==="fr"?"Obtenez votre clé gratuite sur":"Get your free key at"}{" "}
-            <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer" style={{color:P.accent,textDecoration:"none",fontWeight:500}}>openrouter.ai/keys</a>
-          </div>
-          <div style={{marginLeft:"auto",fontSize:11,color:P.t3}}>
-            {lang==="fr"?"Sans clé : API Anthropic directe":"No key: direct Anthropic API"}
-          </div>
-        </div>
-
-        {/* OpenRouter model catalog preview */}
-        <div style={{marginTop:14,padding:"10px 12px",background:`${P.border}40`,borderRadius:8}}>
-          <div style={{fontSize:11,fontWeight:500,color:P.t2,marginBottom:8}}>{lang==="fr"?"Fournisseurs disponibles :":"Available providers:"}</div>
-          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-            {providers.map(p=>(
-              <span key={p} style={{fontSize:11,padding:"3px 9px",borderRadius:20,background:P.card,border:`1px solid ${P.border}`,color:P.t2}}>
-                {providerIcon(p)} {p}
-              </span>
+        {/* Composer */}
+        <div className="composer-wrap" style={{left:0,right:showRight?380:0}}>
+          <div className="quick-prompts">
+            {msgs.length <= 1 && quickPrompts.map((q,i)=>(
+              <button key={i} className="qp" onClick={()=>setInput(q)}>{q}</button>
             ))}
           </div>
+          <div className="composer">
+            <textarea
+              ref={inputRef}
+              className="composer-input"
+              placeholder={lang==="fr"?"Posez une question, déposez un document, ou lancez une analyse…":"Ask a question, drop a document, or run an analysis…"}
+              value={input}
+              onChange={e=>setInput(e.target.value)}
+              rows={1}
+              onInput={(e: any) => { e.target.style.height="auto"; e.target.style.height=Math.min(e.target.scrollHeight,140)+"px"; }}
+              onKeyDown={(e: any)=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
+            />
+            <div className="composer-tools">
+              <button className={`tool-chip ${ragOn?"on":""}`} onClick={()=>setRagOn((v: boolean)=>!v)}>
+                <svg viewBox="0 0 16 16" className="i"><path d="M4 2h6l3 3v9H4z"/><path d="M10 2v3h3"/></svg>
+                <span>{lang==="fr"?"RAG documents":"RAG documents"}</span>
+              </button>
+              <button className={`tool-chip ${webOn?"on":""}`} onClick={()=>setWebOn((v: boolean)=>!v)}>
+                <svg viewBox="0 0 16 16" className="i"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12"/></svg>
+                <span>{lang==="fr"?"Recherche web":"Web search"}</span>
+              </button>
+              <button className="send-btn" disabled={loading||routing||!input.trim()} onClick={send}>
+                {loading||routing ? "…" : (lang==="fr"?"Envoyer":"Send")}
+                <svg viewBox="0 0 16 16" className="i" style={{width:12,height:12}}><path d="M2 8l12-5-5 12-2-5z"/></svg>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ── Agent configurations ────────────────────────────────────────────── */}
-      <div style={{fontSize:11,fontWeight:500,color:P.t3,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:12}}>
-        {lang==="fr"?"Configuration des agents (9)":"Agent configuration (9)"}
-      </div>
-
-      <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:24}}>
-        {AGENTS_DEF.map(a => {
-          const isExp = expandedAgent === a.id;
-          const draft = drafts[a.id] || { model:DEFAULT_AGENT_MODEL, prompt:a.defaultPrompt[lang] };
-          const modelInfo = OPENROUTER_MODELS.find(m=>m.id===draft.model);
-          const isModified = draft.model !== DEFAULT_AGENT_MODEL || draft.prompt !== a.defaultPrompt[lang];
-
-          return (
-            <div key={a.id} style={{...card(P),border:`1px solid ${isExp?a.color:P.border}`,overflow:"hidden",transition:"border-color .2s"}}>
-              {/* Agent header row */}
-              <div onClick={()=>setExpanded(isExp?null:a.id)}
-                style={{padding:"14px 18px",cursor:"pointer",display:"flex",alignItems:"center",gap:12,background:isExp?`${a.color}06`:"transparent",transition:"background .15s"}}>
-                <div style={{width:36,height:36,borderRadius:9,background:`${a.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{a.icon}</div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{fontSize:14,fontWeight:600,color:a.color}}>{a.personName?.[lang]||a.id}</span>
-                    {a.webSearch && <span style={{fontSize:10,padding:"2px 7px",borderRadius:20,background:`${a.color}15`,color:a.color,border:`1px solid ${a.color}40`,fontWeight:600}}>🌐 Web Search</span>}
-                    {isModified && <span style={{fontSize:10,padding:"2px 7px",borderRadius:20,background:`${P.gold}15`,color:P.gold,border:`1px solid ${P.gold}40`}}>✎ {lang==="fr"?"Modifié":"Modified"}</span>}
-                  </div>
-                  <div style={{fontSize:11,color:P.t3,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                    {modelInfo ? `${providerIcon(modelInfo.provider)} ${modelInfo.label}` : draft.model}
-                  </div>
-                </div>
-                <span style={{color:P.t3,fontSize:12,flexShrink:0}}>{isExp?"▲":"▼"}</span>
+      {/* ── RIGHT: Context panel ─────────────────────────────────────── */}
+      {showRight && (
+        <aside className="context">
+          <div className="ctx-tabs">
+            {(["workflow","sources","cost"] as string[]).map(k => (
+              <div key={k} className={`ctx-tab ${ctxTab===k?"on":""}`} onClick={()=>setCtxTab(k)}>
+                {k==="workflow"?(lang==="fr"?"Workflow":"Workflow"):k==="sources"?(lang==="fr"?"Sources":"Sources"):(lang==="fr"?"Coût":"Cost")}
+                {k==="workflow" && wfSteps.length > 0 && <span className="ct-count">{wfSteps.filter((s:any)=>s.status!=="pending").length}/{wfSteps.length}</span>}
+                {k==="sources" && <span className="ct-count">{convs.length}</span>}
               </div>
-
-              {/* Expanded config panel */}
-              {isExp && (
-                <div style={{padding:"0 18px 18px",borderTop:`1px solid ${P.border}`}}>
-
-                  {/* Model selector */}
-                  <div style={{marginTop:14,marginBottom:14}}>
-                    <div style={{fontSize:11,fontWeight:500,color:P.t3,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:8}}>
-                      {lang==="fr"?"Modèle IA":"AI Model"} {!openrouterKey && <span style={{color:P.gold}}>— {lang==="fr"?"Clé OpenRouter requise pour changer":"OpenRouter key required to change"}</span>}
-                    </div>
-                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:6}}>
-                      {OPENROUTER_MODELS.map(m=>(
-                        <div key={m.id} onClick={()=>setDraft(a.id,"model",m.id)}
-                          style={{padding:"8px 10px",borderRadius:8,border:`1px solid ${draft.model===m.id?a.color:P.border}`,background:draft.model===m.id?`${a.color}12`:P.input,cursor:"pointer",transition:"all .15s"}}>
-                          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:3}}>
-                            <span style={{fontSize:12,fontWeight:draft.model===m.id?600:400,color:draft.model===m.id?a.color:P.t1}}>{providerIcon(m.provider)} {m.label}</span>
-                            <span style={{fontSize:10,padding:"1px 6px",borderRadius:10,background:`${tierColor(m.tier)}18`,color:tierColor(m.tier),fontWeight:500}}>{m.cost}</span>
-                          </div>
-                          <div style={{display:"flex",gap:5}}>
-                            <span style={{fontSize:9,color:P.t3}}>{m.provider}</span>
-                            <span style={{fontSize:9,padding:"1px 5px",borderRadius:8,background:`${tierColor(m.tier)}15`,color:tierColor(m.tier)}}>{tierLabel(m.tier)}</span>
+            ))}
+          </div>
+          <div className="ctx-scroll">
+            {ctxTab==="workflow" && (
+              <div className="ctx-section">
+                <div className="ctx-section-title">
+                  {wfSteps.length > 0
+                    ? `${wfSteps.filter((s:any)=>s.status==="working").length} ${lang==="fr"?"agents actifs":"agents working"}`
+                    : (lang==="fr"?"Aucun workflow actif":"No active workflow")}
+                </div>
+                <div className="timeline">
+                  {wfSteps.map((step: any, i: number) => {
+                    const sa = AGENTS_STUDIO.find((a:any) => a.id===step.agentId) || AGENTS_STUDIO[0];
+                    return (
+                      <div key={i} className={`tl-item ${step.status==="working"?"busy":step.status==="done"?"done":"pending"}`}>
+                        <div className="tl-name">{sa.name.split(" ")[0]} {sa.name.split(" ").slice(-1)[0][0]}.</div>
+                        <div className="tl-task">{agentTitle(step.agentId, lang)}</div>
+                        <div className="tl-time">{step.status==="done"?"✓":step.status==="working"?"running…":"queued"}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Conversation history */}
+                {convs.length > 0 && (
+                  <>
+                    <div className="ctx-section-title" style={{marginTop:20}}>{lang==="fr"?"Historique":"History"}</div>
+                    {convs.slice(0,8).map((conv: any) => {
+                      const sa = AGENTS_STUDIO.find((a:any) => a.id===conv.agentId) || AGENTS_STUDIO[0];
+                      return (
+                        <div key={conv.id} className="doc-row" onClick={()=>{setActiveId(conv.id);setMsgs(conv.messages||[]);}}
+                          style={{padding:"6px 0",cursor:"pointer"}}>
+                          <Avatar agent={sa} size={20}/>
+                          <div className="doc-meta">
+                            <div className="doc-name" style={{fontSize:11.5}}>{conv.title||"Conversation"}</div>
+                            <div className="doc-info">{fmtTime(conv.updatedAt)}</div>
                           </div>
                         </div>
-                      ))}
+                      );
+                    })}
+                  </>
+                )}
+              </div>
+            )}
+            {ctxTab==="sources" && (
+              <div className="ctx-section">
+                <div className="ctx-section-title">{lang==="fr"?"Conversations":"Conversations"}</div>
+                {convs.length === 0 && <div style={{fontSize:11,color:"var(--ink-3)"}}>{lang==="fr"?"Aucune conversation":"No conversations yet"}</div>}
+                {convs.map((conv: any) => {
+                  const sa = AGENTS_STUDIO.find((a:any) => a.id===conv.agentId) || AGENTS_STUDIO[0];
+                  return (
+                    <div key={conv.id} className="doc-row" onClick={()=>{setActiveId(conv.id);setMsgs(conv.messages||[]);}}
+                      style={{cursor:"pointer",borderRadius:6,padding:"6px 8px",transition:".1s"}}>
+                      <div className="doc-icon" style={{width:28,height:32,fontSize:10.5}}>
+                        <Avatar agent={sa} size={22}/>
+                      </div>
+                      <div className="doc-meta">
+                        <div className="doc-name">{conv.title||"Untitled"}</div>
+                        <div className="doc-info">{fmtTime(conv.updatedAt)}</div>
+                      </div>
                     </div>
-                  </div>
-
-                  {/* System prompt editor */}
-                  <div>
-                    <div style={{fontSize:11,fontWeight:500,color:P.t3,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:8}}>
-                      {lang==="fr"?"Prompt système":"System prompt"}
-                    </div>
-                    <textarea
-                      value={draft.prompt}
-                      onChange={e=>setDraft(a.id,"prompt",e.target.value)}
-                      rows={7}
-                      style={{width:"100%",background:P.input,border:`1px solid ${P.border}`,borderRadius:9,padding:"10px 12px",color:P.t1,fontSize:12,fontFamily:"'DM Mono',monospace",lineHeight:1.6,resize:"vertical",outline:"none"}}
-                    />
-                    <div style={{display:"flex",justifyContent:"flex-end",marginTop:6}}>
-                      <button onClick={()=>resetAgent(a.id)} style={{background:"transparent",border:`1px solid ${P.border}`,borderRadius:7,padding:"5px 12px",color:P.t3,fontSize:11,cursor:"pointer"}}>
-                        ↺ {lang==="fr"?"Réinitialiser":"Reset to default"}
-                      </button>
-                    </div>
-                  </div>
+                  );
+                })}
+              </div>
+            )}
+            {ctxTab==="cost" && (
+              <div className="ctx-section">
+                <div className="meter">
+                  <div className="meter-row"><span>{lang==="fr"?"Tokens utilisés":"Tokens used"}</span><strong>{msgs.reduce((acc: number, m: any) => acc + (m.content?.length||0), 0).toLocaleString()}</strong></div>
+                  <div className="meter-row"><span>{lang==="fr"?"Conversations":"Conversations"}</span><strong>{convs.length}</strong></div>
+                  <div className="meter-row"><span>{lang==="fr"?"Agents actifs":"Active agents"}</span><strong>{wfSteps.filter((s:any)=>s.status==="working").length}</strong></div>
+                  <div className="meter-bar"><div className="meter-fill" style={{width:Math.min(100, convs.length * 5) + "%"}}/></div>
+                  <div className="meter-foot"><span>{lang==="fr"?"session":"session"}</span><span>{lang==="fr"?"OpenRouter":"OpenRouter"}</span></div>
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* ── Save button ─────────────────────────────────────────────────────── */}
-      <div style={{position:"sticky",bottom:0,background:P.bg,paddingTop:12,paddingBottom:4,display:"flex",gap:10,alignItems:"center"}}>
-        <button onClick={saveAll} style={{flex:1,background:saved?P.accent:"#10B981",border:"none",borderRadius:10,padding:"12px 0",color:"#fff",fontSize:14,fontWeight:600,cursor:"pointer",transition:"background .3s"}}>
-          {saved?(lang==="fr"?"✓ Sauvegardé !":"✓ Saved!"):(lang==="fr"?"Sauvegarder tous les paramètres":"Save all settings")}
-        </button>
-        <button onClick={()=>{setKeyInput("");setDrafts(Object.fromEntries(AGENTS_DEF.map(a=>[a.id,{model:DEFAULT_AGENT_MODEL,prompt:a.defaultPrompt[lang]}])));}}
-          style={{background:"transparent",border:`1px solid ${P.border}`,borderRadius:10,padding:"12px 18px",color:P.t3,fontSize:13,cursor:"pointer"}}>
-          {lang==="fr"?"Tout réinitialiser":"Reset all"}
-        </button>
-      </div>
+              </div>
+            )}
+          </div>
+        </aside>
+      )}
     </div>
   );
 }
 
+
+
+const TWEAK_DEFAULTS = {
+  lang: "fr" as string,
+  theme: "dark" as string,
+  density: "comfortable" as string,
+  showRight: true as boolean,
+  speed: 1 as number,
+};
 
 export default function Z12CFOSuite() {
-  const [view,        setView]       = useLocalStorage("z12-view",     "dashboard");
-  const [darkMode,    setDarkMode]   = useLocalStorage("z12-dark",     true);
-  const [lang,        setLang]       = useLocalStorage("z12-lang",     "fr");
-  const [sidebarOpen, setSidebarOpen]= useLocalStorage("z12-sidebar",  true);
-  const [agentSettings, setAgentSettings] = useLocalStorage("z12-agent-settings", {});
-  const [openrouterKey, setOpenrouterKey] = useLocalStorage("z12-openrouter-key", "");
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const lang = tweaks.lang as string;
+  const [view,        setView]       = useLocalStorage<string>("z12-view", "studio");
+  const [darkMode,    setDarkMode]   = useLocalStorage<boolean>("z12-dark", true);
+  const [convs,       setConvs]      = useLocalStorage<any[]>("z12-conversations", []);
+  const [activeId,    setActiveId]   = useLocalStorage<string|null>("z12-active-conv", null);
+  const [openrouterKey] = useLocalStorage<string>("z12-openrouter-key", "");
+  const [agentSettings] = useLocalStorage<any>("z12-agent-settings", {});
+  const [sidebarOpen, setSidebarOpen] = useLocalStorage<boolean>("z12-sidebar", true);
 
-  const handleStartConvWithAgent = useCallback(agentId => {
-    sessionStorage.setItem("z12-start-agent", agentId);
-    setView("chat");
-  }, [setView]);
+  // Apply theme
+  React.useEffect(() => {
+    document.body.className = tweaks.theme === "light" ? "theme-light" : "";
+  }, [tweaks.theme]);
 
-  const P = useMemo(() => darkMode ? DARK : LIGHT, [darkMode]);
-  const t = useMemo(() => T[lang],                 [lang]);
+  // Compute busy/done from convs context (not available here, passed to Studio)
+  const busyIds = new Set<string>();
+  const doneIds = new Set<string>();
 
-  const viewProps = { t, P, lang, agentSettings, setAgentSettings, onStartConvWithAgent:handleStartConvWithAgent, openrouterKey };
+  const compact = !sidebarOpen || tweaks.density === "dense";
+
+  const viewProps = { lang, openrouterKey, agentSettings, convs, setConvs, activeId, setActiveId };
 
   return (
-    <div style={{display:"flex",height:"100vh",background:P.bg,fontFamily:"'DM Sans',system-ui,sans-serif",overflow:"hidden","--bg-card":P.card,"--bg-border":P.border,"--bg-input":P.input,"--t1":P.t1,"--t2":P.t2,"--t3":P.t3} as React.CSSProperties}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap');
-        *{box-sizing:border-box;margin:0;padding:0}
-        ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:${P.border};border-radius:2px}
-        textarea:focus,select:focus,input:focus{border-color:${P.accent}!important;outline:none}
-        @keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}} @keyframes agentGlow{0%,100%{transform:scale(1)}50%{transform:scale(1.05);filter:brightness(1.15)}}
-      `}</style>
-      <Sidebar view={view} setView={setView} darkMode={darkMode} setDarkMode={setDarkMode} lang={lang} setLang={setLang} t={t} P={P} open={sidebarOpen} setOpen={setSidebarOpen}/>
-      <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-        {view==="dashboard"  && <Dashboard  {...viewProps}/>}
-        {view==="chat"       && <Chat       {...viewProps}/>}
-        {view==="documents"  && <Documents  {...viewProps}/>}
-        {view==="pipeline"   && <Pipeline   {...viewProps}/>}
-        {view==="governance" && <Governance {...viewProps}/>}
-        {view==="agents"     && <Agents     {...viewProps}/>}
-        {view==="settings"   && <Settings   {...viewProps} setOpenrouterKey={setOpenrouterKey}/> }
-        {view==="sandbox"    && <Sandbox    {...viewProps}/>}
-      </div>
+    <>
+    <style>{CSS_STYLES}</style>
+    <div className={"app " + (compact?"compact ":"")} style={{height:"100vh",overflow:"hidden"}}>
+      {/* Roster sidebar */}
+      <Roster lang={lang} busyIds={busyIds} doneIds={doneIds}
+        activeNav={view as string} setNav={setView}
+        compact={compact} setCompact={setSidebarOpen}
+        darkMode={darkMode as boolean} setDarkMode={setDarkMode}
+        tweaks={tweaks} setTweak={setTweak}/>
+
+      {/* Main content area */}
+      {view==="dashboard"  && <DashboardView  lang={lang} t={STUDIO_T[lang as "fr"|"en"]}/>}
+      {view==="docs"       && <Documents      lang={lang} P={{}} agentSettings={agentSettings}/>}
+      {view==="pipeline"   && <PipelineView   lang={lang} t={STUDIO_T[lang as "fr"|"en"]}/>}
+      {view==="governance" && <GovernanceView lang={lang} t={STUDIO_T[lang as "fr"|"en"]}/>}
+      {view==="team"       && <TeamView       lang={lang} t={STUDIO_T[lang as "fr"|"en"]}/>}
+      {view==="settings"   && <SettingsView   lang={lang} t={STUDIO_T[lang as "fr"|"en"]} openrouterKey={openrouterKey} agentSettings={agentSettings}/>}
+      {view==="sandbox"    && <Sandbox        lang={lang} P={{accent:"var(--accent)",t1:"var(--ink)",t2:"var(--ink-2)",t3:"var(--ink-3)",card:"var(--surface)",border:"var(--line)",input:"var(--surface-2)",sb:"var(--surface)",bg:"var(--bg)"} as any} agentSettings={agentSettings} openrouterKey={openrouterKey as string}/>}
+      {(view==="studio" || !["dashboard","docs","pipeline","governance","team","settings","sandbox"].includes(view as string)) && (
+        <Studio {...viewProps} setView={setView} P={{}}/>
+      )}
     </div>
+    <TweaksPanel title="Z12 Tweaks">
+      <TweakSection label="Theme">
+        <TweakRadio label="Mode" value={tweaks.theme} options={["dark","light"]} onChange={(v: string)=>setTweak("theme",v)}/>
+        <TweakRadio label="Density" value={tweaks.density} options={["comfortable","dense"]} onChange={(v: string)=>setTweak("density",v)}/>
+      </TweakSection>
+      <TweakSection label="Language">
+        <TweakRadio label="Lang" value={tweaks.lang} options={["fr","en"]} onChange={(v: string)=>setTweak("lang",v)}/>
+      </TweakSection>
+    </TweaksPanel>
+    </>
   );
 }
+
