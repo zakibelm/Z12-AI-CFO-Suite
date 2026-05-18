@@ -2547,7 +2547,6 @@ function Roster({ lang, busyIds, doneIds, activeNav, setNav, compact, setCompact
   return (
     <aside className="roster">
       <div className="brand">
-        <img src="/favicon-48x48.png" alt="Z12" style={{width:38,height:38,borderRadius:8,objectFit:"cover",flexShrink:0}} />
         {!compact && (
           <div style={{minWidth:0,flex:1}}>
             <div className="brand-name" style={{display:"none"}}></div>
