@@ -209,6 +209,7 @@ input,textarea{font-family:inherit;color:inherit;background:none;border:none;out
 .tool-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;font-size:11px;color:var(--ink-3);border:1px solid transparent;cursor:pointer;transition:.12s}
 .tool-chip:hover{background:var(--surface-2);color:var(--ink-2)}
 .tool-chip.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-line)}
+.tool-chip.attach{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-line);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .send-btn{margin-left:auto;background:var(--ink);color:var(--bg);padding:7px 14px;border-radius:99px;font-weight:500;font-size:12px;display:inline-flex;align-items:center;gap:6px;letter-spacing:-0.01em}
 .send-btn:hover{background:var(--accent);color:#0a0a0a}
 .send-btn:disabled{opacity:.4;cursor:not-allowed;background:var(--ink-4);color:var(--ink-3)}
@@ -2363,7 +2364,7 @@ function UploadZone({ color, lang, t, onAdd }) {
     setQueue(prev => [...items, ...prev].slice(0, 15));
 
     // VectDocs-inspired: extract text preview instantly BEFORE server indexing
-    for (const item of items) {
+    for (const [idx, item] of items.entries()) {
       if (item.error) continue;
       // Async extraction in parallel
       extractTextPreview(item.rawFile).then((result: any) => {
@@ -2381,21 +2382,23 @@ function UploadZone({ color, lang, t, onAdd }) {
         } : q));
       });
 
-      // Simulate server pipeline stages
-      let p = 0;
-      const iv = setInterval(() => {
-        p += Math.random() * 14 + 5;
-        if (p >= 100) { p = 100; clearInterval(iv); }
-        const stage = uploadStageLabel(p);
-        setQueue(prev => prev.map(q => q.id === item.id ? {...q, progress:Math.round(p), stage} : q));
-        if (p === 100 && onAdd) {
-          const agent = item.overrideAgent || detectAgentFromFile(item.name);
-          onAdd({ id:"u_"+Date.now()+Math.random(), name:item.name, agent, size:item.size,
-            date:new Date().toISOString().slice(0,10), chunks:estimateChunks(item.words||30),
-            type:item.ext, words:item.words||0, language:item.language||"fr",
-            preview:item.preview||"", desc:"Document uploadé" });
-        }
-      }, 220);
+      // Simulate server pipeline stages — staggered (800ms/file)
+		setTimeout(() => {
+			let p = 0;
+			const iv = setInterval(() => {
+				p += Math.random() * 14 + 5;
+				if (p >= 100) { p = 100; clearInterval(iv); }
+				const stage = uploadStageLabel(p);
+				setQueue(prev => prev.map(q => q.id === item.id ? {...q, progress:Math.round(p), stage} : q));
+				if (p >= 100 && onAdd) {
+					const agent = item.overrideAgent || detectAgentFromFile(item.name);
+					onAdd({ id:"u_"+Date.now()+Math.random(), name:item.name, agent, size:item.size,
+						date:new Date().toISOString().slice(0,10), chunks:estimateChunks(item.words||30),
+						type:item.ext, words:item.words||0, language:item.language||"fr",
+						preview:item.preview||"", desc:"Document uploadé" });
+				}
+			}, 220);
+		}, idx * 800);
     }
   }, [onAdd]);
 
@@ -2407,12 +2410,20 @@ function UploadZone({ color, lang, t, onAdd }) {
     }
     try {
       const dirHandle = await (window as any).showDirectoryPicker();
-      const files = [];
-      for await (const [, handle] of dirHandle.entries()) {
-        if (handle.kind === "file") files.push(await handle.getFile());
-      }
+      const files: File[] = [];
+      const collectFiles = async (dirH: any, depth = 0) => {
+        if (depth > 5) return;
+        for await (const [, handle] of dirH.entries()) {
+          if (handle.kind === "file") {
+            files.push(await handle.getFile());
+          } else if (handle.kind === "directory") {
+            await collectFiles(handle, depth + 1);
+          }
+        }
+      };
+      await collectFiles(dirHandle);
       if (files.length > 0) processFiles(files);
-    } catch(e) { if (e.name !== "AbortError") console.error(e); }
+    } catch(e) { if ((e as any).name !== "AbortError") console.error(e); }
   }, [processFiles]);
 
   const langFlag = l => l === "fr" ? "🇫🇷" : l === "en" ? "🇬🇧" : "";
@@ -2442,7 +2453,7 @@ function UploadZone({ color, lang, t, onAdd }) {
         <div style={{background:"var(--bg-card)",border:"1px solid var(--bg-border)",borderRadius:12,overflow:"hidden",marginTop:10}}>
           <div style={{padding:"9px 14px",borderBottom:"1px solid var(--bg-border)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <span style={{fontSize:12,fontWeight:500,color:"var(--t2)"}}>
-              {lang==="fr"?"File d'indexation":"Indexing queue"} ({queue.length})
+              {lang==="fr"?"File d'indexation":"Indexing queue"} ({queue.filter((q:any)=>q.progress>=100).length}/{queue.length})
             </span>
             <button onClick={()=>setQueue([])} style={{background:"transparent",border:"none",color:"var(--t3)",fontSize:11,cursor:"pointer"}}> {lang==="fr"?"Effacer":"Clear"}</button>
           </div>
@@ -3198,9 +3209,9 @@ function Documents({ t, P, lang }) {
       {/* Flow legend */}
       <div style={{...card(P),padding:"12px 16px",marginTop:14,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
         <span style={{fontSize:12,fontWeight:500,color:P.t2,flexShrink:0}}>Flux RAG :</span>
-        {[{icon:"📚",l:lang==="fr"?"Sources métier":"Knowledge",c:P.blue},{icon:"📚",l:"search_chunks()",c:P.accent},{icon:"📁",l:lang==="fr"?"Docs client":"Client docs",c:P.gold},{icon:">",l:"LLM",c:P.violet}].map((s,i)=>(
+        {[{icon:"📚",l:lang==="fr"?"Sources métier":"Knowledge",c:P.blue},{icon:"📚",l:"search_chunks()",c:P.accent},{icon:"📁",l:lang==="fr"?"Docs client":"Client docs",c:P.gold},{icon:">[]",l:"LLM",c:P.violet}].map((s,i)=>(
           <div key={s.l} style={{display:"flex",alignItems:"center",gap:5}}>
-            {i>0&&<span style={{color:P.t3,fontSize:12}}>é</span>}
+            {i>0&&<span style={{color:P.t3,fontSize:12}}>→</span>}
             <div style={{display:"flex",alignItems:"center",gap:5,padding:"4px 9px",background:`${s.c}10`,border:`1px solid ${s.c}30`,borderRadius:8}}>
               <span style={{fontSize:12}}>{s.icon}</span>
               <span style={{fontSize:11,color:s.c,fontWeight:500}}>{s.l}</span>
@@ -3433,6 +3444,8 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
   //  Core state 
   const [msgs,      setMsgs]      = _s<any[]>([]);
   const [input,     setInput]     = _s("");
+  const [attachedFile, setAttachedFile] = _s(null);
+  const fileInputRef = _r(null);
   const [loading,   setLoading]   = _s(false);
   const [routing,   setRouting]   = _s(false);
   const [workflow,  setWorkflow]  = _s<any>(null);
@@ -3458,12 +3471,28 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
   _e(() => { if(msgs.length===0) setMsgs(orchWelcome); }, [orchWelcome]);
   _e(() => { threadRef.current?.scrollTo({top:99999,behavior:"smooth"}); }, [msgs, loading]);
 
-  //  Send handler 
+  //  File attach handler
+const handleFileAttach = (e) => {
+  const file = e.target.files && e.target.files[0]; if (!file) return;
+  const isText = /\.(txt|csv|md|json|xml|yaml|yml|log|sql|html|css)$/i.test(file.name) || (file.type && file.type.startsWith('text/'));
+  if (isText) {
+    const r = new FileReader();
+    r.onload = (ev) => { setAttachedFile({name:file.name, content:(ev.target.result||'').slice(0,50000)}); };
+    r.readAsText(file, 'utf-8');
+  } else {
+    const s = file.size>1048576 ? (file.size/1048576).toFixed(1)+' MB' : (file.size/1024).toFixed(0)+' KB';
+    setAttachedFile({name:file.name, content:'[Fichier: '+file.name+' | '+s+' | '+(file.type||'inconnu')+']\nPour analyser ce fichier, indexez-le via la section Documents.'});
+  }
+  e.target.value = '';
+};
+
+//  Send handler 
   const send = _c(async () => {
     if (!input.trim() || loading) return;
-    const userMsg = {role:"user", content:input, ts:Date.now()};
+    const filePrefix = attachedFile ? "[📎 " + attachedFile.name + "]\n---\n" + attachedFile.content + "\n---\n" : "";
+  const userMsg = {role:"user", content: filePrefix + input, ts:Date.now()};
     const draft   = [...msgs, userMsg];
-    setMsgs(draft); setInput(""); setWorkflow(null); setSynthesis(null); setWfSteps([]);
+    setMsgs(draft); setInput(""); setAttachedFile(null); setWorkflow(null); setSynthesis(null); setWfSteps([]);
 
     setRouting(true);
     const plan = await analyzeWorkflow(input, draft, lang, openrouterKey);
@@ -3709,6 +3738,18 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
               onKeyDown={(e:any)=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
             />
             <div className="composer-tools">
+                <input ref={fileInputRef} type="file" accept="*/*" style={{display:"none"}} onChange={handleFileAttach} />
+                {attachedFile ? (
+                  <button className="tool-chip attach" title={attachedFile.name} onClick={()=>setAttachedFile(null)}>
+                    <svg viewBox="0 0 16 16" className="i"><path d="M4 2h6l3 3v9H4z"/><path d="M10 2v3h3"/></svg>
+                    <span>📎 {attachedFile.name.length>20?attachedFile.name.slice(0,18)+'...':attachedFile.name} ×</span>
+                  </button>
+                ) : (
+                  <button className="tool-chip" title={lang==="fr"?"Joindre un fichier":"Attach a file"} onClick={()=>fileInputRef.current&&fileInputRef.current.click()}>
+                    <svg viewBox="0 0 16 16" className="i"><line x1="12" y1="4" x2="4" y2="12"/><path d="M3 9l4 4 6-9"/><path d="M10 2v4h4"/><path d="M4 2h6l4 4v10H4z"/></svg>
+                    <span>{lang==="fr"?"Joindre":"Attach"}</span>
+                  </button>
+                )}
               <button className={`tool-chip ${ragOn?"on":""}`} onClick={()=>setRagOn((v:boolean)=>!v)}>
                 <svg viewBox="0 0 16 16" className="i"><path d="M4 2h6l3 3v9H4z"/><path d="M10 2v3h3"/></svg>
                 <span>{lang==="fr"?"RAG documents":"RAG documents"}</span>
