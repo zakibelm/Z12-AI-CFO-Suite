@@ -2364,7 +2364,7 @@ function UploadZone({ color, lang, t, onAdd }) {
     setQueue(prev => [...items, ...prev].slice(0, 15));
 
     // VectDocs-inspired: extract text preview instantly BEFORE server indexing
-    for (const item of items) {
+    for (const [idx, item] of items.entries()) {
       if (item.error) continue;
       // Async extraction in parallel
       extractTextPreview(item.rawFile).then((result: any) => {
@@ -2382,21 +2382,23 @@ function UploadZone({ color, lang, t, onAdd }) {
         } : q));
       });
 
-      // Simulate server pipeline stages
-      let p = 0;
-      const iv = setInterval(() => {
-        p += Math.random() * 14 + 5;
-        if (p >= 100) { p = 100; clearInterval(iv); }
-        const stage = uploadStageLabel(p);
-        setQueue(prev => prev.map(q => q.id === item.id ? {...q, progress:Math.round(p), stage} : q));
-        if (p === 100 && onAdd) {
-          const agent = item.overrideAgent || detectAgentFromFile(item.name);
-          onAdd({ id:"u_"+Date.now()+Math.random(), name:item.name, agent, size:item.size,
-            date:new Date().toISOString().slice(0,10), chunks:estimateChunks(item.words||30),
-            type:item.ext, words:item.words||0, language:item.language||"fr",
-            preview:item.preview||"", desc:"Document uploadé" });
-        }
-      }, 220);
+      // Simulate server pipeline stages — staggered (800ms/file)
+		setTimeout(() => {
+			let p = 0;
+			const iv = setInterval(() => {
+				p += Math.random() * 14 + 5;
+				if (p >= 100) { p = 100; clearInterval(iv); }
+				const stage = uploadStageLabel(p);
+				setQueue(prev => prev.map(q => q.id === item.id ? {...q, progress:Math.round(p), stage} : q));
+				if (p >= 100 && onAdd) {
+					const agent = item.overrideAgent || detectAgentFromFile(item.name);
+					onAdd({ id:"u_"+Date.now()+Math.random(), name:item.name, agent, size:item.size,
+						date:new Date().toISOString().slice(0,10), chunks:estimateChunks(item.words||30),
+						type:item.ext, words:item.words||0, language:item.language||"fr",
+						preview:item.preview||"", desc:"Document uploadé" });
+				}
+			}, 220);
+		}, idx * 800);
     }
   }, [onAdd]);
 
@@ -2408,12 +2410,20 @@ function UploadZone({ color, lang, t, onAdd }) {
     }
     try {
       const dirHandle = await (window as any).showDirectoryPicker();
-      const files = [];
-      for await (const [, handle] of dirHandle.entries()) {
-        if (handle.kind === "file") files.push(await handle.getFile());
-      }
+      const files: File[] = [];
+      const collectFiles = async (dirH: any, depth = 0) => {
+        if (depth > 5) return;
+        for await (const [, handle] of dirH.entries()) {
+          if (handle.kind === "file") {
+            files.push(await handle.getFile());
+          } else if (handle.kind === "directory") {
+            await collectFiles(handle, depth + 1);
+          }
+        }
+      };
+      await collectFiles(dirHandle);
       if (files.length > 0) processFiles(files);
-    } catch(e) { if (e.name !== "AbortError") console.error(e); }
+    } catch(e) { if ((e as any).name !== "AbortError") console.error(e); }
   }, [processFiles]);
 
   const langFlag = l => l === "fr" ? "🇫🇷" : l === "en" ? "🇬🇧" : "";
@@ -2443,7 +2453,7 @@ function UploadZone({ color, lang, t, onAdd }) {
         <div style={{background:"var(--bg-card)",border:"1px solid var(--bg-border)",borderRadius:12,overflow:"hidden",marginTop:10}}>
           <div style={{padding:"9px 14px",borderBottom:"1px solid var(--bg-border)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <span style={{fontSize:12,fontWeight:500,color:"var(--t2)"}}>
-              {lang==="fr"?"File d'indexation":"Indexing queue"} ({queue.length})
+              {lang==="fr"?"File d'indexation":"Indexing queue"} ({queue.filter((q:any)=>q.progress>=100).length}/{queue.length})
             </span>
             <button onClick={()=>setQueue([])} style={{background:"transparent",border:"none",color:"var(--t3)",fontSize:11,cursor:"pointer"}}> {lang==="fr"?"Effacer":"Clear"}</button>
           </div>
