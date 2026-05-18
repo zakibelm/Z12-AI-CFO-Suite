@@ -3209,9 +3209,9 @@ function Documents({ t, P, lang }) {
       {/* Flow legend */}
       <div style={{...card(P),padding:"12px 16px",marginTop:14,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
         <span style={{fontSize:12,fontWeight:500,color:P.t2,flexShrink:0}}>Flux RAG :</span>
-        {[{icon:"📚",l:lang==="fr"?"Sources métier":"Knowledge",c:P.blue},{icon:"📚",l:"search_chunks()",c:P.accent},{icon:"📁",l:lang==="fr"?"Docs client":"Client docs",c:P.gold},{icon:">",l:"LLM",c:P.violet}].map((s,i)=>(
+        {[{icon:"📚",l:lang==="fr"?"Sources métier":"Knowledge",c:P.blue},{icon:"📚",l:"search_chunks()",c:P.accent},{icon:"📁",l:lang==="fr"?"Docs client":"Client docs",c:P.gold},{icon:">[]",l:"LLM",c:P.violet}].map((s,i)=>(
           <div key={s.l} style={{display:"flex",alignItems:"center",gap:5}}>
-            {i>0&&<span style={{color:P.t3,fontSize:12}}>é</span>}
+            {i>0&&<span style={{color:P.t3,fontSize:12}}>→</span>}
             <div style={{display:"flex",alignItems:"center",gap:5,padding:"4px 9px",background:`${s.c}10`,border:`1px solid ${s.c}30`,borderRadius:8}}>
               <span style={{fontSize:12}}>{s.icon}</span>
               <span style={{fontSize:11,color:s.c,fontWeight:500}}>{s.l}</span>
