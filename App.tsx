@@ -2547,11 +2547,12 @@ function Roster({ lang, busyIds, doneIds, activeNav, setNav, compact, setCompact
   return (
     <aside className="roster">
       <div className="brand">
-        <div className="brand-mark">Z</div>
+        <img src="/favicon-48x48.png" alt="Z12" style={{width:38,height:38,borderRadius:8,objectFit:"cover",flexShrink:0}} />
         {!compact && (
           <div style={{minWidth:0,flex:1}}>
-            <div className="brand-name">Z12 CFO Suite</div>
-            <div className="brand-sub">ZAKI OS à v3.2</div>
+            <div className="brand-name" style={{display:"none"}}></div>
+            <div className="brand-sub" style={{display:"none"}}></div>
+            <img src="/logo.png" alt="Z12 AI CFO Suite" style={{height:42,maxWidth:160,objectFit:"contain"}} />
           </div>
         )}
         <button onClick={()=>setCompact((v: boolean)=>!v)}

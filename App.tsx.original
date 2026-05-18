@@ -2285,25 +2285,9 @@ async function routeViaAPI(msg) {
 const card = (P, extra={}) => ({ background:P.card, border:`1px solid ${P.border}`, borderRadius:12, ...extra });
 
 //  MOCK DATA 
-const KNOWLEDGE_DOCS_INIT = [
-  {id:"k1",name:"Guide CRA T2 — Corporations 2024",   agent:"TaxAgent",        size:"5.1 MB",date:"2024-11-01",chunks:132,type:"pdf", words:49500,language:"fr",preview:"Les sociétés canadiennes doivent produire une déclaration T2 dans les six mois suivant la fin de leur exercice. Le présent guide explique les principales déductions admissibles...",desc:"Guide officiel ARC déclarations sociétés"},
-  {id:"k2",name:"IFRS Normes complétes — édition 2024",agent:"AuditAgent",     size:"12.4 MB",date:"2024-10-15",chunks:310,type:"pdf", words:116250,language:"en",preview:"These standards require entities to present financial statements that fairly represent the financial position and performance of the entity...",desc:"Normes IFRS Foundation — édition annuelle"},
-  {id:"k3",name:"Réglements TVQ — Revenu Québec 2024", agent:"TaxAgent",       size:"3.2 MB",date:"2024-09-20",chunks:87, type:"pdf", words:32625,language:"fr",preview:"La taxe de vente du Québec (TVQ) est calculée au taux de 9,975 % sur la valeur de la contrepartie payée pour une fourniture taxable...",desc:"Texte règlementaire TVQ complet"},
-  {id:"k4",name:"Checklist audit interne CPA Canada",  agent:"AuditAgent",     size:"890 KB",date:"2024-08-05",chunks:44, type:"docx",words:16500,language:"fr",preview:"Vérification des contrôles internes — évaluation des risques et des procédures de contrôle conformément aux normes CPA Canada...",desc:"Grille de vérification normes CPA"},
-  {id:"k5",name:"Loi 25 — Texte intégral annoté",      agent:"ComplianceAgent",size:"2.1 MB",date:"2024-07-12",chunks:96, type:"pdf", words:36000,language:"fr",preview:"Toute organisation qui collecte des renseignements personnels doit obtenir le consentement éclairé de la personne concernée. L'article 12 précise...",desc:"Loi modernisation protection renseignements"},
-  {id:"k6",name:"Méthodologies DCF/TRI/VAN — PME CA",  agent:"InvestmentAgent",size:"1.4 MB",date:"2024-06-30",chunks:63, type:"pdf", words:23625,language:"fr",preview:"L'actualisation des flux de trésorerie (DCF) consiste à estimer la valeur actuelle des flux futurs générés par un investissement en les escomptant...",desc:"Cadres d'évaluation investissements PME"},
-  {id:"k7",name:"Benchmarks financiers PME Québec 2024",agent:"FinancialAgent",size:"2.8 MB",date:"2024-05-18",chunks:78, type:"xlsx",words:0,language:"fr",preview:"",desc:"Statistique Canada — ratios sectoriels"},
-  {id:"k8",name:"CASL — Guide conformité entreprises", agent:"ComplianceAgent",size:"760 KB",date:"2024-04-10",chunks:31, type:"pdf", words:11625,language:"en",preview:"Canada's Anti-Spam Legislation (CASL) requires businesses to obtain express or implied consent before sending commercial electronic messages...",desc:"CRTC — guide pratique CASL pour PME"},
-];
+const KNOWLEDGE_DOCS_INIT: any[] = []
 
-const CLIENT_DOCS_INIT = [
-  {id:"c1",name:"états financiers 2024 — Q4 [ABC inc.]",agent:"FinancialAgent", size:"2.4 MB",date:"2025-01-15",chunks:47,type:"pdf", words:17625,language:"fr",preview:"Bilan consolidé au 31 décembre 2024. Total actif : 4 287 300 $. Total passif : 1 953 100 $. Capitaux propres : 2 334 200 $...",desc:"Bilan, compte de résultat, flux trésorerie"},
-  {id:"c2",name:"Budget trésorerie 2025 — Prévisions",  agent:"CashFlowAgent",  size:"890 KB",date:"2025-01-08",chunks:28,type:"xlsx",words:0,language:"fr",preview:"",desc:"Projections mensuelles 12 mois"},
-  {id:"c3",name:"Rapport audit interne FY2024",         agent:"AuditAgent",     size:"3.2 MB",date:"2024-12-20",chunks:86,type:"pdf", words:32250,language:"fr",preview:"Synthèse des travaux d'audit interne pour l'exercice clos le 31 décembre 2024. Trois zones à risque élevé ont été identifiées...",desc:"Audit interne exercice complet"},
-  {id:"c4",name:"Dossier investissement — Laval",       agent:"InvestmentAgent",size:"1.8 MB",date:"2024-12-15",chunks:53,type:"pdf", words:19875,language:"fr",preview:"Analyse de l'opportunité d'acquisition d'un immeuble commercial à Laval. Valeur d'acquisition : 3 200 000 $. TRI calculé : 18,4 %...",desc:"Acquisition bétiment commercial"},
-  {id:"c5",name:"T2 2023 — Corp. Bélanger inc.",        agent:"TaxAgent",       size:"1.1 MB",date:"2024-11-30",chunks:34,type:"pdf", words:12750,language:"fr",preview:"Déclaration de revenus des sociétés T2 pour l'année d'imposition 2023. Revenu imposable : 412 500 $. Impôt fédéral net : 61 875 $...",desc:"Déclaration corporative exercice 2023"},
-  {id:"c6",name:"Revue conformité Loi 25 — 2024",       agent:"ComplianceAgent",size:"560 KB",date:"2024-11-10",chunks:22,type:"docx",words:8250,language:"fr",preview:"évaluation de la conformité aux exigences de la Loi 25 pour la période 2024. Deux lacunes ont été identifiées nécessitant une action corrective...",desc:"évaluation des pratiques de données internes"},
-];
+const CLIENT_DOCS_INIT: any[] = []
 
 const PIPELINE_DATA = [
   {id:"bronze",label:"Ingestion (Bronze)",icon:"⚖️",desc:"Upload, validation SHA-256, stockage S3 ca-central-1",metrics:{availability:"99.8%",latency:"1.2s",errors:"0.02%",sla:"✅"},status:"active",lastRun:"Il y a 4 min"},
@@ -2448,6 +2432,7 @@ function UploadZone({ color, lang, t, onAdd }) {
       <button onClick={pickFolder} style={{width:"100%",marginTop:8,background:"transparent",border:`1px solid var(--bg-border)`,borderRadius:10,padding:"8px 0",color:"var(--t2)",fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
         📂 {lang==="fr"?"Uploader un dossier entier (Chrome/Edge)":"Upload entire folder (Chrome/Edge)"}
       </button>
+      <button onClick={() => { if (window.confirm(lang==="fr" ? "Réinitialiser le RAG ? Tous les documents indexés seront supprimés." : "Reset RAG? All indexed documents will be deleted.")) { setKDocs([]); setCDocs([]); setQueue([]); } }} style={{width:"100%",marginTop:4,background:"transparent",border:"1px solid var(--red,#e55)",borderRadius:10,padding:"6px 0",color:"var(--red,#e55)",fontSize:11,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}> 🗑️ {lang==="fr" ? "Réinitialiser le RAG" : "Reset RAG"}</button>
 
       {/* Queue with VectDocs-inspired preview */}
       {queue.length > 0 && (
