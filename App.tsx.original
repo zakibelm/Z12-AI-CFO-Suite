@@ -209,7 +209,6 @@ input,textarea{font-family:inherit;color:inherit;background:none;border:none;out
 .tool-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;font-size:11px;color:var(--ink-3);border:1px solid transparent;cursor:pointer;transition:.12s}
 .tool-chip:hover{background:var(--surface-2);color:var(--ink-2)}
 .tool-chip.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-line)}
-.tool-chip.attach{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-line);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .send-btn{margin-left:auto;background:var(--ink);color:var(--bg);padding:7px 14px;border-radius:99px;font-weight:500;font-size:12px;display:inline-flex;align-items:center;gap:6px;letter-spacing:-0.01em}
 .send-btn:hover{background:var(--accent);color:#0a0a0a}
 .send-btn:disabled{opacity:.4;cursor:not-allowed;background:var(--ink-4);color:var(--ink-3)}
@@ -3434,8 +3433,6 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
   //  Core state 
   const [msgs,      setMsgs]      = _s<any[]>([]);
   const [input,     setInput]     = _s("");
-  const [attachedFile, setAttachedFile] = _s(null);
-  const fileInputRef = _r(null);
   const [loading,   setLoading]   = _s(false);
   const [routing,   setRouting]   = _s(false);
   const [workflow,  setWorkflow]  = _s<any>(null);
@@ -3461,28 +3458,12 @@ function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, act
   _e(() => { if(msgs.length===0) setMsgs(orchWelcome); }, [orchWelcome]);
   _e(() => { threadRef.current?.scrollTo({top:99999,behavior:"smooth"}); }, [msgs, loading]);
 
-  //  File attach handler
-const handleFileAttach = (e) => {
-  const file = e.target.files && e.target.files[0]; if (!file) return;
-  const isText = /\.(txt|csv|md|json|xml|yaml|yml|log|sql|html|css)$/i.test(file.name) || (file.type && file.type.startsWith('text/'));
-  if (isText) {
-    const r = new FileReader();
-    r.onload = (ev) => { setAttachedFile({name:file.name, content:(ev.target.result||'').slice(0,50000)}); };
-    r.readAsText(file, 'utf-8');
-  } else {
-    const s = file.size>1048576 ? (file.size/1048576).toFixed(1)+' MB' : (file.size/1024).toFixed(0)+' KB';
-    setAttachedFile({name:file.name, content:'[Fichier: '+file.name+' | '+s+' | '+(file.type||'inconnu')+']\nPour analyser ce fichier, indexez-le via la section Documents.'});
-  }
-  e.target.value = '';
-};
-
-//  Send handler 
+  //  Send handler 
   const send = _c(async () => {
     if (!input.trim() || loading) return;
-    const filePrefix = attachedFile ? "[📎 " + attachedFile.name + "]\n---\n" + attachedFile.content + "\n---\n" : "";
-  const userMsg = {role:"user", content: filePrefix + input, ts:Date.now()};
+    const userMsg = {role:"user", content:input, ts:Date.now()};
     const draft   = [...msgs, userMsg];
-    setMsgs(draft); setInput(""); setAttachedFile(null); setWorkflow(null); setSynthesis(null); setWfSteps([]);
+    setMsgs(draft); setInput(""); setWorkflow(null); setSynthesis(null); setWfSteps([]);
 
     setRouting(true);
     const plan = await analyzeWorkflow(input, draft, lang, openrouterKey);
@@ -3728,18 +3709,6 @@ const handleFileAttach = (e) => {
               onKeyDown={(e:any)=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
             />
             <div className="composer-tools">
-                <input ref={fileInputRef} type="file" accept="*/*" style={{display:"none"}} onChange={handleFileAttach} />
-                {attachedFile ? (
-                  <button className="tool-chip attach" title={attachedFile.name} onClick={()=>setAttachedFile(null)}>
-                    <svg viewBox="0 0 16 16" className="i"><path d="M4 2h6l3 3v9H4z"/><path d="M10 2v3h3"/></svg>
-                    <span>📎 {attachedFile.name.length>20?attachedFile.name.slice(0,18)+'...':attachedFile.name} ×</span>
-                  </button>
-                ) : (
-                  <button className="tool-chip" title={lang==="fr"?"Joindre un fichier":"Attach a file"} onClick={()=>fileInputRef.current&&fileInputRef.current.click()}>
-                    <svg viewBox="0 0 16 16" className="i"><line x1="12" y1="4" x2="4" y2="12"/><path d="M3 9l4 4 6-9"/><path d="M10 2v4h4"/><path d="M4 2h6l4 4v10H4z"/></svg>
-                    <span>{lang==="fr"?"Joindre":"Attach"}</span>
-                  </button>
-                )}
               <button className={`tool-chip ${ragOn?"on":""}`} onClick={()=>setRagOn((v:boolean)=>!v)}>
                 <svg viewBox="0 0 16 16" className="i"><path d="M4 2h6l3 3v9H4z"/><path d="M10 2v3h3"/></svg>
                 <span>{lang==="fr"?"RAG documents":"RAG documents"}</span>
