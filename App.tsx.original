@@ -2361,6 +2361,7 @@ function UploadZone({ color, lang, t, onAdd }) {
       language: "unknown",
       overrideAgent: null,
     }));
+    if (arr.length > 15) { alert(lang === "fr" ? "⚠️ " + (arr.length - 15) + " fichier(s) ignorés — limite de 15 par lot. Importez en plusieurs fois." : "⚠️ " + (arr.length - 15) + " file(s) ignored — batch limit of 15 reached. Import in smaller batches."); }
     setQueue(prev => [...items, ...prev].slice(0, 15));
 
     // VectDocs-inspired: extract text preview instantly BEFORE server indexing
@@ -3291,7 +3292,7 @@ function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
       const entry: any = { id:Date.now(), prompt:q.slice(0,80)+(q.length>80?"...":""), html:result, ts:new Date().toISOString() };
       setHistory(prev => [entry, ...prev].slice(0, 10));
       setActiveHist(entry.id);
-    } catch(e) { setError(e.message); }
+    } catch(e) { const msg = (e && e.message) ? e.message : String(e); const isAuth = msg.includes("Authentication") || msg.includes("401"); const isRate = msg.includes("429") || msg.includes("rate limit"); const friendly = isAuth ? (lang==="fr" ? "Clé API invalide ou manquante - allez dans Paramètres." : "Invalid or missing API key - go to Settings.") : isRate ? (lang==="fr" ? "Limite de requêtes atteinte. Réessayez." : "Rate limit reached. Please retry.") : msg; setError(friendly); }
     setLoading(false);
   };
 
