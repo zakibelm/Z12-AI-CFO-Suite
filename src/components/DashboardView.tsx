@@ -1,5 +1,6 @@
 // src/components/DashboardView.tsx
 import React from "react";
+import { PageHead, Spark } from './PageHead';
 
 export function DashboardView({lang, t}) {
   const fr = lang === "fr";

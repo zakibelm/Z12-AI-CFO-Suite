@@ -1,5 +1,6 @@
 // src/components/TeamView.tsx
 import React from "react";
+import { PageHead, Spark } from './PageHead';
 
 export function TeamView({lang, t}) {
   const fr = lang === "fr";

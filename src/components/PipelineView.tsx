@@ -1,5 +1,6 @@
 // src/components/PipelineView.tsx
 import React from "react";
+import { PageHead, Spark } from './PageHead';
 
 export function PipelineView({lang, t}) {
   const fr = lang === "fr";
