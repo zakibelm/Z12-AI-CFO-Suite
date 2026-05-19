@@ -1,3 +1,9 @@
+import * as Sentry from "@sentry/react";
+Sentry.init({
+  dsn: "https://5ace9b78052c56b2d6b1dab8513f42d8@o4511415512006656.ingest.us.sentry.io/4511415522230272",
+  environment: "production",
+  tracesSampleRate: 0.1,
+});
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 
 

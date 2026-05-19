@@ -1,7 +1,7 @@
 {
   "name": "z12-ai-cfo-suite",
   "version": "3.2.0",
-  "description": "Z12 AI CFO Suite \u2014 ZAKI OS Platform \u00b7 Financial intelligence for Quebec SMEs",
+  "description": "Z12 AI CFO Suite — ZAKI OS Platform · Financial intelligence for Quebec SMEs",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -10,6 +10,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "@sentry/react": "^10.53.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

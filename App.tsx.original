@@ -2343,8 +2343,7 @@ function UploadZone({ color, lang, t, onAdd }) {
       language: "unknown",
       overrideAgent: null,
     }));
-    if (arr.length > 15) { alert(lang === "fr" ? "⚠️ " + (arr.length - 15) + " fichier(s) ignorés — limite de 15 par lot. Importez en plusieurs fois." : "⚠️ " + (arr.length - 15) + " file(s) ignored — batch limit of 15 reached. Import in smaller batches."); }
-    setQueue(prev => [...items, ...prev].slice(0, 15));
+    setQueue(prev => [...items, ...prev]);
 
     // VectDocs-inspired: extract text preview instantly BEFORE server indexing
     for (const [idx, item] of items.entries()) {
