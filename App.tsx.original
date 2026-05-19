@@ -2229,13 +2229,11 @@ async function callOpenRouter(model, system, messages, apiKey, useWebSearch = fa
     max_tokens: useWebSearch ? 2000 : 1400,
     ...(useWebSearch ? { plugins:[{ id:"web", max_results:5 }] } : {}),
   };
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+  const res = await fetch("/api/chat", {
     method:"POST",
     headers:{
       "Content-Type":"application/json",
-      "Authorization":`Bearer ${apiKey}`,
-      "HTTP-Referer":"https://z12cfo.zakiai.com",
-      "X-Title":"Z12 AI CFO Suite",
+      ...(apiKey ? {"X-API-Key":apiKey} : {}),
     },
     body: JSON.stringify(body)
   });
@@ -2996,7 +2994,7 @@ function SettingsView({ lang, t, openrouterKey, agentSettings }: any) {
       <div className="page-body" style={{maxWidth:880}}>
         <div className="set-card">
           <div className="set-h">{fr?"Clé API OpenRouter":"OpenRouter API key"}</div>
-          <div className="set-sub">{fr?"Stockée dans z12-openrouter-key. Donne accès aux modèles Anthropic Claude et autres.":"Stored in z12-openrouter-key. Gives access to Anthropic Claude and other models."}</div>
+          <div className="set-sub">{fr?"Optionnel si OPENROUTER_API_KEY est configurée sur le serveur. La clé transite via le proxy /api/chat et n’est jamais exposée dans le navigateur.":"Optional if OPENROUTER_API_KEY is set on the server. The key transits via /api/chat proxy and is never exposed in the browser."}</div>
           <input className="set-input" value={key} onChange={(e: any)=>setKey(e.target.value)} type="password" placeholder="sk-or-v1-&"/>
           <div style={{display:"flex",gap:8,marginTop:12,alignItems:"center"}}>
             <button className="btn btn-primary" onClick={testConnection} disabled={testing}>
