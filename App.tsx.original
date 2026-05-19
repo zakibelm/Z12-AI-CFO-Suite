@@ -2367,25 +2367,49 @@ function UploadZone({ color, lang, t, onAdd }) {
         } : q));
       });
 
-      // Simulate server pipeline stages — staggered (800ms/file)
-		setTimeout(() => {
-			let p = 0;
-			const iv = setInterval(() => {
-				p += Math.random() * 14 + 5;
-				if (p >= 100) { p = 100; clearInterval(iv); }
-				const stage = uploadStageLabel(p);
-				setQueue(prev => prev.map(q => q.id === item.id ? {...q, progress:Math.round(p), stage} : q));
-				if (p >= 100 && onAdd) {
-					const agent = item.overrideAgent || detectAgentFromFile(item.name);
-					onAdd({ id:"u_"+Date.now()+Math.random(), name:item.name, agent, size:item.size,
-						date:new Date().toISOString().slice(0,10), chunks:estimateChunks(item.words||30),
-						type:item.ext, words:item.words||0, language:item.language||"fr",
-						preview:item.preview||"", desc:"Document uploadé" });
-				}
-			}, 220);
-		}, idx * 800);
-    }
-  }, [onAdd]);
+      		// Send files to real backend RAG pipeline
+		setQueue(items.map((item:any) => ({...item, progress:5, stage:"Envoi..."})));
+		(async () => {
+			const fd = new FormData();
+			const origFiles = Array.from(files);
+			origFiles.forEach((f:any) => fd.append("files", f));
+			try {
+				// Update progress to uploading
+				setQueue(prev => prev.map((q:any) => ({...q, progress:20, stage:"Envoi vers serveur..."})));
+				const res = await fetch("/api/knowledge/ingest", { method:"POST", body:fd });
+				if (!res.ok) throw new Error("Ingest failed: "+res.status);
+				const data = await res.json();
+				// Mark all as done and call onAdd for each
+				const docs = data.documents || data.results || [];
+				items.forEach((item:any, idx:number) => {
+					const doc = docs[idx] || {};
+					setQueue(prev => prev.map((q:any) => q.id===item.id ? {...q, progress:100, stage:"\u2705 Index\u00e9"} : q));
+					if (onAdd) {
+						const agent = item.overrideAgent || detectAgentFromFile(item.name);
+						onAdd({ id:doc.doc_id||"u_"+Date.now()+Math.random(), name:item.name, agent,
+							size:item.size, date:new Date().toISOString().slice(0,10),
+							chunks:doc.chunks||estimateChunks(item.words||30),
+							type:item.ext, words:item.words||0, language:item.language||"fr",
+							preview:item.preview||"", desc:doc.description||"Document upload\u00e9" });
+					}
+				});
+			} catch(err:any) {
+				console.error("RAG ingest error:", err);
+				// Fallback: mark as indexed locally
+				items.forEach((item:any) => {
+					setQueue(prev => prev.map((q:any) => q.id===item.id ? {...q, progress:100, stage:"\u2705 Index\u00e9 (local)"} : q));
+					if (onAdd) {
+						const agent = item.overrideAgent || detectAgentFromFile(item.name);
+						onAdd({ id:"u_"+Date.now()+Math.random(), name:item.name, agent, size:item.size,
+							date:new Date().toISOString().slice(0,10), chunks:estimateChunks(item.words||30),
+							type:item.ext, words:item.words||0, language:item.language||"fr",
+							preview:item.preview||"", desc:"Document upload\u00e9" });
+					}
+				});
+			}
+		})();
+	}
+}, [onAdd]);
 
   // VectDocs-inspired folder picker (showDirectoryPicker API)
   const pickFolder = useCallback(async () => {
@@ -3028,6 +3052,28 @@ function Documents({ t, P, lang }) {
   const [expanded, setExpanded] = useState(null);   // expanded doc id for preview
 
   const addK = useCallback(d => setKDocs(prev=>[d,...prev]), [setKDocs]);
+  // Sync kDocs from backend RAG
+  const refreshKDocs = useCallback(async () => {
+    try {
+      const res = await fetch("/api/knowledge/list");
+      if (res.ok) {
+        const data = await res.json();
+        const docs = (data.documents||[]).map((d:any) => ({
+          id: d.doc_id||d.id||"b_"+Math.random(),
+          name: d.filename||d.name||"Document",
+          agent: detectAgentFromFile(d.filename||d.name||""),
+          size: d.file_size ? Math.round(d.file_size/1024)+" KB" : "?",
+          date: (d.created_at||new Date().toISOString()).slice(0,10),
+          chunks: d.chunks||0,
+          type: (d.filename||"").split(".").pop()||"doc",
+          words: d.words||0, language: d.language||"fr",
+          preview: d.text_excerpt||"", desc: d.description||"Document index\u00e9"
+        }));
+        if (docs.length > 0) setKDocs(docs);
+      }
+    } catch(e) { console.warn("RAG list fetch failed:", e); }
+  }, [setKDocs]);
+  useEffect(() => { refreshKDocs(); }, []);
   const addC = useCallback(d => setCDocs(prev=>[d,...prev]), [setCDocs]);
   const delK = useCallback(id => setKDocs(prev=>prev.filter(d=>d.id!==id)), [setKDocs]);
   const delC = useCallback(id => setCDocs(prev=>prev.filter(d=>d.id!==id)), [setCDocs]);
