@@ -1,5 +1,6 @@
 // src/components/Studio.tsx
 import React from "react";
+import { OrchestratorPanel } from './OrchestratorPanel';
 
 export function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, activeId, setActiveId, setView }: any) {
   const { useState: _s, useEffect: _e, useRef: _r, useMemo: _m, useCallback: _c } = React;
@@ -154,6 +155,9 @@ const handleFileAttach = (e) => {
                     </div>
                   </div>
                   <div className="studio-head-r">
+                <button onClick={() => { const last = [...msgs].reverse().find((m) => m.role === "user"); if (last) { window.dispatchEvent(new CustomEvent("z12-orchestrate", {detail: {question: last.content}})); } }} style={{marginRight:"8px",padding:"4px 10px",borderRadius:"6px",border:"1px solid rgba(139,92,246,0.4)",background:"rgba(139,92,246,0.1)",cursor:"pointer",fontSize:"11px",color:"rgba(139,92,246,0.9)"}} title="Analyse multi-experts">
+                  Multi-experts
+                </button>
                     <button className="icon-btn" title={showRight?"Hide panel":"Show panel"} onClick={()=>setShowRight(v=>!v)}>
                       <svg viewBox="0 0 16 16" className="i"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M10 3v10"/></svg>
                     </button>
