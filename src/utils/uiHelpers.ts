@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react';
 import { AGENTS_STUDIO } from './agentsConfig';
 
 // ----- Model list (OpenRouter) -----
@@ -45,3 +46,11 @@ export const agentTitle = (id: string, _lang?: string) => agentById(id).short ||
 
 // ----- Time formatter -----
 export const fmtTime = (iso: string) => { const d=Math.floor((Date.now()-new Date(iso).getTime())/60000); if(d<1)return"é l'instant";if(d<60)return`${d} min`;if(d<1440)return`${Math.floor(d/60)}h`;if(d<2880)return"Hier";return new Date(iso).toLocaleDateString("fr-CA",{day:"numeric",month:"short"}); };
+
+
+// ----- Custom React hook -----
+export function useLocalStorage(key, initial) {
+  const [val, setVal] = useState(() => { try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : initial; } catch { return initial; } });
+  const set = useCallback((v) => { setVal(prev => { const next = typeof v === 'function' ? v(prev) : v; try { localStorage.setItem(key, JSON.stringify(next)); } catch(e) {} return next; }); }, [key]);
+  return [val, set];
+}
