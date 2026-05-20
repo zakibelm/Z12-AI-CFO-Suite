@@ -8,7 +8,7 @@ export function DashboardView({lang, t}) {
   const fr = lang === "fr";
   return (
     <main className="page" data-screen-label="Dashboard">
-      <PageHead title={fr?"Tableau de bord":"Dashboard"} sub={fr?"Aperçu — Cabinet Belmokhtar CPA à 14 mai 2026":"Overview — Belmokhtar CPA à May 14, 2026"}
+      <PageHead title={fr?"Tableau de bord":"Dashboard"} sub={fr?"Aperçu — Cabinet Belmeddah CPA à 14 mai 2026":"Overview — Belmeddah CPA à May 14, 2026"}
         actions={<><button className="btn">{fr?"Exporter":"Export"}</button><button className="btn btn-primary">+ {fr?"Nouvelle analyse":"New analysis"}</button></>}/>
       <div className="page-body">
         <div className="dash-grid">

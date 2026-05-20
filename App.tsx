@@ -2557,7 +2557,7 @@ function Roster({ lang, busyIds, doneIds, activeNav, setNav, compact, setCompact
         <div className="user-dot">ZB</div>
         {!compact && (
           <div className="user-meta">
-            <div className="user-name">Zaki Belmokhtar</div>
+            <div className="user-name">Belmeddah Zakaria</div>
             <div className="user-org">Z12 AI CFO Suite</div>
           </div>
         )}
@@ -2659,7 +2659,7 @@ function GovernanceView({lang, t}) {
   const fr = lang === "fr";
   const cards = [
     {name:"Loi 25", sub:"L.Q. 2021, c.25 à QC", st:"ok", stl:fr?"Conforme":"Compliant", pct:92, items:[
-      ["ok",fr?"CPO nommé à Zaki Belmokhtar":"CPO appointed à Zaki Belmokhtar"],
+      ["ok",fr?"CPO nommé à Belmeddah Zakaria":"CPO appointed à Belmeddah Zakaria"],
       ["ok",fr?"Hébergement S3 ca-central-1":"S3 ca-central-1 hosting"],
       ["ok",fr?"Registre incidents (PI-1)":"Incident register (PI-1)"],
       ["warn",fr?"EFVP à compléter — collecte RP":"DPIA to complete — PI collection"],
