@@ -1147,8 +1147,8 @@ function useLocalStorage(key, initial) {
 // OpenRouter model catalog — used in Settings page
 const OPENROUTER_MODELS = [
   //  Anthropic 
-  { id:"anthropic/claude-sonnet-4-5",        label:"Claude Sonnet 4.5",         provider:"Anthropic", tier:"premium",   cost:"$$"   },
-  { id:"anthropic/claude-3.5-sonnet",        label:"Claude 3.5 Sonnet",         provider:"Anthropic", tier:"premium",   cost:"$$"   },
+  { id:"deepseek/deepseek-v4-pro",        label:"Claude Sonnet 4.5",         provider:"Anthropic", tier:"premium",   cost:"$$"   },
+  { id:"deepseek/deepseek-v4-pro",        label:"Claude 3.5 Sonnet",         provider:"Anthropic", tier:"premium",   cost:"$$"   },
   { id:"anthropic/claude-3-opus",            label:"Claude 3 Opus",             provider:"Anthropic", tier:"premium",   cost:"$$$$" },
   { id:"anthropic/claude-3-haiku",           label:"Claude 3 Haiku",            provider:"Anthropic", tier:"fast",      cost:"$"    },
   //  OpenAI 
@@ -1189,7 +1189,7 @@ const MODELS = [
   { id:"gpt-4o-mini",              label:"GPT-4o Mini" },
 ];
 
-const DEFAULT_AGENT_MODEL = "anthropic/claude-sonnet-4-5";
+const DEFAULT_AGENT_MODEL = "deepseek/deepseek-v4-pro";
 
 const AGENTS_DEF = [
   //  1. SOPHIE MERCIER — TaxAgent
@@ -1879,14 +1879,14 @@ const T = {
 // Standard call — RAG agents (no web search)
 async function callClaude(system: string, messages: any[], openrouterKey: string) {
   // Routes through OpenRouter which supports Anthropic Claude models
-  return callOpenRouter("anthropic/claude-3-5-sonnet-20241022", system, messages, openrouterKey, false);
+  return callOpenRouter("deepseek/deepseek-v4-pro", system, messages, openrouterKey, false);
 }
 
 // Web-search-enabled call — VeilleAgent + SubventionsAgent
 // Uses Anthropic web_search tool for real-time information
 async function callClaudeWithWebSearch(system: string, messages: any[], openrouterKey: string) {
   // Routes through OpenRouter with web search support
-  return callOpenRouter("anthropic/claude-3-5-sonnet-20241022", system, messages, openrouterKey, true);
+  return callOpenRouter("deepseek/deepseek-v4-pro", system, messages, openrouterKey, true);
 }
 
 // Route to correct API based on agent type and available key

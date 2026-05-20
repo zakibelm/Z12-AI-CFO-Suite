@@ -1,5 +1,6 @@
 // src/components/TeamView.tsx
 import React from "react";
+import Avatar from './Avatar';
 import { AGENTS_STUDIO, AGENTS_DEF } from '../utils/agentsConfig';
 import { PageHead, Spark } from './PageHead';
 
