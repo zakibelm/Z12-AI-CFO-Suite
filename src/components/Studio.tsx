@@ -1,6 +1,6 @@
 // src/components/Studio.tsx
 import React from "react";
-import { AGENTS_STUDIO, A_STUDIO } from '../utils/agentsConfig';
+import { AGENTS_STUDIO, A_STUDIO, AGENTS_DEF } from '../utils/agentsConfig';
 import { OrchestratorPanel } from './OrchestratorPanel';
 
 export function Studio({ t, P, lang, agentSettings, openrouterKey, convs, setConvs, activeId, setActiveId, setView }: any) {

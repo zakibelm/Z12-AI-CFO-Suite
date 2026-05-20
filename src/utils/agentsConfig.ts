@@ -23,3 +23,6 @@ export const AGENTS_STUDIO: AgentStudioEntry[] = [
 export const A_STUDIO: Record<string, AgentStudioEntry> = Object.fromEntries(
   AGENTS_STUDIO.map(a => [a.id, a])
 );
+
+// Alias for backward compatibility
+export const AGENTS_DEF = AGENTS_STUDIO;

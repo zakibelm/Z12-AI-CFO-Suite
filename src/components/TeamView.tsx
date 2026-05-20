@@ -1,6 +1,6 @@
 // src/components/TeamView.tsx
 import React from "react";
-import { AGENTS_STUDIO } from '../utils/agentsConfig';
+import { AGENTS_STUDIO, AGENTS_DEF } from '../utils/agentsConfig';
 import { PageHead, Spark } from './PageHead';
 
 export function TeamView({lang, t}) {
