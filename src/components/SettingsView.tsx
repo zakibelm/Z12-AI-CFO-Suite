@@ -1,5 +1,6 @@
 // src/components/SettingsView.tsx
 import React from "react";
+import { OPENROUTER_MODELS } from '../utils/uiHelpers';
 import Avatar from './Avatar';
 import { AGENTS_STUDIO, AGENTS_DEF } from '../utils/agentsConfig';
 
