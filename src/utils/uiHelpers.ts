@@ -39,7 +39,7 @@ export const OPENROUTER_MODELS = [
 ];
 
 // ----- Agent lookup helpers -----
-const agentById = (id: string) => AGENTS_STUDIO.find(a => a.id === id) || AGENTS_STUDIO[0];
+export const agentById = (id: string) => AGENTS_STUDIO.find(a => a.id === id) || AGENTS_STUDIO[0];
 export const agentName  = (id: string, _lang?: string) => agentById(id).name;
 export const agentTitle = (id: string, _lang?: string) => agentById(id).short || '';
 
