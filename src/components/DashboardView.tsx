@@ -1,7 +1,7 @@
 // src/components/DashboardView.tsx
 import React from "react";
 import Avatar from './Avatar';
-import { AGENTS_STUDIO } from '../utils/agentsConfig';
+import { AGENTS_STUDIO, A_STUDIO } from '../utils/agentsConfig';
 import { PageHead, Spark } from './PageHead';
 
 export function DashboardView({lang, t}) {
@@ -70,7 +70,7 @@ export function DashboardView({lang, t}) {
             ].map((c,i)=>(
               <div className="conv-row" key={i}>
                 <div className="conv-text"><div className="conv-title">{c.title}</div><div className="conv-info">{c.info}</div></div>
-                <div className="conv-stack">{c.agents.map(id=><Avatar key={id} agent={A[id]} size={22}/>)}</div>
+                <div className="conv-stack">{c.agents.map(id=><Avatar key={id} agent={A_STUDIO[id]} size={22}/>)}</div>
               </div>
             ))}
           </div>
