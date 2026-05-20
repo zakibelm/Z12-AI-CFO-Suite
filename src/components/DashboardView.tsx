@@ -1,5 +1,6 @@
 // src/components/DashboardView.tsx
 import React from "react";
+import { AGENTS_STUDIO } from '../utils/agentsConfig';
 import { PageHead, Spark } from './PageHead';
 
 export function DashboardView({lang, t}) {

@@ -1,5 +1,6 @@
 // src/components/SettingsView.tsx
 import React from "react";
+import { AGENTS_STUDIO } from '../utils/agentsConfig';
 
 export function SettingsView({ lang, t, openrouterKey, agentSettings }: any) {
   const fr = lang === "fr";
