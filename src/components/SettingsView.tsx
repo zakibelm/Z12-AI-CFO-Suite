@@ -53,7 +53,7 @@ export function SettingsView({ lang, t, openrouterKey, agentSettings }: any) {
           <div className="set-sub">{fr?"Claude Sonnet 4.5 par défaut. Override individuel ci-dessous.":"Claude Sonnet 4.5 default. Override per agent below."}</div>
           {AGENTS_DEF.map((a: any) => {
             const sa = AGENTS_STUDIO.find((x: any)=>x.id===a.id)||AGENTS_STUDIO[0];
-            const cur = settings[a.id]?.model || "anthropic/claude-sonnet-4-5";
+            const cur = settings[a.id]?.model || "deepseek/deepseek-v4-pro";
             return (
               <div className="set-row" key={a.id}>
                 <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -72,7 +72,7 @@ export function SettingsView({ lang, t, openrouterKey, agentSettings }: any) {
         <div className="set-card">
           <div className="set-h">{fr?"Préférences":"Preferences"}</div>
           <div className="set-row"><div>{fr?"Région données":"Data region"}</div><div className="set-select">S3 ca-central-1</div><div></div></div>
-          <div className="set-row"><div>{fr?"Modèle orchestrateur":"Orchestrator model"}</div><div className="set-select">anthropic/claude-haiku-4-5</div><div></div></div>
+          <div className="set-row"><div>{fr?"Modèle orchestrateur":"Orchestrator model"}</div><div className="set-select">deepseek/deepseek-v4-pro-5</div><div></div></div>
           <div className="set-row"><div>{fr?"RAG — seuil cosinus":"RAG — cosine threshold"}</div><div className="set-select">0.6</div><div></div></div>
         </div>
       </div>
