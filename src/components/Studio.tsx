@@ -1,6 +1,6 @@
 // src/components/Studio.tsx
 import React from "react";
-import { executeWorkflow, synthesizeResults, genTitle, agentById } from '../utils/workflow';
+import { executeWorkflow, synthesizeResults, genTitle, agentById, analyzeWorkflow } from '../utils/workflow';
 import { fmtTime, agentName, agentTitle } from '../utils/uiHelpers';
 import Avatar from './Avatar';
 import { AGENTS_STUDIO, A_STUDIO, AGENTS_DEF } from '../utils/agentsConfig';

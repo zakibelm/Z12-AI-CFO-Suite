@@ -1,3 +1,4 @@
+import { FILE_CATEGORY } from "./workflow";
 // src/utils/fileUtils.ts
 // Extracted from App.tsx — utility functions for file handling
 

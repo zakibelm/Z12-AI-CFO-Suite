@@ -9,7 +9,7 @@ const agentTitle   = (id, lang) => agentById(id).personTitle?.[lang] || "";
 //  VECTDOCS-INSPIRED UTILITIES 
 
 // Inspired by VectDocs EmbeddedDocument fileType enum — extended for finance
-const FILE_CATEGORY = ext => {
+export const FILE_CATEGORY = ext => {
   if (["pdf"].includes(ext))                          return "pdf";
   if (["docx","doc"].includes(ext))                   return "docx";
   if (["xlsx","xls"].includes(ext))                   return "xlsx";
