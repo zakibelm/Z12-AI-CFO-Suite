@@ -3167,6 +3167,7 @@ function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
 
 
 import { Studio } from './src/components/Studio';
+import { OrchestratorPanel } from './src/components/OrchestratorPanel';
 
 
 
@@ -3190,6 +3191,21 @@ export default function Z12CFOSuite() {
   const [openrouterKey] = useLocalStorage("z12-openrouter-key", "");
   const [agentSettings] = useLocalStorage("z12-agent-settings", {});
   const [sidebarOpen, setSidebarOpen] = useLocalStorage("z12-sidebar", true);
+
+	// Phase 4 - Orchestrateur multi-agents
+	const [showOrchestrator, setShowOrchestrator] = React.useState(false);
+	const [orchestratorQ, setOrchestratorQ] = React.useState("");
+
+	// Ecouter l'evenement z12-orchestrate dispatche par Studio
+	React.useEffect(() => {
+		const handler = (e: Event) => {
+			const q = (e as CustomEvent).detail?.question || "";
+			setOrchestratorQ(q);
+			setShowOrchestrator(true);
+		};
+		window.addEventListener("z12-orchestrate", handler);
+		return () => window.removeEventListener("z12-orchestrate", handler);
+	}, []);
 
   // Apply theme
   React.useEffect(() => {
@@ -3226,6 +3242,15 @@ export default function Z12CFOSuite() {
       {(view==="studio" || !["dashboard","docs","pipeline","governance","team","settings","sandbox"].includes(view as string)) && (
         <Studio {...viewProps} setView={setView} P={{}}/>
       )}
+		{showOrchestrator && (
+			<OrchestratorPanel
+				question={orchestratorQ}
+				onComplete={(synthesis) => {
+					setShowOrchestrator(false);
+				}}
+				onClose={() => setShowOrchestrator(false)}
+			/>
+		)}
     </div>
     <TweaksPanel title="Z12 Tweaks">
       <TweakSection label="Theme">
