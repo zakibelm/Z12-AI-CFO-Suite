@@ -1,8 +1,8 @@
-# 🎯 Z12 AI CFO Suite — v3.2
+# 🎯 Z12 AI CFO Suite — v3.3
 
 > **ZAKI OS Platform** · Bureau CPA Virtuel · Intelligence Financière IA pour PME Québécoises · Mai 2026
 
-[![Version](https://img.shields.io/badge/version-3.2.0-10B981?style=for-the-badge)](https://github.com/zakibelm/Z12-AI-CFO-Suite)
+[![Version](https://img.shields.io/badge/version-3.3.0-10B981?style=for-the-badge)](https://github.com/zakibelm/Z12-AI-CFO-Suite)
 [![Stack](https://img.shields.io/badge/React_18_+_TypeScript-3B82F6?style=for-the-badge)]()
 [![Agents](https://img.shields.io/badge/9_Agents_CPA-6366F1?style=for-the-badge)]()
 [![RAG](https://img.shields.io/badge/RAG_Illimité-F59E0B?style=for-the-badge)]()
@@ -158,6 +158,7 @@ cddd178 feat: intelligent orchestrator — parallel/sequential/hybrid workflow
 0a398b5 feat: expert-level system prompts for all 9 agents
 01d3c75 feat: Settings page — OpenRouter key + model selector + system prompt
 7e86e8f feat: add VeilleAgent + SubventionsAgent (web search real-time)
+387af56 feat: Phase 4+5 — OrchestratorPanel integration + memory endpoints (10/10)
 9cff486 feat: Z12 AI CFO Suite v3.2 — Production ready
 ```
 
