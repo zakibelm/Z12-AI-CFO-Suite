@@ -5,6 +5,8 @@ Sentry.init({
   tracesSampleRate: 0.1,
 });
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useAuth } from "./src/hooks/useAuth";
+import { LoginView } from "./src/components/LoginView";
 
 
 const CSS_STYLES = `
@@ -860,6 +862,13 @@ function TweaksPanel({ title = 'Tweaks', noDeckControls = false, children }: any
   };
 
   if (!open) return null;
+	// ── JWT Auth guard ──────────────────────────────
+	const { user, token, loading: authLoading, error: authError, login, logout } = useAuth();
+	if (authLoading) return <div style={{minHeight:"100vh",background:"var(--bg,#0E0D0B)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--ink-3,#7A7567)",fontSize:"13px"}}>Chargement…</div>;
+	if (!user || !token) return <LoginView onLogin={login} error={authError} />;
+	// ─────────────────────────────────────────────────
+
+
   return (
     <>
       <style>{__TWEAKS_STYLE}</style>
@@ -3167,6 +3176,7 @@ function Sandbox({ t, P, lang, agentSettings, openrouterKey }) {
 
 
 import { Studio } from './src/components/Studio';
+import { OrchestratorPanel } from './src/components/OrchestratorPanel';
 
 
 
@@ -3190,6 +3200,21 @@ export default function Z12CFOSuite() {
   const [openrouterKey] = useLocalStorage("z12-openrouter-key", "");
   const [agentSettings] = useLocalStorage("z12-agent-settings", {});
   const [sidebarOpen, setSidebarOpen] = useLocalStorage("z12-sidebar", true);
+
+	// Phase 4 - Orchestrateur multi-agents
+	const [showOrchestrator, setShowOrchestrator] = React.useState(false);
+	const [orchestratorQ, setOrchestratorQ] = React.useState("");
+
+	// Ecouter l'evenement z12-orchestrate dispatche par Studio
+	React.useEffect(() => {
+		const handler = (e: Event) => {
+			const q = (e as CustomEvent).detail?.question || "";
+			setOrchestratorQ(q);
+			setShowOrchestrator(true);
+		};
+		window.addEventListener("z12-orchestrate", handler);
+		return () => window.removeEventListener("z12-orchestrate", handler);
+	}, []);
 
   // Apply theme
   React.useEffect(() => {
@@ -3226,6 +3251,15 @@ export default function Z12CFOSuite() {
       {(view==="studio" || !["dashboard","docs","pipeline","governance","team","settings","sandbox"].includes(view as string)) && (
         <Studio {...viewProps} setView={setView} P={{}}/>
       )}
+		{showOrchestrator && (
+			<OrchestratorPanel
+				question={orchestratorQ}
+				onComplete={(synthesis) => {
+					setShowOrchestrator(false);
+				}}
+				onClose={() => setShowOrchestrator(false)}
+			/>
+		)}
     </div>
     <TweaksPanel title="Z12 Tweaks">
       <TweakSection label="Theme">

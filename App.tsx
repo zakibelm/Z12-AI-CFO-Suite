@@ -5,6 +5,8 @@ Sentry.init({
   tracesSampleRate: 0.1,
 });
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useAuth } from "./src/hooks/useAuth";
+import { LoginView } from "./src/components/LoginView";
 
 
 const CSS_STYLES = `
@@ -860,6 +862,13 @@ function TweaksPanel({ title = 'Tweaks', noDeckControls = false, children }: any
   };
 
   if (!open) return null;
+	// ── JWT Auth guard ──────────────────────────────
+	const { user, token, loading: authLoading, error: authError, login, logout } = useAuth();
+	if (authLoading) return <div style={{minHeight:"100vh",background:"var(--bg,#0E0D0B)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--ink-3,#7A7567)",fontSize:"13px"}}>Chargement…</div>;
+	if (!user || !token) return <LoginView onLogin={login} error={authError} />;
+	// ─────────────────────────────────────────────────
+
+
   return (
     <>
       <style>{__TWEAKS_STYLE}</style>
