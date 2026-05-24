@@ -1,3 +1,4 @@
+const DEFAULT_AGENT_MODEL = "deepseek/deepseek-r1";
 import { AGENTS_DEF } from './agentsConfig';
 
 export const agentById    = id => AGENTS_DEF.find(a => a.id === id) || AGENTS_DEF[0];
