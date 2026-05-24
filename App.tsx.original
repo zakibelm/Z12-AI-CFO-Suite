@@ -890,6 +890,20 @@ function TweaksPanel({ title = 'Tweaks', noDeckControls = false, children }: any
           )}
         </div>
       </div>
+	<ConsentBanner
+		onConsent={() => {}}
+		onShowPolicy={() => setIsPrivacyOpen(true)}
+	/>
+	<PrivacyPolicy
+		isOpen={isPrivacyOpen}
+		onClose={() => setIsPrivacyOpen(false)}
+		onAccept={() => {}}
+	/>
+	<MemoryPanel
+		isOpen={isMemoryOpen}
+		onClose={() => setIsMemoryOpen(false)}
+		authFetch={authFetch}
+	/>
     </>
   );
 }
@@ -2649,22 +2663,7 @@ const WORKFLOW_STUDIO = [
 const PageHead = ({title, sub, actions}: any) => (
   <header className="page-head">
     <div><div className="page-title serif">{title}</div><div className="page-sub">{sub}</div></div>
-    <div className="page-actions">{actions}
-      <ConsentBanner
-        onConsent={() => {}}
-        onShowPolicy={() => setIsPrivacyOpen(true)}
-      />
-      <PrivacyPolicy
-        isOpen={isPrivacyOpen}
-        onClose={() => setIsPrivacyOpen(false)}
-        onAccept={() => {}}
-      />
-      <MemoryPanel
-        isOpen={isMemoryOpen}
-        onClose={() => setIsMemoryOpen(false)}
-        authFetch={authFetch}
-      />
-      </div>
+		<div className="page-actions">{actions}</div>
   </header>
 );
 
