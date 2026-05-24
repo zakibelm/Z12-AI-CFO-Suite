@@ -246,7 +246,7 @@ export async function executeWorkflow(plan, query, historyMsgs, agentSettings, o
 
   const runOne = async (agentId, contextExtra="") => {
     const def = agentById(agentId);
-    const prompt = agentSettings[agentId]?.prompt || def.defaultPrompt[lang];
+    const prompt = agentSettings[agentId]?.prompt || (def.defaultPrompt?.[lang] ?? def.systemPrompt ?? "");
     const model  = agentSettings[agentId]?.model;
     const msgs = [...baseMessages, userMsg];
     if (contextExtra) msgs.push({ role:"user", content: contextExtra });
