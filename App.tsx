@@ -3268,7 +3268,7 @@ export default function Z12CFOSuite() {
       {view==="pipeline"   && <PipelineView   lang={lang} t={STUDIO_T[lang as "fr"|"en"]}/>}
       {view==="governance" && <GovernanceView lang={lang} t={STUDIO_T[lang as "fr"|"en"]}/>}
       {view==="team"       && <TeamView       lang={lang} t={STUDIO_T[lang as "fr"|"en"]}/>}
-      {view==="settings"   && <SettingsView   lang={lang} t={STUDIO_T[lang as "fr"|"en"]} openrouterKey={openrouterKey} agentSettings={agentSettings}/>}
+      {view==="settings"   && <SettingsView   lang={lang} t={STUDIO_T[lang as "fr"|"en"]} openrouterKey={openrouterKey} agentSettings={agentSettings} authFetch={authFetch}/>}
       {view==="sandbox"    && <Sandbox        lang={lang} P={{accent:"var(--accent)",t1:"var(--ink)",t2:"var(--ink-2)",t3:"var(--ink-3)",card:"var(--surface)",border:"var(--line)",input:"var(--surface-2)",sb:"var(--surface)",bg:"var(--bg)"} as any} agentSettings={agentSettings} openrouterKey={openrouterKey as string} t={STUDIO_T[lang as "fr"|"en"]}/>}
       {(view==="studio" || !["dashboard","docs","pipeline","governance","team","settings","sandbox"].includes(view as string)) && (
         <Studio {...viewProps} setView={setView} P={{}}/>

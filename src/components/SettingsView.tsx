@@ -15,7 +15,7 @@ export function SettingsView({ lang, t, openrouterKey, agentSettings }: any) {
     setTesting(true); setTestResult("");
     try {
       const r = await fetch("https://openrouter.ai/api/v1/models",{headers:{Authorization:`Bearer ${key}`}});
-      if (r.ok) setTestResult(fr?"✅ Connexion réussie":"✅ Connection successful");
+      if (r.ok) { setTestResult(fr?"✅ Connexion réussie":"✅ Connection successful"); if (authFetch) { try { await authFetch("/api/settings/save-key", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ api_key: key }) }); } catch(e) { console.warn("save-key DB error:", e); } } }
       else setTestResult(fr?"L Clé invalide":"L Invalid key");
     } catch { setTestResult(fr?"L Erreur réseau":"L Network error"); }
     setTesting(false);
