@@ -8,6 +8,8 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { useAuth } from "./src/hooks/useAuth";
 import { LoginView } from "./src/components/LoginView";
 import MemoryPanel from "./src/components/MemoryPanel";
+import ConsentBanner from "./src/components/ConsentBanner";
+import PrivacyPolicy from "./src/components/PrivacyPolicy";
 
 
 const CSS_STYLES = `
@@ -866,6 +868,7 @@ function TweaksPanel({ title = 'Tweaks', noDeckControls = false, children }: any
 	// ── JWT Auth guard ──────────────────────────────
 	const { user, token, loading: authLoading, error: authError, login, logout, authFetch } = useAuth();
     const [isMemoryOpen, setIsMemoryOpen] = React.useState(false);
+    const [isPrivacyOpen, setIsPrivacyOpen] = React.useState(false);
 	if (authLoading) return <div style={{minHeight:"100vh",background:"var(--bg,#0E0D0B)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--ink-3,#7A7567)",fontSize:"13px"}}>Chargement…</div>;
 	if (!user || !token) return <LoginView onLogin={login} error={authError} />;
 	// ─────────────────────────────────────────────────
@@ -2651,6 +2654,15 @@ const PageHead = ({title, sub, actions}: any) => (
   <header className="page-head">
     <div><div className="page-title serif">{title}</div><div className="page-sub">{sub}</div></div>
     <div className="page-actions">{actions}
+      <ConsentBanner
+        onConsent={() => {}}
+        onShowPolicy={() => setIsPrivacyOpen(true)}
+      />
+      <PrivacyPolicy
+        isOpen={isPrivacyOpen}
+        onClose={() => setIsPrivacyOpen(false)}
+        onAccept={() => {}}
+      />
       <MemoryPanel
         isOpen={isMemoryOpen}
         onClose={() => setIsMemoryOpen(false)}
