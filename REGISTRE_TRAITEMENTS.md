@@ -59,6 +59,21 @@ Responsable : Zaki Belm — privacy@optigenius.pro
 
 ---
 
+
+## Traitement 6 — WhatsApp / Canal de messagerie (Twilio)
+| Champ | Valeur |
+|---|---|
+| Finalité | Permettre aux utilisateurs d’interagir avec Z12 CFO via WhatsApp |
+| Base légale | Consentement explicite (l’utilisateur initie le contact) |
+| Données | Numéro de téléphone WhatsApp, contenu des messages, métadonnées Twilio |
+| Conservation | 90 jours (logs backend) — Twilio conserve 7 jours |
+| Destinataires | Twilio Inc. (É.-U.) via API sécurisée HTTPS |
+| Données nominatives transmises | Oui — numéro de téléphone (identifiant) |
+| Transfert hors QC | Oui — Twilio (É.-U.) avec DPA + clauses contractuelles |
+| Mesures de protection | HTTPS/TLS, webhook signé (X-Twilio-Signature), liste blanche numéros |
+| Données financières | NON — seuls résumés et alertes envoyés (art. R8) |
+| Droit de retrait | Cesser de contacter le numéro Twilio ou contacter privacy@optigenius.pro |
+
 ## Audit de résidence des données — Résumé
 
 | Sous-traitant | Résidence | Données personnelles | Garanties |
@@ -67,6 +82,7 @@ Responsable : Zaki Belm — privacy@optigenius.pro
 | OpenRouter | 🇺🇸 États-Unis | Oui (contenu messages) | CGU + DPA disponible |
 | Sentry.io | 🇺🇸 États-Unis | Non (anonymisé) | Privacy Shield / DPA |
 | UptimeRobot | 🇺🇸 États-Unis | Non | URL uniquement |
+| Twilio Inc. | 🇺🇸 États-Unis | Oui (n° tél, messages) | DPA + clauses contractuelles |
 
 **Note Loi 25 (art. 17)** : Les transferts vers OpenRouter sont encadrés par des clauses contractuelles
 standard. L'utilisateur est informé de ce transfert dans la politique de confidentialité.
