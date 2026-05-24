@@ -864,14 +864,10 @@ function TweaksPanel({ title = 'Tweaks', noDeckControls = false, children }: any
     window.addEventListener('mouseup', up);
   };
 
-  if (!open) return null;
-	// ── JWT Auth guard ──────────────────────────────
 	const { user, token, loading: authLoading, error: authError, login, logout, authFetch } = useAuth();
-    const [isMemoryOpen, setIsMemoryOpen] = React.useState(false);
-    const [isPrivacyOpen, setIsPrivacyOpen] = React.useState(false);
-	if (authLoading) return <div style={{minHeight:"100vh",background:"var(--bg,#0E0D0B)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--ink-3,#7A7567)",fontSize:"13px"}}>Chargement…</div>;
-	if (!user || !token) return <LoginView onLogin={login} error={authError} />;
-	// ─────────────────────────────────────────────────
+	const [isMemoryOpen, setIsMemoryOpen] = React.useState(false);
+	const [isPrivacyOpen, setIsPrivacyOpen] = React.useState(false);
+  if (!open) return null;
 
 
   return (
