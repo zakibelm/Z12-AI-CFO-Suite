@@ -7,6 +7,7 @@ Sentry.init({
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useAuth } from "./src/hooks/useAuth";
 import { LoginView } from "./src/components/LoginView";
+import MemoryPanel from "./src/components/MemoryPanel";
 
 
 const CSS_STYLES = `
@@ -863,7 +864,8 @@ function TweaksPanel({ title = 'Tweaks', noDeckControls = false, children }: any
 
   if (!open) return null;
 	// ── JWT Auth guard ──────────────────────────────
-	const { user, token, loading: authLoading, error: authError, login, logout } = useAuth();
+	const { user, token, loading: authLoading, error: authError, login, logout, authFetch } = useAuth();
+    const [isMemoryOpen, setIsMemoryOpen] = React.useState(false);
 	if (authLoading) return <div style={{minHeight:"100vh",background:"var(--bg,#0E0D0B)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--ink-3,#7A7567)",fontSize:"13px"}}>Chargement…</div>;
 	if (!user || !token) return <LoginView onLogin={login} error={authError} />;
 	// ─────────────────────────────────────────────────
@@ -2648,7 +2650,13 @@ const WORKFLOW_STUDIO = [
 const PageHead = ({title, sub, actions}: any) => (
   <header className="page-head">
     <div><div className="page-title serif">{title}</div><div className="page-sub">{sub}</div></div>
-    <div className="page-actions">{actions}</div>
+    <div className="page-actions">{actions}
+      <MemoryPanel
+        isOpen={isMemoryOpen}
+        onClose={() => setIsMemoryOpen(false)}
+        authFetch={authFetch}
+      />
+      </div>
   </header>
 );
 
