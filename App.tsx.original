@@ -8,6 +8,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { useAuth } from "./src/hooks/useAuth";
 import { LoginView } from "./src/components/LoginView";
 import MemoryPanel from "./src/components/MemoryPanel";
+import WhatsAppPanel from "./src/components/WhatsAppPanel";
 import ConsentBanner from "./src/components/ConsentBanner";
 import PrivacyPolicy from "./src/components/PrivacyPolicy";
 
@@ -867,6 +868,7 @@ function TweaksPanel({ title = 'Tweaks', noDeckControls = false, children }: any
 	const { user, token, loading: authLoading, error: authError, login, logout, authFetch } = useAuth();
 	const [isMemoryOpen, setIsMemoryOpen] = React.useState(false);
 	const [isPrivacyOpen, setIsPrivacyOpen] = React.useState(false);
+		const [isWhatsAppOpen, setIsWhatsAppOpen] = React.useState(false);
   if (!open) return null;
 
 
@@ -904,6 +906,11 @@ function TweaksPanel({ title = 'Tweaks', noDeckControls = false, children }: any
 		onClose={() => setIsMemoryOpen(false)}
 		authFetch={authFetch}
 	/>
+		<WhatsAppPanel
+			open={isWhatsAppOpen}
+			onClose={() => setIsWhatsAppOpen(false)}
+			authFetch={authFetch}
+		/>
     </>
   );
 }
