@@ -4,7 +4,7 @@ import { OPENROUTER_MODELS, useLocalStorage } from '../utils/uiHelpers';
 import Avatar from './Avatar';
 import { AGENTS_STUDIO, AGENTS_DEF } from '../utils/agentsConfig';
 
-export function SettingsView({ lang, t, openrouterKey, agentSettings }: any) {
+export function SettingsView({ lang, t, openrouterKey, agentSettings, authFetch }: any) {
   const fr = lang === "fr";
   const [key, setKey] = useLocalStorage("z12-openrouter-key", "");
   const [settings, setSettings] = useLocalStorage("z12-agent-settings", {});
