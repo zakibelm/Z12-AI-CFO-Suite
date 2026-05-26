@@ -3222,6 +3222,7 @@ export default function Z12CFOSuite() {
   const [openrouterKey] = useLocalStorage("z12-openrouter-key", "");
   const [agentSettings] = useLocalStorage("z12-agent-settings", {});
   const [sidebarOpen, setSidebarOpen] = useLocalStorage("z12-sidebar", true);
+	  const { authFetch } = useAuth();
 
 	// Phase 4 - Orchestrateur multi-agents
 	const [showOrchestrator, setShowOrchestrator] = React.useState(false);
