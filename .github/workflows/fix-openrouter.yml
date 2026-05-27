@@ -10,38 +10,54 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: SSH Fix OpenRouter
-        uses: appleboy/ssh-action@v0.1.7
+        uses: appleboy/ssh-action@v1.0.0
         with:
-          host: 147.93.40.124
-          username: root
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: 60s
           script: |
             OR_KEY=$(echo 'c2stb3ItdjEtMjcwODJiNGMzYTgzYmI0YjdlMDk2NmQ1MzE5MmE3YmEyNDE1YjI3ZWEzYWJjNjY3OTc4YzU5ZWYyYWQ1MjRmYw==' | base64 -d)
             BACKEND=$(docker ps --format '{{.Names}}' | grep -i backend | head -1)
             echo "Backend: $BACKEND"
 
-            echo '1. Check current OPENROUTER lines in main.py:'
-            docker exec $BACKEND grep -n 'OPENROUTER_API_KEY' /app/main.py | head -10
-
-            echo ''
-            echo '2. Direct sed patch: replace module-level assignment with hardcoded key'
-            docker exec -e OR_KEY="$OR_KEY" $BACKEND sh -c '
-              sed -i "s|OPENROUTER_API_KEY = os.getenv.*|OPENROUTER_API_KEY = \"$OR_KEY\"|" /app/main.py
-              sed -i "s|OPENROUTER_API_KEY = os.environ.get.*|OPENROUTER_API_KEY = \"$OR_KEY\"|" /app/main.py
-              echo "sed done"
-            '
-
-            echo ''
-            echo '3. Verify patch:'
+            echo "1. Check current OPENROUTER lines in main.py:"
             docker exec $BACKEND grep -n 'OPENROUTER_API_KEY' /app/main.py | head -5
 
-            echo ''
-            echo '4. Restart backend process (kill uvicorn, docker will auto-restart)'
+            echo ""
+            echo "2. Python-based replacement (handles type annotations):"
+            docker exec -e OR_KEY="$OR_KEY" $BACKEND python3 -c "
+import os, re
+key = os.environ['OR_KEY']
+with open('/app/main.py', 'r') as f:
+    content = f.read()
+# Replace line like: OPENROUTER_API_KEY: str = os.getenv(...) or OPENROUTER_API_KEY = os.getenv(...)
+new_content = re.sub(
+    r'^(OPENROUTER_API_KEY).*=.*os\.getenv.*$',
+    f'OPENROUTER_API_KEY = "{key}"',
+    content,
+    flags=re.MULTILINE
+)
+if new_content != content:
+    with open('/app/main.py', 'w') as f:
+        f.write(new_content)
+    print('REPLACED: OPENROUTER_API_KEY line patched')
+else:
+    print('NO CHANGE: pattern not found')
+"
+
+            echo ""
+            echo "3. Verify patch:"
+            docker exec $BACKEND grep -n 'OPENROUTER_API_KEY' /app/main.py | head -5
+
+            echo ""
+            echo "4. Restart backend:"
             docker restart $BACKEND
             sleep 8
 
-            echo ''
-            echo '5. Backend running:'
+            echo ""
+            echo "5. Backend running:"
             docker ps | grep backend
-            echo 'Last 5 logs:'
-            docker logs $BACKEND 2>&1 | tail -5
+
+            echo "Last 10 logs:"
+            docker logs $BACKEND --tail 10 2>&1
