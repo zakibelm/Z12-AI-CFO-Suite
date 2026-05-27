@@ -1,0 +1,60 @@
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: z12_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ai_cfo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-ai_cfo_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - z12_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ai_cfo}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: z12_backend
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      CABINET_NAME: ${CABINET_NAME}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - z12_network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: z12_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - z12_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  z12_network:
+    driver: bridge

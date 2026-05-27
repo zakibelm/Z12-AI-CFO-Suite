@@ -112,7 +112,7 @@ if ! grep -q "Ubuntu" /etc/os-release 2>/dev/null; then
                                                                                                                                                             # -- 4. Demarrage des services --------------------------------
                                                                                                                                                             echo ""
                                                                                                                                                             info "Etape 4/6 -- Demarrage des services..."
-                                                                                                                                                            docker compose up -d
+                                                                                                                                                            docker compose up --build -d
                                                                                                                                                             info "Initialisation en cours (max 60s)..."
                                                                                                                                                             TIMEOUT=60; ELAPSED=0
                                                                                                                                                             while [ $ELAPSED -lt $TIMEOUT ]; do
