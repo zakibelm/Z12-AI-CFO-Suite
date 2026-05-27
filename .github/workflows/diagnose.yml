@@ -1,7 +1,9 @@
-name: Diagnose & Fix VPS
+name: Diagnose VPS
 
 on:
-  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/diagnose.yml'
 
 jobs:
   diagnose:
@@ -14,17 +16,29 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "=== DOCKER CONTAINERS ==="
-            docker ps --format "table {{.Names}}\t{{.Status}}"
-            echo ""
-            echo "=== ENV FILE ==="
-            grep -E 'OPENROUTER|JWT|DATABASE' /opt/ai-cfo-phoenix-v3/.env 2>/dev/null || grep -E 'OPENROUTER|JWT|DATABASE' /var/www/z12-cfo/.env 2>/dev/null || echo "env not found at expected paths"
-            echo ""
-            echo "=== BACKEND LOGS (openrouter errors) ==="
-            docker logs $(docker ps -q --filter name=backend) 2>&1 | grep -i 'openrouter\|401\|api_key\|ERROR' | tail -30 2>/dev/null || echo "Could not get backend logs"
-            echo ""
-            echo "=== BACKEND MAIN.PY OPENROUTER SECTION ==="
-            docker exec $(docker ps -q --filter name=backend) grep -n 'openrouter\|api_key\|get_key\|OPENROUTER_API_KEY\|user_key\|settings' /app/main.py 2>/dev/null | head -50 || echo "Could not exec into backend"
-            echo ""
-            echo "=== DB CHECK ==="
-            docker exec $(docker ps -q --filter name=db) psql -U ai_cfo -d ai_cfo_db -c "SELECT id, email, LEFT(openrouter_key,20) as key_prefix FROM users LIMIT 5;" 2>/dev/null || docker exec $(docker ps -q --filter name=postgres) psql -U postgres -c "\\l" 2>/dev/null || echo "Could not query DB"
+            echo '=== DOCKER CONTAINERS ==='
+            docker ps
+            echo ''
+            echo '=== ENV FILE (OPENROUTER) ==='
+            find /opt /var/www -name '.env' 2>/dev/null | head -5 | xargs -I{} grep -l OPENROUTER {} 2>/dev/null || echo 'no .env with OPENROUTER found'
+            cat /opt/ai-cfo-phoenix-v3/.env 2>/dev/null | grep -v PASSWORD | grep -v SECRET || true
+            cat /var/www/z12-cfo/.env 2>/dev/null | grep -v PASSWORD | grep -v SECRET || true
+            echo ''
+            echo '=== BACKEND LOGS ==='
+            BACKEND=$(docker ps --format '{{.Names}}' | grep -i backend | head -1)
+            echo "Backend container: $BACKEND"
+            if [ -n "$BACKEND" ]; then
+              docker logs $BACKEND 2>&1 | tail -50
+            fi
+            echo ''
+            echo '=== BACKEND MAIN.PY openrouter lines ==='
+            if [ -n "$BACKEND" ]; then
+              docker exec $BACKEND cat /app/main.py 2>/dev/null | grep -in 'openrouter\|api_key\|get_key\|openrouter_key' | head -60
+            fi
+            echo ''
+            echo '=== DB openrouter_key check ==='
+            DB=$(docker ps --format '{{.Names}}' | grep -i 'db\|postgres' | head -1)
+            echo "DB container: $DB"
+            if [ -n "$DB" ]; then
+              docker exec $DB psql -U ai_cfo -d ai_cfo_db -c "SELECT id, email, LEFT(openrouter_key,30) as key_prefix FROM users LIMIT 5;" 2>&1
+            fi
