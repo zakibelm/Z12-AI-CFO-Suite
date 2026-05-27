@@ -16,15 +16,14 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo '=== docker-compose.yml env section ==='
-            cat /opt/ai-cfo-phoenix-v3/docker-compose.yml | grep -A5 -B5 'OPENROUTER\|environment\|env_file'
-            echo ''
-            echo '=== Current backend container env vars ==='
             BACKEND=$(docker ps --format '{{.Names}}' | grep -i backend | head -1)
-            docker exec $BACKEND env | grep -i 'openrouter\|api_key' 2>/dev/null || echo 'No OPENROUTER env var in container'
+            echo "Backend: $BACKEND"
             echo ''
-            echo '=== .env OPENROUTER line ==='
-            grep 'OPENROUTER' /opt/ai-cfo-phoenix-v3/.env
+            echo '=== Container OPENROUTER_API_KEY env var ==='
+            docker exec $BACKEND env | grep 'OPENROUTER'
             echo ''
-            echo '=== Recent backend logs (401 openrouter) ==='
-            docker logs $BACKEND 2>&1 | grep -i 'openrouter\|401\|api_key\|OPENROUTER' | tail -10
+            echo '=== Main.py chat endpoint (lines 438-470) ==='
+            docker exec $BACKEND sed -n '430,480p' /app/main.py
+            echo ''
+            echo '=== Recent backend log (last 20 lines) ==='
+            docker logs $BACKEND 2>&1 | tail -20
