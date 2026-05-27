@@ -9,7 +9,7 @@ jobs:
   fix:
     runs-on: ubuntu-latest
     steps:
-      - name: SSH Fix OpenRouter Key
+      - name: SSH Fix OpenRouter
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: 147.93.40.124
@@ -17,43 +17,31 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             OR_KEY=$(echo 'c2stb3ItdjEtMjcwODJiNGMzYTgzYmI0YjdlMDk2NmQ1MzE5MmE3YmEyNDE1YjI3ZWEzYWJjNjY3OTc4YzU5ZWYyYWQ1MjRmYw==' | base64 -d)
-            ENV_PATH='/opt/ai-cfo-phoenix-v3/.env'
-            COMPOSE_DIR='/opt/ai-cfo-phoenix-v3'
-
-            echo 'Updating .env...'
-            if grep -q 'OPENROUTER_API_KEY' $ENV_PATH; then
-              sed -i "s|OPENROUTER_API_KEY=.*|OPENROUTER_API_KEY=$OR_KEY|" $ENV_PATH
-              echo 'Updated existing OPENROUTER_API_KEY'
-            else
-              echo "OPENROUTER_API_KEY=$OR_KEY" >> $ENV_PATH
-              echo 'Added OPENROUTER_API_KEY'
-            fi
-
-            echo 'Verify (prefix):'
-            grep 'OPENROUTER_API_KEY' $ENV_PATH | cut -c1-40
-
-            echo 'Finding backend container...'
             BACKEND=$(docker ps --format '{{.Names}}' | grep -i backend | head -1)
             echo "Backend: $BACKEND"
 
-            echo 'Recreating backend with new env vars...'
-            cd $COMPOSE_DIR
-            # Try docker compose (new) then docker-compose (legacy)
-            if docker compose version 2>/dev/null; then
-              docker compose up -d --force-recreate backend
-            elif docker-compose version 2>/dev/null; then
-              docker-compose up -d --force-recreate backend
-            else
-              echo 'Neither docker compose nor docker-compose found. Trying manual restart...'
-              docker stop $BACKEND
-              ENV_ARGS=$(grep -v '^#' $ENV_PATH | grep -v '^$' | xargs -I{} echo '--env={}' | tr '\n' ' ')
-              echo 'Using env args for docker run'
-              docker start $BACKEND
-            fi
+            echo '1. Check current OPENROUTER lines in main.py:'
+            docker exec $BACKEND grep -n 'OPENROUTER_API_KEY' /app/main.py | head -10
 
-            sleep 10
-            echo 'Container status:'
+            echo ''
+            echo '2. Direct sed patch: replace module-level assignment with hardcoded key'
+            docker exec -e OR_KEY="$OR_KEY" $BACKEND sh -c '
+              sed -i "s|OPENROUTER_API_KEY = os.getenv.*|OPENROUTER_API_KEY = \"$OR_KEY\"|" /app/main.py
+              sed -i "s|OPENROUTER_API_KEY = os.environ.get.*|OPENROUTER_API_KEY = \"$OR_KEY\"|" /app/main.py
+              echo "sed done"
+            '
+
+            echo ''
+            echo '3. Verify patch:'
+            docker exec $BACKEND grep -n 'OPENROUTER_API_KEY' /app/main.py | head -5
+
+            echo ''
+            echo '4. Restart backend process (kill uvicorn, docker will auto-restart)'
+            docker restart $BACKEND
+            sleep 8
+
+            echo ''
+            echo '5. Backend running:'
             docker ps | grep backend
-            echo 'Last 5 lines of backend logs:'
-            BACKEND=$(docker ps --format '{{.Names}}' | grep -i backend | head -1)
+            echo 'Last 5 logs:'
             docker logs $BACKEND 2>&1 | tail -5
