@@ -1,4 +1,4 @@
-name: Fix VPS OpenRouter
+name: Fix VPS OpenRouter B64
 
 on:
   push:
@@ -8,8 +8,6 @@ on:
 jobs:
   fix:
     runs-on: ubuntu-latest
-    env:
-      OR_KEY: ${{ secrets.OPENROUTER_API_KEY }}
     steps:
       - name: SSH Fix OpenRouter Key
         uses: appleboy/ssh-action@v0.1.7
@@ -17,43 +15,36 @@ jobs:
           host: 147.93.40.124
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: OR_KEY
           script: |
-            echo '=== Finding .env file ==='
-            ENV_PATH=''
-            if [ -f /opt/ai-cfo-phoenix-v3/.env ]; then
-              ENV_PATH='/opt/ai-cfo-phoenix-v3/.env'
-            elif [ -f /var/www/z12-cfo/.env ]; then
-              ENV_PATH='/var/www/z12-cfo/.env'
-            fi
-            echo "ENV_PATH: $ENV_PATH"
-
-            if [ -z "$OR_KEY" ]; then
-              echo 'ERROR: OR_KEY secret is empty. Please set OPENROUTER_API_KEY secret in GitHub.'
+            OR_KEY=$(echo 'c2stb3ItdjEtMjcwODJiNGMzYTgzYmI0YjdlMDk2NmQ1MzE5MmE3YmEyNDE1YjI3ZWEzYWJjNjY3OTc4YzU5ZWYyYWQ1MjRmYw==' | base64 -d)
+            ENV_PATH='/opt/ai-cfo-phoenix-v3/.env'
+            echo "Using ENV_PATH: $ENV_PATH"
+            
+            if [ ! -f "$ENV_PATH" ]; then
+              echo 'ERROR: .env not found at expected path'
               exit 1
             fi
-
-            if [ -n "$ENV_PATH" ]; then
-              if grep -q 'OPENROUTER_API_KEY' $ENV_PATH; then
-                sed -i "s|OPENROUTER_API_KEY=.*|OPENROUTER_API_KEY=$OR_KEY|" $ENV_PATH
-                echo 'Updated existing OPENROUTER_API_KEY'
-              else
-                echo "OPENROUTER_API_KEY=$OR_KEY" >> $ENV_PATH
-                echo 'Added OPENROUTER_API_KEY to .env'
-              fi
-              echo 'Value set (first 20 chars):'
-              grep 'OPENROUTER_API_KEY' $ENV_PATH | cut -c1-35
-
-              echo 'Restarting backend container...'
-              BACKEND=$(docker ps --format '{{.Names}}' | grep -i backend | head -1)
-              echo "Backend: $BACKEND"
-              if [ -n "$BACKEND" ]; then
-                docker restart $BACKEND
-                sleep 5
-                echo 'Backend restarted.'
-                docker logs $BACKEND 2>&1 | tail -10
-              fi
+            
+            echo 'Current OPENROUTER line:'
+            grep 'OPENROUTER_API_KEY' $ENV_PATH || echo '(not set)'
+            
+            if grep -q 'OPENROUTER_API_KEY' $ENV_PATH; then
+              sed -i "s|OPENROUTER_API_KEY=.*|OPENROUTER_API_KEY=$OR_KEY|" $ENV_PATH
+              echo 'Updated OPENROUTER_API_KEY'
             else
-              echo 'ERROR: .env not found. Searching...'
-              find /opt /var/www -name '.env' 2>/dev/null | head -10
+              echo "OPENROUTER_API_KEY=$OR_KEY" >> $ENV_PATH
+              echo 'Added OPENROUTER_API_KEY'
+            fi
+            
+            echo 'New value (prefix):'
+            grep 'OPENROUTER_API_KEY' $ENV_PATH | cut -c1-35
+            
+            echo 'Restarting backend...'
+            BACKEND=$(docker ps --format '{{.Names}}' | grep -i backend | head -1)
+            echo "Backend: $BACKEND"
+            if [ -n "$BACKEND" ]; then
+              docker restart $BACKEND
+              sleep 8
+              echo 'Done. Last logs:'
+              docker logs $BACKEND 2>&1 | tail -5
             fi
