@@ -38,14 +38,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built React app from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Create non-root user for security
-RUN 
-    chown -R nginx:nginx /usr/share/nginx/html && \
-    chown -R nginx:nginx /var/cache/nginx && \
-    chown -R nginx:nginx /var/log/nginx && \
-    chown -R nginx:nginx /var/run/nginx.pid && \
-    touch /var/run/nginx.pid && \
-    chown -R nginx:nginx /var/run/nginx.pid
+# Use existing nginx user (GID 101 pre-exists in nginx:alpine) && \
 
 # Expose port 80
 EXPOSE 80
