@@ -29,15 +29,31 @@ jobs:
               echo 'Added OPENROUTER_API_KEY'
             fi
 
-            echo 'Verify prefix:'
+            echo 'Verify (prefix):'
             grep 'OPENROUTER_API_KEY' $ENV_PATH | cut -c1-40
 
-            echo 'Doing docker-compose down + up for backend only...'
+            echo 'Finding backend container...'
+            BACKEND=$(docker ps --format '{{.Names}}' | grep -i backend | head -1)
+            echo "Backend: $BACKEND"
+
+            echo 'Recreating backend with new env vars...'
             cd $COMPOSE_DIR
-            docker-compose stop backend 2>/dev/null || true
-            docker-compose up -d backend
+            # Try docker compose (new) then docker-compose (legacy)
+            if docker compose version 2>/dev/null; then
+              docker compose up -d --force-recreate backend
+            elif docker-compose version 2>/dev/null; then
+              docker-compose up -d --force-recreate backend
+            else
+              echo 'Neither docker compose nor docker-compose found. Trying manual restart...'
+              docker stop $BACKEND
+              ENV_ARGS=$(grep -v '^#' $ENV_PATH | grep -v '^$' | xargs -I{} echo '--env={}' | tr '\n' ' ')
+              echo 'Using env args for docker run'
+              docker start $BACKEND
+            fi
+
             sleep 10
-            echo 'Backend status:'
-            docker-compose ps backend
-            echo 'Last logs:'
-            docker-compose logs --tail=10 backend
+            echo 'Container status:'
+            docker ps | grep backend
+            echo 'Last 5 lines of backend logs:'
+            BACKEND=$(docker ps --format '{{.Names}}' | grep -i backend | head -1)
+            docker logs $BACKEND 2>&1 | tail -5
