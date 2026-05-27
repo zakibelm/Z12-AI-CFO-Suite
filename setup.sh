@@ -134,15 +134,15 @@ if ! grep -q "Ubuntu" /etc/os-release 2>/dev/null; then
                                                                                                                                                                                         echo ""
                                                                                                                                                                                         info "Etape 5/6 -- Creation du compte administrateur..."
                                                                                                                                                                                         docker compose exec -T backend python3 << PYEOF
-                                                                                                                                                                                        import sys
-                                                                                                                                                                                        sys.path.insert(0, '/app')
-                                                                                                                                                                                        try:
-                                                                                                                                                                                            from auth import create_user_if_not_exists
-                                                                                                                                                                                                create_user_if_not_exists('${ADMIN_EMAIL}', '${ADMIN_PASSWORD}', role='admin')
-                                                                                                                                                                                                    print('Admin cree')
-                                                                                                                                                                                                    except Exception as e:
-                                                                                                                                                                                                        print(f'Note: {e}')
-                                                                                                                                                                                                        PYEOF
+import sys
+sys.path.insert(0, '/app')
+try:
+from auth import create_user_if_not_exists
+create_user_if_not_exists('${ADMIN_EMAIL}', '${ADMIN_PASSWORD}', role='admin')
+print('Admin cree')
+except Exception as e:
+print(f'Note: {e}')
+PYEOF
                                                                                                                                                                                                         ok "Compte admin configure"
                                                                                                                                                                                                         
                                                                                                                                                                                                         # -- 6. Rapport final -----------------------------------------
