@@ -1,0 +1,33 @@
+name: Diagnose VPS v5 - check backend logs and OPENROUTER
+
+on:
+  push:
+    paths:
+      - ".github/workflows/diagnose-v5.yml"
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH Diagnose
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: 60s
+          script: |
+            BACKEND=$(docker ps --format "{{.Names}}" | grep -i backend | head -1)
+            echo "Backend: $BACKEND"
+            
+            echo "=== Container env OPENROUTER ==="
+            docker exec $BACKEND env | grep OPENROUTER || echo "NOT FOUND IN ENV"
+            
+            echo "=== Python sees OPENROUTER ==="
+            docker exec $BACKEND sh -c "python3 -c "import os; k=os.getenv(\"OPENROUTER_API_KEY\",\"\"); print(len(k), k[:10] if k else \"EMPTY\")""
+            
+            echo "=== .env file ==="
+            grep OPENROUTER /opt/ai-cfo-phoenix-v3/.env || echo "NOT IN .env"
+            
+            echo "=== Last 30 backend logs ==="
+            docker logs $BACKEND --tail 30 2>&1
