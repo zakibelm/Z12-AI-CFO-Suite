@@ -1,0 +1,44 @@
+name: Diagnose VPS v4 - check Python OPENROUTER value
+
+on:
+  push:
+    paths:
+      - '.github/workflows/diagnose-v4.yml'
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH Diagnose
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: 60s
+          script: |
+            BACKEND=$(docker ps --format '{{.Names}}' | grep -i backend | head -1)
+            echo "Backend: $BACKEND"
+            
+            echo "=== 1. Container env var ==="
+            docker exec $BACKEND env | grep OPENROUTER || echo "NOT FOUND IN ENV"
+            
+            echo "=== 2. Python runtime value ==="
+            docker exec $BACKEND python3 -c "
+import os
+val = os.getenv('OPENROUTER_API_KEY', 'NOT_SET')
+print(f'os.getenv result: {val[:15] if val != \"NOT_SET\" else val}...')
+print(f'Length: {len(val)}')
+"
+            
+            echo "=== 3. Actual module-level line in main.py ==="
+            docker exec $BACKEND grep -n 'OPENROUTER_API_KEY' /app/main.py | head -10
+            
+            echo "=== 4. Check .env file on VPS ==="
+            cat /opt/ai-cfo-phoenix-v3/.env | grep OPENROUTER || echo "NOT IN .env"
+            
+            echo "=== 5. Check docker-compose env_file config ==="
+            cat /opt/ai-cfo-phoenix-v3/docker-compose.yml | grep -A5 'env_file\|environment\|OPENROUTER' | head -20
+            
+            echo "=== 6. Backend recent logs ==="
+            docker logs $BACKEND --tail 20 2>&1
