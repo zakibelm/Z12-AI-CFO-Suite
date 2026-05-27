@@ -18,33 +18,26 @@ jobs:
           script: |
             OR_KEY=$(echo 'c2stb3ItdjEtMjcwODJiNGMzYTgzYmI0YjdlMDk2NmQ1MzE5MmE3YmEyNDE1YjI3ZWEzYWJjNjY3OTc4YzU5ZWYyYWQ1MjRmYw==' | base64 -d)
             ENV_PATH='/opt/ai-cfo-phoenix-v3/.env'
-            echo "Using ENV_PATH: $ENV_PATH"
-            
-            if [ ! -f "$ENV_PATH" ]; then
-              echo 'ERROR: .env not found at expected path'
-              exit 1
-            fi
-            
-            echo 'Current OPENROUTER line:'
-            grep 'OPENROUTER_API_KEY' $ENV_PATH || echo '(not set)'
-            
+            COMPOSE_DIR='/opt/ai-cfo-phoenix-v3'
+
+            echo 'Updating .env...'
             if grep -q 'OPENROUTER_API_KEY' $ENV_PATH; then
               sed -i "s|OPENROUTER_API_KEY=.*|OPENROUTER_API_KEY=$OR_KEY|" $ENV_PATH
-              echo 'Updated OPENROUTER_API_KEY'
+              echo 'Updated existing OPENROUTER_API_KEY'
             else
               echo "OPENROUTER_API_KEY=$OR_KEY" >> $ENV_PATH
               echo 'Added OPENROUTER_API_KEY'
             fi
-            
-            echo 'New value (prefix):'
-            grep 'OPENROUTER_API_KEY' $ENV_PATH | cut -c1-35
-            
-            echo 'Restarting backend...'
-            BACKEND=$(docker ps --format '{{.Names}}' | grep -i backend | head -1)
-            echo "Backend: $BACKEND"
-            if [ -n "$BACKEND" ]; then
-              docker restart $BACKEND
-              sleep 8
-              echo 'Done. Last logs:'
-              docker logs $BACKEND 2>&1 | tail -5
-            fi
+
+            echo 'Verify prefix:'
+            grep 'OPENROUTER_API_KEY' $ENV_PATH | cut -c1-40
+
+            echo 'Doing docker-compose down + up for backend only...'
+            cd $COMPOSE_DIR
+            docker-compose stop backend 2>/dev/null || true
+            docker-compose up -d backend
+            sleep 10
+            echo 'Backend status:'
+            docker-compose ps backend
+            echo 'Last logs:'
+            docker-compose logs --tail=10 backend
