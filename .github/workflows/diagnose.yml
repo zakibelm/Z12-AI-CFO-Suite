@@ -1,4 +1,4 @@
-name: Diagnose VPS
+name: Diagnose VPS v2
 
 on:
   push:
@@ -9,36 +9,22 @@ jobs:
   diagnose:
     runs-on: ubuntu-latest
     steps:
-      - name: SSH Diagnose Backend
+      - name: SSH Diagnose
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: 147.93.40.124
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo '=== DOCKER CONTAINERS ==='
-            docker ps
+            echo '=== docker-compose.yml env section ==='
+            cat /opt/ai-cfo-phoenix-v3/docker-compose.yml | grep -A5 -B5 'OPENROUTER\|environment\|env_file'
             echo ''
-            echo '=== ENV FILE (OPENROUTER) ==='
-            find /opt /var/www -name '.env' 2>/dev/null | head -5 | xargs -I{} grep -l OPENROUTER {} 2>/dev/null || echo 'no .env with OPENROUTER found'
-            cat /opt/ai-cfo-phoenix-v3/.env 2>/dev/null | grep -v PASSWORD | grep -v SECRET || true
-            cat /var/www/z12-cfo/.env 2>/dev/null | grep -v PASSWORD | grep -v SECRET || true
-            echo ''
-            echo '=== BACKEND LOGS ==='
+            echo '=== Current backend container env vars ==='
             BACKEND=$(docker ps --format '{{.Names}}' | grep -i backend | head -1)
-            echo "Backend container: $BACKEND"
-            if [ -n "$BACKEND" ]; then
-              docker logs $BACKEND 2>&1 | tail -50
-            fi
+            docker exec $BACKEND env | grep -i 'openrouter\|api_key' 2>/dev/null || echo 'No OPENROUTER env var in container'
             echo ''
-            echo '=== BACKEND MAIN.PY openrouter lines ==='
-            if [ -n "$BACKEND" ]; then
-              docker exec $BACKEND cat /app/main.py 2>/dev/null | grep -in 'openrouter\|api_key\|get_key\|openrouter_key' | head -60
-            fi
+            echo '=== .env OPENROUTER line ==='
+            grep 'OPENROUTER' /opt/ai-cfo-phoenix-v3/.env
             echo ''
-            echo '=== DB openrouter_key check ==='
-            DB=$(docker ps --format '{{.Names}}' | grep -i 'db\|postgres' | head -1)
-            echo "DB container: $DB"
-            if [ -n "$DB" ]; then
-              docker exec $DB psql -U ai_cfo -d ai_cfo_db -c "SELECT id, email, LEFT(openrouter_key,30) as key_prefix FROM users LIMIT 5;" 2>&1
-            fi
+            echo '=== Recent backend logs (401 openrouter) ==='
+            docker logs $BACKEND 2>&1 | grep -i 'openrouter\|401\|api_key\|OPENROUTER' | tail -10
