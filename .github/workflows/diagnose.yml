@@ -1,0 +1,30 @@
+name: Diagnose & Fix VPS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH Diagnose Backend
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: 147.93.40.124
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "=== DOCKER CONTAINERS ==="
+            docker ps --format "table {{.Names}}\t{{.Status}}"
+            echo ""
+            echo "=== ENV FILE ==="
+            grep -E 'OPENROUTER|JWT|DATABASE' /opt/ai-cfo-phoenix-v3/.env 2>/dev/null || grep -E 'OPENROUTER|JWT|DATABASE' /var/www/z12-cfo/.env 2>/dev/null || echo "env not found at expected paths"
+            echo ""
+            echo "=== BACKEND LOGS (openrouter errors) ==="
+            docker logs $(docker ps -q --filter name=backend) 2>&1 | grep -i 'openrouter\|401\|api_key\|ERROR' | tail -30 2>/dev/null || echo "Could not get backend logs"
+            echo ""
+            echo "=== BACKEND MAIN.PY OPENROUTER SECTION ==="
+            docker exec $(docker ps -q --filter name=backend) grep -n 'openrouter\|api_key\|get_key\|OPENROUTER_API_KEY\|user_key\|settings' /app/main.py 2>/dev/null | head -50 || echo "Could not exec into backend"
+            echo ""
+            echo "=== DB CHECK ==="
+            docker exec $(docker ps -q --filter name=db) psql -U ai_cfo -d ai_cfo_db -c "SELECT id, email, LEFT(openrouter_key,20) as key_prefix FROM users LIMIT 5;" 2>/dev/null || docker exec $(docker ps -q --filter name=postgres) psql -U postgres -c "\\l" 2>/dev/null || echo "Could not query DB"
