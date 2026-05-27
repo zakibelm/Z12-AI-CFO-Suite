@@ -39,7 +39,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Create non-root user for security
-RUN addgroup -g 101 -S nginx-z12 && \
+RUN 
     chown -R nginx:nginx /usr/share/nginx/html && \
     chown -R nginx:nginx /var/cache/nginx && \
     chown -R nginx:nginx /var/log/nginx && \
