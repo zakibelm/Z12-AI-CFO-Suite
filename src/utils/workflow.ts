@@ -30,7 +30,7 @@ const typeIcon = ext => ({pdf:"📄",docx:"📄",doc:"📄",xlsx:"📄",xls:"�
 // Decision: only for lightweight text formats; DOCX/PPTX/XLSX stay server-side
 // (browser can't run mammoth/JSZip without those libs, and financial data shouldn't be
 //  fully client-side processed for Loi 25 traceability)
-import { extractTextPreview, detectAgentFromFile, detectLanguage, estimateChunks, uploadStageLabel } from './src/utils/fileUtils';
+import { extractTextPreview, detectAgentFromFile, detectLanguage, estimateChunks, uploadStageLabel } from './fileUtils';
 
 //  SHARED UTILS 
 const fmtSize = b => { if(!b) return "~"; const m=b/1048576; return m>=1?m.toFixed(1)+" MB":Math.round(b/1024)+" KB"; };
