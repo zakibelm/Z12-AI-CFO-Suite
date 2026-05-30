@@ -1,3 +1,4 @@
+import { WelcomeBanner } from './WelcomeBanner';
 // src/components/Studio.tsx
 import React from "react";
 import { executeWorkflow, synthesizeResults, genTitle, agentById, analyzeWorkflow } from '../utils/workflow';
@@ -146,7 +147,8 @@ const handleFileAttach = (e) => {
   ];
 
   return (
-    <div style={{display:"flex",flex:1,overflow:"hidden",minWidth:0}}>
+    <div style={{display:"flex",flex:1,overflow:"hidden",minWidth:0,position:"relative"}}>
+    <WelcomeBanner openrouterKey={openrouterKey} onGoToSettings={() => setView('settings')} />
       {/*  Studio column: header + scrollable thread + sticky composer  */}
       <div className="studio">
         <header className="studio-head">
