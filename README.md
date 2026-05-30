@@ -250,3 +250,4 @@ Le script `setup.sh` :
 | **Total** | **< 10 min** |
 
 *Confidentiel — Zaki Belkhiter · ZAKI OS Platform · 2026*
+# M3.2 deployed
