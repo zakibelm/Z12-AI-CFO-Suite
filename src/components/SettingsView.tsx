@@ -38,7 +38,7 @@ export function SettingsView({ lang, t, openrouterKey, agentSettings, authFetch 
       <div className="page-body" style={{maxWidth:880}}>
         <div className="set-card">
           <div className="set-h">{fr?"Clé API OpenRouter":"OpenRouter API key"}</div>
-          <div className="set-sub">{fr?"Optionnel si OPENROUTER_API_KEY est configurée sur le serveur. La clé transite via le proxy /api/chat et n’est jamais exposée dans le navigateur.":"Optional if OPENROUTER_API_KEY is set on the server. The key transits via /api/chat proxy and is never exposed in the browser."}</div>
+          <div className="set-sub">{fr?"Optionnel si OPENROUTER_API_KEY est configurée sur le serveur. La clé transite via le proxy /api/chat et n’est également utilisée côté serveur pour les appels IA.":"Optional if OPENROUTER_API_KEY is set on the server. The key transits via /api/chat proxy and is never exposed in the browser."}</div>
           <input className="set-input" value={key} onChange={(e: any)=>setKey(e.target.value)} type="password" placeholder="sk-or-v1-&"/>
           <div style={{display:"flex",gap:8,marginTop:12,alignItems:"center"}}>
             <button className="btn btn-primary" onClick={testConnection} disabled={testing}>

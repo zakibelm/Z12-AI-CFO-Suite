@@ -231,7 +231,7 @@ Le script `setup.sh` :
 2. Dans la section **Clé API OpenRouter** → coller la clé `sk-or-v1-...`
 3. Cliquer **Tester connexion** → attendre ✅ *Connexion réussie*
 
-> La clé est stockée dans le navigateur (localStorage) et transmise via le proxy `/api/chat`. Elle n'est jamais exposée côté frontend.
+> La clé OpenRouter est configurée par instance dans le fichier `.env` du serveur. Elle peut aussi être saisie via l'interface pour les tests — dans ce cas elle est stockée localement dans le navigateur.
 
 ### Étape 4 — Première question à Patrick
 
