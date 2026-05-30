@@ -112,6 +112,8 @@ except Exception as _e:
 # ────────────────────────────────────────────────────────────────
 try:
     app.include_router(whatsapp_router)
+    if bank_router is not None:
+        app.include_router(bank_router)
     app.include_router(settings_router, prefix="/api/settings", tags=["settings"])
     print("[INFO] WhatsApp router mounted at /api/whatsapp/*")
 except Exception as _wa:
