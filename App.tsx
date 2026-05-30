@@ -2526,8 +2526,8 @@ function Roster({ lang, busyIds, doneIds, activeNav, setNav, compact, setCompact
     ["governance",lang==="fr"?"Gouvernance":"Governance",      <svg viewBox="0 0 16 16" className="i"><path d="M8 2l5 2v4c0 3-2 5.5-5 6-3-.5-5-3-5-6V4z"/></svg>],
     ["team",     lang==="fr"?"Équipe":"Team",                  <svg viewBox="0 0 16 16" className="i"><circle cx="6" cy="6" r="2.5"/><circle cx="11.5" cy="7" r="2"/><path d="M2 14c0-2 2-3.5 4-3.5s4 1.5 4 3.5M9 13c0-1.6 1.5-2.5 3-2.5s3 .9 3 2.5"/></svg>],
     ["settings", lang==="fr"?"Paramètres":"Settings",          <svg viewBox="0 0 16 16" className="i"><circle cx="8" cy="8" r="2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M3 13l1.5-1.5M11.5 4.5L13 3"/></svg>],
-    ["sandbox",  lang==="fr"?"Sandbox IA":"AI Sandbox",        <svg viewBox="0 0 16 16" className="i"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8h6M8 5v6"/></svg>,
-      ["bankreconciliation", lang==="fr"?"Rapprochement":"Bank Recon", <svg viewBox="0 0 16 16" className="i"><rect x="1" y="8" width="14" height="6" rx="1"/><polygon points="8,1 1,6 15,6"/><rect x="3" y="9.5" width="2" height="3"/><rect x="7" y="9.5" width="2" height="3"/><rect x="11" y="9.5" width="2" height="3"/></svg>]],
+    ["sandbox",  lang==="fr"?"Sandbox IA":"AI Sandbox",        <svg viewBox="0 0 16 16" className="i"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8h6M8 5v6"/></svg>],
+      ["bankreconciliation", lang==="fr"?"Rapprochement":"Bank Recon", <svg viewBox="0 0 16 16" className="i"><rect x="1" y="8" width="14" height="6" rx="1"/><polygon points="8,1 1,6 15,6"/><rect x="3" y="9.5" width="2" height="3"/><rect x="7" y="9.5" width="2" height="3"/><rect x="11" y="9.5" width="2" height="3"/></svg>],
   ];
 
   return (
