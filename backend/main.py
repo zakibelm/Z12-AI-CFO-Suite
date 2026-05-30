@@ -119,6 +119,15 @@ except Exception as _wa:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# ─── BankReconciliationAgent router ───────────────────────────────────────────
+try:
+    from bank_reconciliation import bank_router as _bank_router
+    if _bank_router is not None:
+        app.include_router(_bank_router)
+        print("[INFO] BankReconciliationAgent router mounted at /api/bank/*")
+except Exception as _br:
+    print(f"[WARN] BankReconciliation router not loaded: {_br}")
+
 # Routes utilitaires
 # ─────────────────────────────────────────────────────────────────────────────
 
