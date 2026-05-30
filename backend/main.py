@@ -68,6 +68,14 @@ MAX_FILES_PER_REQUEST = 50          # max 50 fichiers par upload
 # Application FastAPI
 # ─────────────────────────────────────────────────────────────────────────────
 
+# --- AUTH_MODE security check ---
+import os as _os
+_AUTH_MODE = _os.environ.get("AUTH_MODE", "dev")
+if _AUTH_MODE != "strict":
+    print(f"[SECURITY WARNING] AUTH_MODE={_AUTH_MODE} — set AUTH_MODE=strict in production")
+else:
+    print("[SECURITY] AUTH_MODE=strict — production mode active")
+
 app = FastAPI(
     title="AI CFO Suite API",
     description="API pour la suite AI CFO : upload, extraction, RAG et requetes IA.",
@@ -123,21 +131,7 @@ async def root():
 async def health():
     return {"status": "healthy"}
 
-@app.get("/debug/config")
-async def debug_config():
-    """Debug endpoint to check configuration."""
-    return {
-        "api_key_length": len(OPENROUTER_API_KEY),
-        "api_key_prefix": OPENROUTER_API_KEY[:10] + "..." if OPENROUTER_API_KEY else "EMPTY",
-        "default_model": DEFAULT_MODEL,
-        "api_url": OPENROUTER_API_URL,
-    }
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Upload de fichiers
-# ─────────────────────────────────────────────────────────────────────────────
-
+# [REMOVED] debug/config endpoint removed for security
 @app.post("/upload", status_code=200)
 async def upload_files(files: list[UploadFile] = File(...)):
     """
@@ -482,6 +476,25 @@ async def chat_proxy(payload: ChatRequest, request: Request, user_id: str = "def
         _msgs[0] = {**_msgs[0], "content": _msgs[0]["content"] + "\n\n" + _mem_ctx}
     elif _mem_ctx:
         _msgs.insert(0, {"role": "system", "content": _mem_ctx})
+
+    # --- KB QC Patrick injection ---
+    if getattr(payload, 'agent', '') == 'Patrick' and _question:
+        try:
+            from kb_storage import search_kb_qc_by_text
+            _kb_chunks = await search_kb_qc_by_text(_question, limit=3)
+            if _kb_chunks:
+                _kb_ctx = "Contexte KB QC (sources officielles):"
+                for _c in _kb_chunks:
+                    _src = _c.get("source_url", "source inconnue")
+                    _txt = _c.get("text_content", "")[:600]
+                    _kb_ctx += "\nSource: " + _src + "\n" + _txt + "\n"
+                if _msgs and _msgs[0].get("role") == "system":
+                    _msgs[0] = {**_msgs[0], "content": _msgs[0]["content"] + "\n\n" + _kb_ctx}
+                else:
+                    _msgs.insert(0, {"role": "system", "content": _kb_ctx})
+                print(f"[Patrick KB] {len(_kb_chunks)} chunks injected for query: {_question[:80]}")
+        except Exception as _kb_err:
+            print(f"[Patrick KB] ERROR: {_kb_err}")
 
     body = {
         "model": payload.model,

@@ -409,3 +409,28 @@ def insert_page(page: dict) -> dict:
         pages.insert(0, page)
         _save(_PAGES_FILE, pages)
     return page
+
+
+async def search_kb_qc_by_text(query: str, limit: int = 3) -> list[dict]:
+    """Embed query via OpenRouter then search KB QC chunks."""
+    import os, httpx
+    api_key = os.environ.get('OPENROUTER_API_KEY', '')
+    if not api_key:
+        print("[Patrick KB] OPENROUTER_API_KEY not set")
+        return []
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                "https://openrouter.ai/api/v1/embeddings",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={"model": "intfloat/multilingual-e5-large", "input": query[:2000]}
+            )
+        if resp.status_code != 200:
+            print(f"[Patrick KB] Embedding API error: {resp.status_code} {resp.text[:100]}")
+            return []
+        data = resp.json()
+        embedding = data["data"][0]["embedding"]
+        return search_kb_qc(embedding, limit=limit)
+    except Exception as e:
+        print(f"[Patrick KB] search_kb_qc_by_text error: {e}")
+        return []
