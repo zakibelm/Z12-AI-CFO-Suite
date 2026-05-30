@@ -196,4 +196,57 @@
 > >
 > > ---
 > >
-> > *Confidentiel — Zaki Belkhiter · ZAKI OS Platform · 2026*
+> > 
+---
+
+## 🔑 Premier accès — Flux self-service
+
+> **Critère M2** : Un CPA inconnu reçoit l'URL → se connecte seul → configure sa clé → pose une question à Patrick → obtient une réponse avec valeur chiffrée. Sans intervention. En moins de 10 minutes.
+
+### Étape 1 — Déploiement (admin)
+
+```bash
+# Sur un VPS Ubuntu 22.04+ avec Docker installé
+git clone https://github.com/zakibelm/Z12-AI-CFO-Suite.git
+cd Z12-AI-CFO-Suite
+cp .env.example .env
+# Éditer .env : ADMIN_EMAIL, ADMIN_PASSWORD, JWT_SECRET
+bash setup.sh
+```
+
+Le script `setup.sh` :
+- Lance les 3 containers Docker (backend, frontend, db)
+- Crée le compte admin avec l'email/mot de passe configurés
+- Expose l'app sur le port 80 (nginx) et l'API sur le port 8000
+
+### Étape 2 — Connexion (utilisateur CPA)
+
+1. Ouvrir l'URL de l'instance (ex: `https://cfo.votrecabinet.com`)
+2. Saisir email + mot de passe fournis par l'administrateur
+3. Cliquer **Se connecter** → accès au Studio
+
+### Étape 3 — Configuration clé OpenRouter
+
+1. Cliquer sur l'icône **⚙️ Paramètres** (bas gauche de la sidebar)
+2. Dans la section **Clé API OpenRouter** → coller la clé `sk-or-v1-...`
+3. Cliquer **Tester connexion** → attendre ✅ *Connexion réussie*
+
+> La clé est stockée dans le navigateur (localStorage) et transmise via le proxy `/api/chat`. Elle n'est jamais exposée côté frontend.
+
+### Étape 4 — Première question à Patrick
+
+1. Sélectionner l'agent **Patrick Gagnon** dans la sidebar gauche
+2. Saisir : *"Quels programmes de subventions pour une PME construction, 12 employés, Laval, fondée 2018 ?"*
+3. Attendre la réponse (~20-30 secondes)
+4. Vérifier que la réponse contient la section **Valeur estimée des programmes identifiés**
+
+### Durée totale attendue : < 10 minutes
+
+| Étape | Durée estimée |
+|-------|---------------|
+| Connexion | 1 min |
+| Configuration clé | 2 min |
+| Première question | 2-3 min |
+| **Total** | **< 10 min** |
+
+*Confidentiel — Zaki Belkhiter · ZAKI OS Platform · 2026*
