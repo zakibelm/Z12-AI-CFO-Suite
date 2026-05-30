@@ -532,7 +532,26 @@ async def chat_proxy(payload: ChatRequest, request: Request, user_id: str = "def
         asyncio.create_task(cache_response(_question, payload.agent, _answer))
     except Exception as _me:
         print(f"[WARN] Memory save skip: {_me}")
-    return _resp_data
+
+    # --- M1.3: Patrick valeur chiffree post-processing ---
+    try:
+        _agent_name = getattr(payload, 'agent', '') or ''
+        if _agent_name.lower() == 'patrick':
+            _ch = _resp_data.get('choices', [])
+            if _ch and isinstance(_ch[0].get('message', {}).get('content'), str):
+                _orig = _ch[0]['message']['content']
+                if 'Valeur estim' not in _orig:
+                    _bloc = (
+                        chr(10) + chr(10) +
+                        '---' + chr(10) +
+                        '**Valeur estim' + chr(233) + 'e des programmes identifi' + chr(233) + 's : X $ – Y $**' + chr(10) +
+                        '**Temps économisé vs recherche manuelle : ~Z heures**' + chr(10) +
+                        '*(Remplace X/Y en sommant les montants max des programmes cités, Z = nb\\_programmes × 2h)*'
+                    )
+                    _ch[0]['message']['content'] = _orig + _bloc
+    except Exception as _e_m13:
+        print(f"[M1.3] post-proc skip: {_e_m13}")
+        return _resp_data
 
 
 
