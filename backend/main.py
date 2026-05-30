@@ -455,9 +455,29 @@ class ChatRequest(BaseModel):
 @app.post("/api/chat", status_code=200)
 async def chat_proxy(payload: ChatRequest, request: Request, user_id: str = "default_user"):
     # Bypass JWT pour appels internes WhatsApp
-    x_internal = request.headers.get("X-Internal-Service", "")
-    if x_internal == "whatsapp":
-        user_id = "whatsapp-service"
+    # Auth : verifier secret interne (WhatsApp) OU Bearer JWT (utilisateur)
+    internal_secret = os.environ.get("INTERNAL_SERVICE_SECRET", "")
+    x_internal_header = request.headers.get("X-Internal-Service", "")
+    is_internal = (
+        bool(internal_secret) and
+        x_internal_header == internal_secret
+    )
+
+    if is_internal:
+        user_id = payload.user_id or "whatsapp_user"
+    else:
+        # Auth utilisateur via Bearer JWT si present
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            try:
+                from auth import decode_token as _decode_token
+                token = auth_header.split(" ", 1)[1]
+                token_data = _decode_token(token)
+                user_id = str(token_data.get("sub", "default_user"))
+            except Exception:
+                user_id = "default_user"
+        else:
+            user_id = "default_user"
     """
     Proxy vers OpenRouter. Utilise OPENROUTER_API_KEY (serveur).
     Fallback: X-API-Key header envoyé par le client (legacy).
