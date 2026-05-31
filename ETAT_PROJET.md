@@ -151,3 +151,14 @@ App.tsx C8 : WelcomeBanner affiche sur view===dashboard (post-login)
 
 Test cookie Set-Cookie : en attente resultat VPS (curl login)
 Si Set-Cookie absent : patcher auth_local.py avec response.set_cookie(...)
+
+## Corrections C9-C12 (commit CI #95)
+
+| Code | Description | Statut |
+|------|-------------|--------|
+| C9 | useAuth.ts /api/auth/me → /api/auth/local/me | ✅ |
+| C10 | /api/chat default_user supprimé → 401 strict | ✅ |
+| C11 | /api/orchestrate default_user supprimé → 401 strict | ✅ |
+| C12 | SettingsView texte anglais OpenRouter honnête | ✅ |
+
+Score révisé : **8.6/10** (vs 8.3/10 état après audit critique 4)

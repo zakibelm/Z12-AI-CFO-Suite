@@ -26,7 +26,7 @@ export function useAuth(): AuthHook {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const res = await fetch(`${API}/auth/me`, {
+        const res = await fetch(`${API}/auth/local/me`, {
           credentials: "include",
         });
         if (res.ok) {
@@ -58,7 +58,7 @@ export function useAuth(): AuthHook {
     }
     // Le cookie phoenix_session est pose par le serveur -- pas besoin de lire le token
     // Verifier la session immediatement
-    const meRes = await fetch(`${API}/auth/me`, {
+    const meRes = await fetch(`${API}/auth/local/me`, {
       credentials: "include",
     });
     if (meRes.ok) {

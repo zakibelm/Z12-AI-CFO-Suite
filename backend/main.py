@@ -453,7 +453,7 @@ class ChatRequest(BaseModel):
     session_id: str = None
 
 @app.post("/api/chat", status_code=200)
-async def chat_proxy(payload: ChatRequest, request: Request, user_id: str = "default_user"):
+async def chat_proxy(payload: ChatRequest, request: Request):
     # Bypass JWT pour appels internes WhatsApp
     # Auth : verifier secret interne (WhatsApp) OU Bearer JWT (utilisateur)
     internal_secret = os.environ.get("INTERNAL_SERVICE_SECRET", "")
@@ -473,11 +473,13 @@ async def chat_proxy(payload: ChatRequest, request: Request, user_id: str = "def
                 from auth import _decode_jwt as _decode_token
                 token = auth_header.split(" ", 1)[1]
                 token_data = _decode_token(token)
-                user_id = str(token_data.get("sub", "default_user"))
+                user_id = str(token_data.get("sub", ""))
+                if not user_id:
+                    raise HTTPException(status_code=401, detail="Token invalide: sub manquant")
             except Exception:
-                user_id = "default_user"
+                raise HTTPException(status_code=401, detail="Authentification requise")
         else:
-            user_id = "default_user"
+            raise HTTPException(status_code=401, detail="Authentification requise")
     """
     Proxy vers OpenRouter. Utilise OPENROUTER_API_KEY (serveur).
     Fallback: X-API-Key header envoyé par le client (legacy).
@@ -614,11 +616,13 @@ async def api_orchestrate(req: OrchestrateRequest, request: Request):
                 from auth import _decode_jwt as _decode_token
                 token = auth_header.split(" ", 1)[1]
                 token_data = _decode_token(token)
-                orchestrate_user_id = str(token_data.get("sub", "default_user"))
+                orchestrate_user_id = str(token_data.get("sub", ""))
+                if not orchestrate_user_id:
+                    raise HTTPException(status_code=401, detail="Token invalide: sub manquant")
             except Exception:
-                orchestrate_user_id = "default_user"
+                raise HTTPException(status_code=401, detail="Authentification requise")
         else:
-            orchestrate_user_id = "default_user"
+            raise HTTPException(status_code=401, detail="Authentification requise")
     else:
         orchestrate_user_id = req.context.get("user_id", "whatsapp_user") if req.context else "whatsapp_user"
 
