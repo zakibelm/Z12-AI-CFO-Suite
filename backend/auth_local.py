@@ -93,13 +93,14 @@ async def register(body: RegisterBody):
         raise HTTPException(500, f"Erreur creation compte: {e}")
     jti = secrets.token_urlsafe(24)
     exp = _now() + dt.timedelta(hours=SESSION_TTL_HOURS)
+    token = _sign_jwt(user_id, jti, exp)
     with _conn() as c, c.cursor() as cur:
         cur.execute(
-            "INSERT INTO user_sessions (user_id, jti, expires_at) VALUES (%s, %s, %s)",
-            (str(user_id), jti, exp))
+            "INSERT INTO user_sessions (user_id, jti, expires_at, token) VALUES (%s, %s, %s, %s)",
+            (str(user_id), jti, exp, token))
         c.commit()
     resp = JSONResponse({"ok": True, "email": email})
-    _set_cookie(resp, _sign_jwt(user_id, jti, exp))
+    _set_cookie(resp, token)
     return resp
 
 @router.post("/login")
