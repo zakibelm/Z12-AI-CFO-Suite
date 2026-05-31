@@ -1,7 +1,7 @@
 # Z12 AI CFO — ÉTAT DU PROJET
 
-Version 5.4 — 30 mai 2026
-Score : 8.7/10 · C1-C13 ✅ déployés · CI #96 ✅ · bêta CPA validée
+Version 5.5 — 31 mai 2026
+Score : 8.9/10 · C1-C16 ✅ déployés · CI #99 ✅ · auth cookie opérationnel
 
 ---
 
@@ -233,3 +233,22 @@ curl -s -b /tmp/cookies.txt -X POST http://localhost:8000/api/chat \
   -d '{"messages":[{"role":"user","content":"test auth"}],"agent":"Sophie"}' \
   | python3 -c "import sys,json; d=json.load(sys.stdin); print('STATUS:', d.get('detail','OK'))"
 ```
+
+
+---
+## C14-C16 — Corrections auth cookie (31 mai 2026)
+
+### C14 — auth_local.register : token manquant dans INSERT user_sessions
+- **Bug** : NotNullViolation — colonne `token` NOT NULL ignorée lors de l'inscription
+- **Fix** : Générer le JWT avant l'INSERT, inclure `token` dans les colonnes
+- **Commit** : e0d6d07
+
+### C15 — auth.py : _session_secret fallback manquant
+- **Bug** : `_session_secret = os.environ.get("SESSION_JWT_SECRET", "")` → `""` falsy → branche cookie jamais prise → 401
+- **Fix** : Fallback `phoenix-local-secret` identique à auth_local.py
+- **Commit** : 3b35c35
+
+### C16 — auth_local._get_user : u.id::uuid sur colonne INTEGER
+- **Bug** : `WHERE u.id = %s::uuid` → erreur SQL car local_users.id est INTEGER
+- **Fix** : `WHERE u.id = %s::integer`
+- **Résultat attendu** : /api/auth/local/me ✅ · /api/chat avec cookie ✅

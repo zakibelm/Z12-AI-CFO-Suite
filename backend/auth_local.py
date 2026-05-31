@@ -50,7 +50,7 @@ def _get_user(token):
                 """SELECT u.id, u.email, u.name, u.picture_url
                    FROM local_users u
                    JOIN user_sessions s ON s.user_id = u.id
-                   WHERE u.id = %s::uuid AND s.jti = %s
+                   WHERE u.id = %s::integer AND s.jti = %s
                      AND s.revoked_at IS NULL AND s.expires_at > NOW()
                      AND u.is_active = TRUE LIMIT 1""",
                 (uid, jti))
