@@ -162,3 +162,12 @@ Si Set-Cookie absent : patcher auth_local.py avec response.set_cookie(...)
 | C12 | SettingsView texte anglais OpenRouter honnête | ✅ |
 
 Score révisé : **8.6/10** (vs 8.3/10 état après audit critique 4)
+
+## Correction C13 (commit CI #96)
+
+| Code | Description | Statut |
+|------|-------------|--------|
+| C13 | \_resolve\_user() helper: cookie phoenix\_session + Bearer + X-Internal-Service | ✅ |
+| C13 | chat\_proxy + api\_orchestrate → await \_resolve\_user(request) | ✅ |
+
+Score : **8.6/10 → 8.8/10** (cookie HttpOnly enfin opérationnel bout-en-bout)

@@ -452,38 +452,22 @@ class ChatRequest(BaseModel):
     agent: str = "Auto"
     session_id: str = None
 
+
+async def _resolve_user(request: Request) -> str:
+    """Accepte cookie phoenix_session (via get_current_user_id),
+    Bearer token JWT, ou X-Internal-Service pour WhatsApp."""
+    internal_secret = os.environ.get("INTERNAL_SERVICE_SECRET", "")
+    if internal_secret and \
+       request.headers.get("X-Internal-Service") == internal_secret:
+        return "whatsapp_user"
+    # Délègue à get_current_user_id qui lit cookie OU Bearer
+    return await get_current_user_id(request)
+
 @app.post("/api/chat", status_code=200)
 async def chat_proxy(payload: ChatRequest, request: Request):
     # Bypass JWT pour appels internes WhatsApp
     # Auth : verifier secret interne (WhatsApp) OU Bearer JWT (utilisateur)
-    internal_secret = os.environ.get("INTERNAL_SERVICE_SECRET", "")
-    x_internal_header = request.headers.get("X-Internal-Service", "")
-    is_internal = (
-        bool(internal_secret) and
-        x_internal_header == internal_secret
-    )
-
-    if is_internal:
-        user_id = payload.user_id or "whatsapp_user"
-    else:
-        # Auth utilisateur via Bearer JWT si present
-        auth_header = request.headers.get("Authorization", "")
-        if auth_header.startswith("Bearer "):
-            try:
-                from auth import _decode_jwt as _decode_token
-                token = auth_header.split(" ", 1)[1]
-                token_data = _decode_token(token)
-                user_id = str(token_data.get("sub", ""))
-                if not user_id:
-                    raise HTTPException(status_code=401, detail="Token invalide: sub manquant")
-            except Exception:
-                raise HTTPException(status_code=401, detail="Authentification requise")
-        else:
-            raise HTTPException(status_code=401, detail="Authentification requise")
-    """
-    Proxy vers OpenRouter. Utilise OPENROUTER_API_KEY (serveur).
-    Fallback: X-API-Key header envoyé par le client (legacy).
-    """
+    user_id = await _resolve_user(request)
     # Priorité 1 : clé serveur dans l'environnement
     api_key = os.environ.get("OPENROUTER_API_KEY", "")
     # Priorité 2 : clé transmise par le client (header X-API-Key)
@@ -605,27 +589,7 @@ class OrchestrateRequest(_BM):
 @app.post("/api/orchestrate")
 async def api_orchestrate(req: OrchestrateRequest, request: Request):
     # Auth : meme pattern que /api/chat
-    internal_secret = os.environ.get("INTERNAL_SERVICE_SECRET", "")
-    x_internal_header = request.headers.get("X-Internal-Service", "")
-    is_internal = bool(internal_secret) and x_internal_header == internal_secret
-
-    if not is_internal:
-        auth_header = request.headers.get("Authorization", "")
-        if auth_header.startswith("Bearer "):
-            try:
-                from auth import _decode_jwt as _decode_token
-                token = auth_header.split(" ", 1)[1]
-                token_data = _decode_token(token)
-                orchestrate_user_id = str(token_data.get("sub", ""))
-                if not orchestrate_user_id:
-                    raise HTTPException(status_code=401, detail="Token invalide: sub manquant")
-            except Exception:
-                raise HTTPException(status_code=401, detail="Authentification requise")
-        else:
-            raise HTTPException(status_code=401, detail="Authentification requise")
-    else:
-        orchestrate_user_id = req.context.get("user_id", "whatsapp_user") if req.context else "whatsapp_user"
-
+    orchestrate_user_id = await _resolve_user(request)
     ctx = req.context or {}
     ctx["user_id"] = orchestrate_user_id
     ctx["api_key"] = os.environ.get("OPENROUTER_API_KEY", "") or request.headers.get("X-API-Key", "")
