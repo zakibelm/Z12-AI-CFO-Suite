@@ -1,7 +1,7 @@
 # Z12 AI CFO — ÉTAT DU PROJET
 
-Version 5.5 — 31 mai 2026
-Score : 8.9/10 · C1-C16 ✅ déployés · CI #99 ✅ · auth cookie opérationnel
+Version 5.8 — 31 mai 2026
+Score : 8.8/10 · C1-C17 ✅ · Landing ✅ CI #105 · tiret-insécable/FAQ/C-27 corrigés
 
 ---
 
