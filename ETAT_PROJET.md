@@ -1,7 +1,7 @@
 # Z12 AI CFO — ÉTAT DU PROJET
 
-Version 5.1 — 30 mai 2026
-Score : 9.0/10 · M3 ✅ 100% PROD · CI #93 ✅ · C6+C7+C8 ✅
+Version 5.4 — 30 mai 2026
+Score : 8.7/10 · C1-C13 ✅ déployés · CI #96 ✅ · bêta CPA validée
 
 ---
 
