@@ -1,7 +1,7 @@
 # Z12 AI CFO — ÉTAT DU PROJET
 
-Version 5.0 — 30 mai 2026
-Score : 9.0/10 · M3 ✅ 100% PROD · CI #90 ✅
+Version 5.1 — 30 mai 2026
+Score : 9.0/10 · M3 ✅ 100% PROD · CI #93 ✅ · C6+C7+C8 ✅
 
 ---
 
@@ -127,6 +127,10 @@ Si elle pose une question à Patrick en moins de 10 minutes sans aide → M2 ✅
 | nginx trailing slash | proxy_pass /z12upload/; | proxy_pass sans slash |
 | /debug/config en prod | Endpoint debug oublié | Supprimé de main.py |
 | cannot import 'router' | bank_reconciliation.py exporte bank_router | from bank_reconciliation import bank_router |
+
+| decode_token inexistant | auth.py exporte _decode_jwt | from auth import _decode_jwt as _decode_token |
+| /api/orchestrate non protege | Depends absent | Bloc auth INTERNAL_SERVICE_SECRET + Bearer JWT |
+| WelcomeBanner non affiche | Import + JSX absent dans App.tsx | import + fragment <><WelcomeBanner/><DashboardView/></> |
 | navItems extra ] | Python replace créait ]] | Correction ligne par ligne (lines[2528/2529]) |
 
 ---
@@ -136,3 +140,14 @@ Si elle pose une question à Patrick en moins de 10 minutes sans aide → M2 ✅
 Z12 CFO = vitrine → ouvre la porte aux mandats sur-mesure ops
 Ancrage prix : valeur remplacée (40h CPA × 200$/h = 8K$)
 Logique : démo parfaite → crédibilité → mandat sur-mesure → marge réelle
+
+## VPS — ÉTAT DU COOKIE AUTH (30 mai 2026)
+
+auth.py exporte : _decode_jwt (L36) + _is_valid_uuid
+main.py C3 : X-Internal-Service verifie contre INTERNAL_SERVICE_SECRET
+main.py C6 : from auth import _decode_jwt as _decode_token (fix alias)
+main.py C7 : /api/orchestrate meme protection que /api/chat
+App.tsx C8 : WelcomeBanner affiche sur view===dashboard (post-login)
+
+Test cookie Set-Cookie : en attente resultat VPS (curl login)
+Si Set-Cookie absent : patcher auth_local.py avec response.set_cookie(...)

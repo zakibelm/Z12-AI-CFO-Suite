@@ -2682,6 +2682,7 @@ const Spark = ({color="var(--accent)"}: any) => (
 const A: Record<string,any> = Object.fromEntries(AGENTS_STUDIO.map((a: any) => [a.id, a]));
 
 import { DashboardView } from './src/components/DashboardView';
+import { WelcomeBanner } from './src/components/WelcomeBanner';
 
 
 import { PipelineView } from './src/components/PipelineView';
@@ -3266,7 +3267,7 @@ export default function Z12CFOSuite() {
         tweaks={tweaks} setTweak={setTweak}/>
 
       {/* Main content area */}
-      {view==="dashboard"  && <DashboardView  lang={lang} t={STUDIO_T[lang as "fr"|"en"]}/>}
+      {view==="dashboard"  && <><WelcomeBanner lang={lang}/><DashboardView  lang={lang} t={STUDIO_T[lang as "fr"|"en"]}/></>}
       {view==="docs"       && <Documents      lang={lang} P={{} as any} agentSettings={agentSettings} t={T[lang as "fr"|"en"]} {...{} as any}/>}
       {view==="pipeline"   && <PipelineView   lang={lang} t={STUDIO_T[lang as "fr"|"en"]}/>}
       {view==="governance" && <GovernanceView lang={lang} t={STUDIO_T[lang as "fr"|"en"]}/>}
