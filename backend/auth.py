@@ -117,7 +117,7 @@ async def get_current_user_id(
     try:
         import jwt as _jwt
         import os as _os
-        _session_secret = _os.environ.get("SESSION_JWT_SECRET", "")
+        _session_secret = (_os.environ.get("SESSION_JWT_SECRET") or _os.environ.get("SUPABASE_JWT_SECRET") or "phoenix-local-secret")
         _cookie_token = request.cookies.get("phoenix_session")
         if _cookie_token and _session_secret:
             try:
