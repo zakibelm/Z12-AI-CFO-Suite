@@ -51,7 +51,7 @@ def _get_user(token):
                    FROM local_users u
                    JOIN user_sessions s ON s.user_id = u.id
                    WHERE u.id = %s::integer AND s.jti = %s
-                     AND s.revoked_at IS NULL AND s.expires_at > NOW()
+                     AND s.is_active = TRUE AND s.expires_at > NOW()
                      AND u.is_active = TRUE LIMIT 1""",
                 (uid, jti))
             return cur.fetchone()
@@ -145,7 +145,7 @@ async def logout(phoenix_session: Optional[str] = Cookie(default=None, alias=COO
             jti = p.get("jti")
             if jti:
                 with _conn() as c, c.cursor() as cur:
-                    cur.execute("UPDATE user_sessions SET revoked_at = NOW() WHERE jti = %s", (jti,))
+                    cur.execute("UPDATE user_sessions SET is_active = FALSE WHERE jti = %s", (jti,))
                     c.commit()
         except Exception:
             pass
