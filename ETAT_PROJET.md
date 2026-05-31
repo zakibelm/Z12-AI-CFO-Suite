@@ -171,3 +171,65 @@ Score révisé : **8.6/10** (vs 8.3/10 état après audit critique 4)
 | C13 | chat\_proxy + api\_orchestrate → await \_resolve\_user(request) | ✅ |
 
 Score : **8.6/10 → 8.8/10** (cookie HttpOnly enfin opérationnel bout-en-bout)
+
+## État final — v5.4 · 30 mai 2026 · Score 8.7/10
+
+### Milestone status
+| Milestone | Statut | CI |
+|-----------|--------|----|
+| M0 Gate 1 | ✅ FERMÉ | — |
+| M0.5 Dette technique | ✅ | — |
+| M1 Patrick KB QC + RAG + valeur chiffrée | ✅ 100% PROD | #82 |
+| M2 Auth self-service (README + WelcomeBanner) | ✅ PROD · test réel ⏳ humain | #85 |
+| M3 BankReconciliationAgent + sidebar | ✅ 100% PROD | #90 |
+
+### Corrections déployées — C1 à C13
+| Code | Description | CI |
+|------|-------------|----|
+| C1 | nginx.conf trailing slash | #92 |
+| C2 | docker-compose AUTH_MODE=strict | #92 |
+| C3 | /api/chat X-Internal-Service + Bearer | #93 |
+| C4 | OpenRouter texte cohérent | #92 |
+| C5 | useAuth cookie HttpOnly · localStorage supprimé | #93 |
+| C6 | _decode_jwt alias | #94 |
+| C7 | /api/orchestrate Depends auth | #94 |
+| C8 | WelcomeBanner dashboard | #94 |
+| C9 | useAuth /api/auth/local/me | #95 |
+| C10 | /api/chat 401 strict · default_user supprimé | #95 |
+| C11 | /api/orchestrate 401 strict | #95 |
+| C12 | SettingsView texte anglais OpenRouter | #95 |
+| C13 | _resolve_user() cookie+Bearer+Internal · chat+orchestrate | #96 |
+
+### Architecture auth finale (C13)
+```
+Login  → POST /api/auth/local/login → Set-Cookie: phoenix_session
+Accès  → /api/chat   → await _resolve_user(request) → get_current_user_id()
+         /api/orchestrate → await _resolve_user(request)
+Canal  → Cookie HttpOnly OU Bearer token OU X-Internal-Service (WhatsApp)
+```
+
+### Gate 2 — Checklist avant monétisation
+- [ ] 1 CPA bêta utilise son instance spontanément chaque semaine
+- [ ] BankReconciliationAgent 95% précision sur vrais relevés Desjardins
+- [ ] CGU licence logicielle rédigées (modèle Docker, pas SaaS)
+- [ ] Assurance RC professionnelle souscrite (~500-1500$/an)
+- [ ] Pricing validé avec 10 entretiens Van Westendorp (CPA QC)
+
+### M2 critère restant (action humaine)
+Trouver 1 personne qui ne connaît pas l'app.
+Donner uniquement l'URL : https://cfo.optigenius.pro
+Observer : pose une question à Patrick en < 10 min sans aide → M2 ✅
+
+### VPS test cookie — résultats
+```bash
+# Étape 1 — login
+curl -v -c /tmp/cookies.txt -X POST http://localhost:8000/api/auth/local/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"EMAIL","password":"MDP"}' 2>&1 | grep -i "set-cookie|< HTTP"
+
+# Étape 2 — /api/chat avec cookie
+curl -s -b /tmp/cookies.txt -X POST http://localhost:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"test auth"}],"agent":"Sophie"}' \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print('STATUS:', d.get('detail','OK'))"
+```
