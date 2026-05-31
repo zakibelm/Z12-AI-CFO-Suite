@@ -1,0 +1,1632 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Z12 AI CFO Suite — Anticipez. Analysez. Décidez. Performez.</title>
+<meta name="description" content="Z12 AI CFO Suite — Bureau CPA virtuel propulsé par 9 spécialistes IA (CPA, CFA, DPO) pour PME québécoises. Fiscalité, audit, trésorerie, M&A, conformité Loi 25. Hébergé au Québec." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<style>
+:root{
+  --bg:#070806;
+  --bg-2:#0E0F0C;
+  --surface:#13140F;
+  --surface-2:#1A1B16;
+  --line:#23241D;
+  --line-2:#33342A;
+  --ink:#F5F2E8;
+  --ink-2:#B8B2A0;
+  --ink-3:#7A7567;
+  --ink-4:#4A4639;
+  --accent: oklch(0.74 0.18 152);
+  --accent-2: oklch(0.85 0.20 145);
+  --accent-deep: oklch(0.62 0.16 152);
+  --accent-soft: oklch(0.74 0.18 152 / .12);
+  --accent-line: oklch(0.74 0.18 152 / .35);
+  --accent-glow: oklch(0.74 0.18 152 / .55);
+  --shadow-glow: 0 0 80px var(--accent-soft);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+html,body{background:var(--bg);color:var(--ink);font-family:"Geist",ui-sans-serif,system-ui,sans-serif;font-feature-settings:"ss01","cv11";font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{min-height:100vh}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+img{max-width:100%;display:block}
+
+.serif{font-family:"Instrument Serif",ui-serif,Georgia,serif;font-weight:400;letter-spacing:-0.015em;font-feature-settings:"liga"}
+.mono{font-family:"Geist Mono",ui-monospace,monospace;letter-spacing:-0.01em}
+.italic-serif{font-family:"Instrument Serif",serif;font-style:italic}
+
+/* ===== Loader ===== */
+.loader{position:fixed;inset:0;background:var(--bg);z-index:9999;display:grid;place-items:center;overflow:hidden}
+.loader-logo{max-width:min(640px,52vw);width:auto;height:auto;filter:drop-shadow(0 0 40px var(--accent-glow)) drop-shadow(0 0 80px var(--accent-soft)) brightness(1.4) contrast(1.25) saturate(1.3);will-change:transform,opacity;transform-origin:center}
+.loader-mark{font-family:"Instrument Serif",serif;font-size:18vw;line-height:1;letter-spacing:-0.05em;display:flex;gap:0.04em;color:var(--ink)}
+.loader-mark span:nth-child(2){color:var(--accent)}
+.loader-bar{position:absolute;left:8vw;right:8vw;bottom:6vh;height:1px;background:var(--line)}
+.loader-bar::after{content:"";position:absolute;left:0;top:0;height:100%;width:0%;background:var(--accent);transition:none}
+.loader-counter{position:absolute;right:8vw;bottom:8vh;font-family:"Geist Mono",monospace;font-size:11px;color:var(--ink-3);letter-spacing:.1em}
+.loader-tag{position:absolute;left:8vw;bottom:8vh;font-family:"Geist Mono",monospace;font-size:11px;color:var(--ink-3);letter-spacing:.16em;text-transform:uppercase}
+
+/* ===== Background canvas: starfield/grid ===== */
+#bgCanvas{position:fixed;inset:0;z-index:0;opacity:.55;pointer-events:none}
+
+/* ===== Nav ===== */
+.nav{position:fixed;top:18px;left:0;right:0;z-index:100;display:flex;justify-content:center;pointer-events:none}
+.nav-inner{display:flex;align-items:center;gap:22px;padding:8px 9px 8px 14px;background:rgba(19,20,15,.72);backdrop-filter:blur(20px) saturate(140%);border:1px solid var(--line);border-radius:99px;pointer-events:auto;box-shadow:0 12px 40px rgba(0,0,0,.4),0 1px 0 rgba(255,255,255,.04) inset}
+.nav-brand{display:flex;align-items:center;height:42px;overflow:hidden;border-radius:8px;padding:0 4px}
+.nav-logo{height:48px;width:auto;display:block;object-fit:contain;object-position:center top;clip-path:inset(8% 0 38% 0);margin:-4px 0 -18px;filter:drop-shadow(0 0 12px var(--accent-soft));transition:transform .25s ease}
+.nav-brand:hover .nav-logo{transform:scale(1.06)}
+.nav-mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--accent),var(--accent-deep));display:grid;place-items:center;color:#0a0a0a;font-weight:700;font-size:12px;font-family:"Instrument Serif",serif;letter-spacing:-0.04em}
+.nav-links{display:flex;gap:18px;font-size:13px;color:var(--ink-2)}
+.nav-links a{transition:.15s;position:relative}
+.nav-links a:hover{color:var(--ink)}
+.nav-cta{padding:7px 16px;border-radius:99px;background:var(--ink);color:var(--bg);font-size:12.5px;font-weight:500;letter-spacing:-0.01em;transition:.2s}
+.nav-cta:hover{background:var(--accent);color:#0a0a0a}
+.nav-lang{font-size:11px;color:var(--ink-3);font-family:"Geist Mono",monospace;letter-spacing:.05em;padding:0 4px}
+
+/* Watermark logo behind hero */
+.hero-watermark{display:none}
+@media (max-width:980px){.hero-watermark{display:none}}
+
+/* ===== Hero ===== */
+.hero{position:relative;min-height:92vh;padding:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+.hero-video-overlay{position:absolute;inset:0;z-index:1;background:
+  linear-gradient(180deg, rgba(7,8,6,.72) 0%, rgba(7,8,6,.45) 38%, rgba(7,8,6,.6) 72%, var(--bg) 100%),
+  radial-gradient(ellipse 70% 60% at 50% 42%, transparent 0%, rgba(7,8,6,.35) 100%)}
+.hero-inner{max-width:1100px;margin:0 auto;padding:90px 32px 40px;position:relative;z-index:2;text-align:center;display:flex;flex-direction:column;align-items:center}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;padding:6px 14px 6px 8px;border-radius:99px;background:var(--surface);border:1px solid var(--line);font-family:"Geist Mono",monospace;font-size:11px;letter-spacing:.08em;color:var(--ink-2);text-transform:uppercase;margin-bottom:30px}
+.eyebrow-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--accent-glow)}50%{box-shadow:0 0 0 6px transparent}}
+
+h1.hero-title{font-family:"Instrument Serif",serif;font-size:clamp(40px,5.4vw,84px);line-height:0.98;letter-spacing:-0.03em;color:var(--ink);font-weight:400;margin-bottom:6px;text-align:center}
+h1.hero-title .accent{color:var(--accent);font-style:italic}
+.title-line{display:block;overflow:hidden;padding:0 2px}
+.title-word{display:inline-block;will-change:transform}
+.title-char{display:inline-block;will-change:transform}
+
+.hero-sub{font-family:"Geist",sans-serif;font-size:13.5px;color:var(--ink-2);max-width:560px;margin-top:10px;line-height:1.5;font-weight:300;text-align:center}
+.hero-rotate{display:inline-flex;align-items:center;gap:10px;margin-top:10px;font-family:"Geist Mono",monospace;font-size:10.5px;color:var(--ink-3);letter-spacing:.1em;text-transform:uppercase;justify-content:center}
+.hero-rotate-words{position:relative;display:inline-block;min-width:140px;height:18px;overflow:hidden;color:var(--accent)}
+.hero-rotate-words span{position:absolute;top:0;left:0;display:block}
+
+.hero-cta-row{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap;justify-content:center}
+.cta-primary{position:relative;display:inline-flex;align-items:center;gap:10px;padding:14px 24px 14px 28px;background:var(--ink);color:var(--bg);border-radius:99px;font-size:14px;font-weight:500;letter-spacing:-0.01em;overflow:hidden;transition:.2s}
+.cta-primary::before{content:"";position:absolute;inset:0;background:radial-gradient(120px circle at var(--mx,50%) var(--my,50%),var(--accent),transparent 60%);opacity:0;transition:.3s}
+.cta-primary:hover::before{opacity:1}
+.cta-primary > *{position:relative;z-index:1}
+.cta-primary:hover{color:#0a0a0a}
+.cta-secondary{display:inline-flex;align-items:center;gap:8px;padding:14px 22px;border-radius:99px;border:1px solid var(--line-2);color:var(--ink-2);font-size:14px;font-weight:500;transition:.2s}
+.cta-secondary:hover{color:var(--ink);border-color:var(--ink-3)}
+
+/* Banner imagery */
+.hero-banner{position:relative;margin:6px auto 0;max-width:1340px;padding:0 24px}
+.hero-banner-frame{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--accent-line);box-shadow:0 18px 60px rgba(0,0,0,.5),0 0 30px var(--accent-soft);will-change:transform}
+.hero-banner-frame img{display:block;width:100%;height:auto;object-fit:cover}
+.hero-banner-glow{position:absolute;inset:-2px;border-radius:20px;background:linear-gradient(135deg,var(--accent),transparent 40%,transparent 60%,var(--accent));opacity:.4;filter:blur(40px);z-index:-1;animation:rotate-bg 20s linear infinite}
+@keyframes rotate-bg{to{transform:rotate(360deg)}}
+
+.scroll-cue{position:relative;z-index:2;display:flex;justify-content:center;align-items:center;gap:8px;margin:22px auto 30px;font-family:"Geist Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--ink-2);text-transform:uppercase;flex-direction:column}
+.scroll-cue-line{width:1px;height:34px;background:linear-gradient(to bottom,var(--ink-3),transparent);position:relative;overflow:hidden}
+.scroll-cue-line::after{content:"";position:absolute;left:0;top:-12px;width:1px;height:12px;background:var(--accent);animation:scroll-down 1.8s ease-in-out infinite}
+@keyframes scroll-down{0%{top:-12px}100%{top:36px}}
+
+/* ===== Stat strip ===== */
+.stats{padding:8px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:linear-gradient(180deg,transparent,var(--bg-2),transparent);position:relative;z-index:2}
+.stats-inner{max-width:1280px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:repeat(4,1fr);gap:28px}
+.stat{position:relative;padding-left:18px;border-left:1px solid var(--line-2)}
+.stat-num{font-family:"Instrument Serif",serif;font-size:48px;line-height:1;letter-spacing:-0.03em;color:var(--ink);display:flex;align-items:flex-start;gap:3px}
+.stat-num .suf{font-size:22px;color:var(--accent);margin-top:6px;font-style:italic}
+.stat-label{font-family:"Geist Mono",monospace;font-size:10.5px;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase;margin-top:8px}
+.stat-desc{font-size:12px;color:var(--ink-2);margin-top:6px;line-height:1.5}
+
+/* ===== Section base ===== */
+section{position:relative;z-index:2}
+.section-head{max-width:1100px;margin:0 auto;padding:36px 32px 18px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
+.section-tag{display:inline-flex;align-items:center;gap:8px;font-family:"Geist Mono",monospace;font-size:10.5px;letter-spacing:.14em;color:var(--accent);text-transform:uppercase;margin:0 auto 4px;justify-content:center}
+.section-tag::before{content:"";width:18px;height:1px;background:var(--accent)}
+h2.section-title{font-family:"Instrument Serif",serif;font-size:clamp(36px,4.5vw,64px);line-height:1.05;letter-spacing:-0.025em;color:var(--ink);font-weight:400;max-width:780px;margin:0;text-align:center}
+h2.section-title em{color:var(--accent);font-style:italic}
+.section-desc{font-size:13px;color:var(--ink-2);max-width:560px;line-height:1.5;flex:0 0 auto;padding-top:4px;text-align:center;margin:0 auto}
+
+/* ===== Agents · 3D Coverflow Carousel ===== */
+.agents{padding-bottom:40px}
+.carousel{position:relative;max-width:1280px;margin:24px auto 0;padding:0 80px;display:flex;align-items:center;justify-content:center}
+.car-stage{position:relative;width:100%;height:360px;perspective:1600px;transform-style:preserve-3d}
+.car-card{position:absolute;top:50%;left:50%;width:240px;height:240px;margin:-120px 0 0 -120px;border-radius:50%;overflow:hidden;cursor:pointer;
+  transition:transform .6s cubic-bezier(.25,.8,.25,1), opacity .6s, filter .6s;
+  box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--agent-color,var(--accent)),0 18px 50px rgba(0,0,0,.5),0 0 50px var(--agent-glow,var(--accent-soft));
+  will-change:transform,opacity}
+.car-card img{width:100%;height:100%;object-fit:cover;display:block}
+.car-card::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 120%,transparent 50%,rgba(0,0,0,.55));opacity:0;transition:.5s}
+.car-card.pos-0{transform:translateX(0) scale(1.18);opacity:1;z-index:5;filter:saturate(1.1)}
+.car-card.pos-1,.car-card.pos--1{z-index:4;opacity:.85}
+.car-card.pos-1{transform:translateX(210px) scale(0.82)}
+.car-card.pos--1{transform:translateX(-210px) scale(0.82)}
+.car-card.pos-2,.car-card.pos--2{z-index:3;opacity:.45;filter:saturate(.6) brightness(.7)}
+.car-card.pos-2{transform:translateX(370px) scale(0.6)}
+.car-card.pos--2{transform:translateX(-370px) scale(0.6)}
+.car-card.pos-hidden{opacity:0;transform:translateX(0) scale(0.4);pointer-events:none;z-index:1}
+.car-card:not(.pos-0)::after{opacity:1}
+.car-card:not(.pos-0):hover{opacity:1;filter:none}
+
+.car-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:10;width:46px;height:46px;border-radius:50%;background:var(--surface);border:1px solid var(--line-2);color:var(--ink-2);display:grid;place-items:center;cursor:pointer;transition:.2s}
+.car-arrow:hover{background:var(--accent);color:#0a0a0a;border-color:var(--accent);box-shadow:0 0 24px var(--accent-soft)}
+.car-prev{left:8px}
+.car-next{right:8px}
+
+.car-info{text-align:center;margin-top:18px;min-height:96px;display:flex;flex-direction:column;align-items:center}
+.car-info-name{font-family:"Instrument Serif",serif;font-size:34px;line-height:1.05;letter-spacing:-0.02em;color:var(--ink);transition:.4s}
+.car-info-title{font-family:"Geist Mono",monospace;font-size:12px;letter-spacing:.05em;color:var(--accent);margin-top:6px;text-transform:uppercase}
+.car-info-domain{font-size:13px;color:var(--ink-2);line-height:1.5;max-width:560px;margin-top:10px}
+
+.car-dots{display:flex;gap:8px;justify-content:center;margin-top:18px}
+.car-dot{width:8px;height:8px;border-radius:50%;background:var(--ink-4);border:none;cursor:pointer;transition:.25s;padding:0}
+.car-dot.on{width:24px;border-radius:4px;background:var(--accent);box-shadow:0 0 10px var(--accent-glow)}
+
+@media (max-width:640px){
+  .carousel{padding:0 50px}
+  .car-card{width:180px;height:180px;margin:-90px 0 0 -90px}
+  .car-card.pos-1{transform:translateX(150px) scale(0.78)}
+  .car-card.pos--1{transform:translateX(-150px) scale(0.78)}
+  .car-card.pos-2,.car-card.pos--2{opacity:0}
+  .car-stage{height:280px}
+  .car-info-name{font-size:26px}
+}
+
+/* ===== Pinned showcase ===== */
+.showcase{padding:0 0 8px;position:relative}
+.showcase-wrap{max-width:1280px;margin:0 auto;padding:0 32px}
+.showcase-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:20px;align-items:stretch;margin-top:4px}
+.showcase-left{position:sticky;top:140px}
+.showcase-step{padding:8px 0;border-bottom:1px dashed var(--line);position:relative}
+.showcase-step:last-child{border-bottom:none;padding-bottom:0}
+.showcase-step-num{font-family:"Geist Mono",monospace;font-size:10px;letter-spacing:.14em;color:var(--ink-3);margin-bottom:4px}
+.showcase-step-title{font-family:"Instrument Serif",serif;font-size:20px;line-height:1.1;letter-spacing:-0.02em;color:var(--ink);margin-bottom:6px}
+.showcase-step-title em{color:var(--accent);font-style:italic}
+.showcase-step-body{font-size:12.5px;color:var(--ink-2);line-height:1.5;max-width:520px}
+
+.showcase-visual{position:relative;min-height:340px;max-height:380px;background:linear-gradient(180deg,var(--surface),var(--surface-2));border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-glow)}
+.showcase-visual::before{content:"";position:absolute;inset:0;background:
+  radial-gradient(circle at 50% 0%, var(--accent-soft), transparent 60%),
+  repeating-linear-gradient(0deg,transparent 0,transparent 32px,var(--line) 32px,var(--line) 33px),
+  repeating-linear-gradient(90deg,transparent 0,transparent 32px,var(--line) 32px,var(--line) 33px);
+  opacity:.35
+}
+
+/* SVG workflow inside showcase */
+.workflow-svg{position:absolute;inset:0;width:100%;height:100%}
+.wf-node{transform-origin:center}
+.wf-node-bg{fill:var(--surface-2);stroke:var(--line-2);stroke-width:1}
+.wf-node.active .wf-node-bg{stroke:var(--accent);fill:oklch(0.74 0.18 152 / .08);filter:drop-shadow(0 0 12px var(--accent-glow))}
+.wf-node text{font-family:"Geist Mono",monospace;font-size:9px;letter-spacing:.04em;text-transform:uppercase;fill:var(--ink-2)}
+.wf-node.active text{fill:var(--ink)}
+.wf-path{fill:none;stroke:var(--line-2);stroke-width:1.5;stroke-dasharray:1000;stroke-dashoffset:1000}
+.wf-path.lit{stroke:var(--accent);filter:drop-shadow(0 0 6px var(--accent-glow))}
+
+/* ===== Differentiators ===== */
+.diff{padding:0 0 8px}
+.diff-grid{max-width:1280px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.diff-card{position:relative;padding:18px 20px;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;min-height:auto;display:flex;flex-direction:column;justify-content:flex-start;transition:.3s}
+.diff-card:hover{border-color:var(--accent-line);box-shadow:0 20px 60px rgba(0,0,0,.4),0 0 40px var(--accent-soft)}
+.diff-icon{position:absolute;top:18px;right:18px;width:34px;height:34px;border-radius:9px;background:var(--accent-soft);border:1px solid var(--accent-line);display:grid;place-items:center;color:var(--accent)}
+.diff-num{font-family:"Geist Mono",monospace;font-size:11px;letter-spacing:.14em;color:var(--ink-3);margin-bottom:12px}
+.diff-title{font-family:"Instrument Serif",serif;font-size:20px;line-height:1.15;letter-spacing:-0.02em;color:var(--ink);margin-bottom:6px;margin-top:18px}
+.diff-title em{color:var(--accent);font-style:italic}
+.diff-body{font-size:12.5px;color:var(--ink-2);line-height:1.6}
+.diff-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:14px}
+.diff-tag{font-family:"Geist Mono",monospace;font-size:10px;letter-spacing:.05em;padding:4px 10px;border-radius:99px;background:var(--bg);border:1px solid var(--line-2);color:var(--ink-3)}
+
+/* ===== PLEDGE · Loi 25 + 27 commitment ===== */
+.pledge{position:relative;padding:8px 0 10px;overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.pledge-bg{position:absolute;inset:0;background:
+  radial-gradient(ellipse 80% 40% at 50% 0%, var(--accent-soft), transparent 70%),
+  radial-gradient(ellipse 60% 30% at 50% 100%, var(--accent-soft), transparent 70%),
+  var(--bg-2);
+  pointer-events:none;z-index:0}
+.pledge-bg::after{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent 0,transparent 64px,var(--line) 64px,var(--line) 65px),
+             repeating-linear-gradient(90deg,transparent 0,transparent 64px,var(--line) 64px,var(--line) 65px);
+  opacity:.18;mask-image:radial-gradient(ellipse at center, black 0%, transparent 75%)}
+.pledge-inner{max-width:1280px;margin:0 auto;padding:0 32px;position:relative;z-index:1}
+.pledge-head{max-width:880px;margin:0 auto 22px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.pledge-head .section-tag{color:var(--accent);justify-content:center}
+.pledge-head .section-tag::before{background:var(--accent)}
+.pledge-lead{margin-top:6px;font-size:14px;color:var(--ink-2);line-height:1.55;max-width:680px;text-align:center}
+.pledge-lead strong{color:var(--ink);font-weight:500}
+
+.pledge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.pledge-card{position:relative;padding:24px 24px 22px;background:var(--surface);border:1px solid var(--line);border-radius:16px;display:flex;flex-direction:column;transition:.3s;overflow:hidden}
+.pledge-card:hover{border-color:var(--accent-line);transform:translateY(-4px);box-shadow:0 30px 60px rgba(0,0,0,.4),0 0 50px var(--accent-soft)}
+.pledge-card.highlight{border-color:var(--accent-line);background:linear-gradient(180deg,oklch(0.74 0.18 152 / .08) 0%,var(--surface) 60%)}
+.pledge-card.highlight::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+.pledge-flag{width:40px;height:40px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent-line);display:grid;place-items:center;color:var(--accent);margin-bottom:14px}
+.pledge-tag{font-family:"Geist Mono",monospace;font-size:10.5px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase;margin-bottom:6px}
+.pledge-card h3{font-family:"Instrument Serif",serif;font-size:28px;line-height:1;letter-spacing:-0.02em;color:var(--ink);font-weight:400;margin-bottom:12px}
+.pledge-card.highlight h3{color:var(--accent)}
+.pledge-card p{font-size:12.5px;color:var(--ink-2);line-height:1.6;flex:1}
+.pledge-card p strong{color:var(--ink);font-weight:500}
+.pledge-stat{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
+.pledge-stat span{font-family:"Instrument Serif",serif;font-size:24px;color:var(--ink);letter-spacing:-0.02em;display:block;line-height:1.05}
+.pledge-card.highlight .pledge-stat span{color:var(--accent)}
+.pledge-stat small{display:block;font-size:11px;color:var(--ink-3);font-family:"Geist Mono",monospace;letter-spacing:.02em;margin-top:4px;line-height:1.4}
+
+.pledge-commitments{background:linear-gradient(180deg,var(--surface) 0%,var(--bg-2) 100%);border:1px solid var(--accent-line);border-radius:18px;padding:36px 44px 32px;margin-bottom:18px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.4),0 0 50px var(--accent-soft)}
+.pc-title{font-family:"Instrument Serif",serif;font-size:clamp(28px,3vw,40px);letter-spacing:-0.02em;color:var(--ink);margin:0 auto 24px;text-align:center;line-height:1.1;max-width:600px;position:relative}
+.pc-title::before{content:"";display:block;width:32px;height:2px;background:var(--accent);margin:0 auto 14px;border-radius:2px;box-shadow:0 0 12px var(--accent-glow)}
+.pc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 36px;max-width:1000px;margin:0 auto}
+.pc-row{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px dashed var(--line)}
+.pc-row:last-child,.pc-row:nth-last-child(2){border-bottom:none}
+.pc-num{font-family:"Instrument Serif",serif;font-size:20px;color:var(--accent);letter-spacing:-0.02em;flex:0 0 28px;padding-top:0;line-height:1}
+.pc-row div{font-size:12.5px;color:var(--ink-2);line-height:1.55}
+.pc-row strong{color:var(--ink);font-weight:500;display:inline}
+
+.pledge-sign{display:flex;justify-content:space-between;align-items:center;gap:14px;background:linear-gradient(135deg,var(--surface) 0%,var(--bg-2) 100%);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.pledge-sig-text p{font-family:"Instrument Serif",serif;font-style:italic;font-size:18px;line-height:1.4;color:var(--ink);letter-spacing:-0.01em;max-width:560px;margin-bottom:14px}
+.pledge-sig-name{display:flex;flex-direction:column;gap:2px}
+.pledge-sig-name .serif{font-size:16px;color:var(--ink);letter-spacing:-0.01em}
+.pledge-sig-role{font-family:"Geist Mono",monospace;font-size:11px;color:var(--ink-3);letter-spacing:.04em}
+.pledge-doc{display:flex;align-items:center;gap:14px;padding:18px 22px;background:var(--bg);border:1px solid var(--line-2);border-radius:14px;color:var(--ink-2);transition:.2s;flex:0 0 auto;min-width:280px}
+.pledge-doc:hover{border-color:var(--accent-line);color:var(--ink);box-shadow:0 0 30px var(--accent-soft)}
+.pledge-doc-ic{width:36px;height:36px;border-radius:8px;background:var(--accent-soft);border:1px solid var(--accent-line);display:grid;place-items:center;color:var(--accent);flex:0 0 36px}
+.pledge-doc-t{font-size:13px;color:var(--ink);font-weight:500;letter-spacing:-0.01em}
+.pledge-doc-s{font-family:"Geist Mono",monospace;font-size:10.5px;color:var(--ink-3);margin-top:2px;letter-spacing:.02em}
+
+@media (max-width:980px){
+  .pledge-grid{grid-template-columns:1fr}
+  .pc-grid{grid-template-columns:1fr}
+  .pc-row{border-bottom:1px dashed var(--line) !important}
+  .pledge-sign{flex-direction:column;align-items:flex-start;padding:28px}
+  .pledge-commitments{padding:28px 24px}
+}
+
+/* ===== Trust band ===== */
+.trust{padding:24px 0;border-bottom:1px solid var(--line);background:var(--bg)}
+.trust-inner{max-width:1280px;margin:0 auto;padding:0 32px;display:flex;align-items:center;gap:32px;flex-wrap:wrap;justify-content:center}
+.trust-label{font-family:"Geist Mono",monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);flex:0 0 auto}
+.trust-logos{display:flex;align-items:center;gap:28px;flex-wrap:wrap;justify-content:center}
+.trust-logo{font-family:"Geist",sans-serif;font-weight:600;font-size:15px;letter-spacing:-0.01em;color:var(--ink-2);opacity:.7;transition:.2s;display:inline-flex;align-items:center;gap:7px}
+.trust-logo:hover{opacity:1;color:var(--ink)}
+.trust-logo svg{opacity:.6}
+.trust-ph{font-size:9px;color:var(--accent);border:1px dashed var(--accent-line);border-radius:4px;padding:1px 5px;font-family:"Geist Mono",monospace;letter-spacing:.04em;vertical-align:middle;margin-left:4px}
+
+/* ===== How it works ===== */
+.how{padding:8px 0 40px}
+.how-grid{max-width:1080px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.how-step{position:relative;padding:24px 22px;background:var(--surface);border:1px solid var(--line);border-radius:16px;transition:.3s}
+.how-step:hover{border-color:var(--accent-line);transform:translateY(-3px)}
+.how-step-n{width:34px;height:34px;border-radius:50%;background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);display:grid;place-items:center;font-family:"Instrument Serif",serif;font-size:17px;margin-bottom:14px}
+.how-step h4{font-size:15px;font-weight:500;letter-spacing:-0.01em;color:var(--ink);margin-bottom:7px}
+.how-step p{font-size:12.5px;color:var(--ink-2);line-height:1.55}
+.how-arrow{position:absolute;top:38px;right:-12px;color:var(--ink-4);z-index:2}
+.how-step:last-child .how-arrow{display:none}
+
+/* ===== Pricing ===== */
+.pricing{padding:40px 0 56px;position:relative}
+.price-grid{max-width:1200px;margin:18px auto 0;padding:0 32px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:stretch}
+.price-card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:30px 28px;display:flex;flex-direction:column;transition:.3s}
+.price-card:hover{border-color:var(--line-2);transform:translateY(-4px)}
+.price-card.featured{border-color:var(--accent-line);background:linear-gradient(180deg,oklch(0.74 0.18 152 / .07) 0%,var(--surface) 55%);box-shadow:0 24px 60px rgba(0,0,0,.4),0 0 50px var(--accent-soft)}
+.price-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--accent);color:#0a0a0a;font-family:"Geist Mono",monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:99px;font-weight:500}
+.price-name{font-family:"Geist Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.price-amt{font-family:"Instrument Serif",serif;font-size:52px;line-height:1;letter-spacing:-0.03em;color:var(--ink);margin:14px 0 2px;display:flex;align-items:flex-start;gap:4px}
+.price-amt .cur{font-size:24px;margin-top:8px}
+.price-amt .per{font-family:"Geist",sans-serif;font-size:13px;color:var(--ink-3);font-weight:300;align-self:flex-end;margin-bottom:10px;letter-spacing:0}
+.featured .price-amt{color:var(--accent)}
+.price-tagline{font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-bottom:18px;min-height:38px}
+.price-feats{display:flex;flex-direction:column;gap:9px;margin-bottom:22px;flex:1}
+.price-feat{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.price-feat svg{flex:0 0 15px;color:var(--accent);margin-top:2px}
+.price-cta{display:block;text-align:center;padding:11px 18px;border-radius:99px;font-size:13px;font-weight:500;letter-spacing:-0.01em;transition:.2s;border:1px solid var(--line-2);color:var(--ink)}
+.price-cta:hover{border-color:var(--ink-3);background:var(--surface-2)}
+.price-cta.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.price-cta.primary:hover{background:var(--accent);color:#0a0a0a;border-color:var(--accent)}
+.price-note{text-align:center;font-size:11.5px;color:var(--ink-3);margin-top:18px;font-family:"Geist Mono",monospace;letter-spacing:.02em}
+
+/* ===== FAQ ===== */
+.faq{padding:40px 0 56px}
+.faq-grid{max-width:820px;margin:18px auto 0;padding:0 32px;display:flex;flex-direction:column;gap:10px}
+.faq-item{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:border-color .2s}
+.faq-item.open{border-color:var(--accent-line)}
+.faq-q{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;font-size:14.5px;font-weight:500;color:var(--ink);letter-spacing:-0.01em;text-align:left;cursor:pointer;background:none;border:none}
+.faq-q svg{flex:0 0 18px;color:var(--accent);transition:transform .3s}
+.faq-item.open .faq-q svg{transform:rotate(45deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .35s cubic-bezier(.4,0,.2,1)}
+.faq-a-inner{padding:0 22px 18px;font-size:13px;color:var(--ink-2);line-height:1.65}
+
+@media (max-width:860px){
+  .how-grid,.price-grid{grid-template-columns:1fr}
+  .how-arrow{display:none !important}
+  .price-card.featured{order:-1}
+}
+
+/* ===== Marquee ===== */
+.marquee{padding:8px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;background:var(--bg-2)}
+.marquee-track{display:flex;gap:50px;width:max-content;animation:marquee 40s linear infinite;font-family:"Instrument Serif",serif;font-size:36px;letter-spacing:-0.02em;color:var(--ink-3)}
+.marquee-track span{display:inline-flex;align-items:center;gap:50px}
+.marquee-track .dot{color:var(--accent);font-size:28px}
+.marquee-track .hi{color:var(--ink)}
+@keyframes marquee{to{transform:translateX(-50%)}}
+
+/* ===== CTA ===== */
+.cta{padding:18px 0 16px;position:relative;overflow:hidden}
+.cta-inner{max-width:1100px;margin:0 auto;padding:0 32px;text-align:center;position:relative;z-index:2}
+.cta-glow{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:80%;height:60%;background:radial-gradient(ellipse at center,var(--accent-soft),transparent 70%);filter:blur(40px);pointer-events:none}
+.cta-title{font-family:"Instrument Serif",serif;font-size:clamp(38px,4.8vw,72px);line-height:1.0;letter-spacing:-0.03em;color:var(--ink);font-weight:400}
+.cta-title em{color:var(--accent);font-style:italic}
+.cta-sub{font-size:14px;color:var(--ink-2);max-width:540px;margin:22px auto 0;line-height:1.55}
+.cta-row{display:flex;gap:12px;justify-content:center;margin-top:32px}
+
+/* ===== Footer ===== */
+footer{padding:14px 32px 12px;border-top:1px solid var(--line);background:var(--bg)}
+.foot-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:40px}
+.foot-brand{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.foot-brand .nav-mark{width:32px;height:32px;font-size:14px}
+.foot-name{font-weight:600;letter-spacing:-0.02em;font-size:16px}
+.foot-tagline{font-size:13px;color:var(--ink-2);max-width:280px;line-height:1.5}
+.foot-col h4{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-family:"Geist Mono",monospace;font-weight:500;margin-bottom:14px}
+.foot-col a{display:block;font-size:13px;color:var(--ink-2);padding:5px 0;transition:.15s}
+.foot-col a:hover{color:var(--accent)}
+.foot-bot{max-width:1280px;margin:36px auto 0;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-family:"Geist Mono",monospace;font-size:11px;color:var(--ink-3);letter-spacing:.04em}
+
+/* Magnetic cursor */
+.cursor{position:fixed;width:36px;height:36px;border:1px solid var(--accent);border-radius:50%;pointer-events:none;z-index:9998;mix-blend-mode:difference;transform:translate(-50%,-50%);transition:width .25s,height .25s,opacity .25s;will-change:transform;display:none}
+.cursor.lg{width:80px;height:80px;background:var(--accent);border-color:transparent}
+@media (hover:hover) and (pointer:fine){
+  .cursor{display:block}
+}
+
+/* Reveal helpers */
+.reveal-mask{overflow:hidden}
+.reveal-up{transform:translateY(110%);will-change:transform}
+.fade-in{will-change:transform,opacity}
+
+/* ========================================================
+   WOW · SCROLL PROGRESS + SECTION INDICATOR
+======================================================== */
+.scroll-progress{position:fixed;top:0;left:0;right:0;height:2px;background:transparent;z-index:200;pointer-events:none}
+.scroll-progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--accent-deep),var(--accent),var(--accent-2));box-shadow:0 0 14px var(--accent-glow);transform-origin:left;transition:width .05s linear}
+
+.section-indicator{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:90;display:flex;flex-direction:column;gap:8px;pointer-events:auto}
+.sec-dot{display:flex;align-items:center;gap:10px;justify-content:flex-end;text-decoration:none;color:transparent;font-family:"Geist Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;transition:color .3s}
+.sec-dot span{transition:transform .3s, opacity .3s;opacity:0;transform:translateX(8px)}
+.sec-dot::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--ink-4);border:1px solid var(--ink-4);transition:.3s;flex:0 0 6px}
+.sec-dot:hover{color:var(--ink-2)}
+.sec-dot:hover span{opacity:1;transform:translateX(0)}
+.sec-dot.on{color:var(--accent)}
+.sec-dot.on span{opacity:1;transform:translateX(0);color:var(--accent)}
+.sec-dot.on::after{background:var(--accent);border-color:var(--accent);box-shadow:0 0 12px var(--accent-glow);transform:scale(1.4)}
+@media (max-width:980px){.section-indicator{display:none}}
+
+/* WOW · pinned hero zoom-out */
+.hero-banner{will-change:transform,opacity,filter}
+.hero-banner-frame{transform-origin:center 30%}
+
+/* WOW · gradient sweep on section titles */
+.title-sweep{background:linear-gradient(110deg,var(--ink) 0%,var(--ink) 30%,var(--accent) 50%,var(--ink) 70%,var(--ink) 100%);background-size:300% 100%;background-position:100% 0;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.title-sweep em{background:linear-gradient(110deg,var(--accent) 0%,var(--accent) 30%,var(--ink) 50%,var(--accent) 70%,var(--accent) 100%);background-size:300% 100%;background-position:100% 0;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+
+/* WOW · horizontal scroll agents */
+.h-scroll{display:none}
+.h-scroll-track{display:flex;height:100%;align-items:center;padding:0 8vw;gap:24px;will-change:transform}
+.h-scroll-card{flex:0 0 380px;height:520px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:34px 28px;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;transition:transform .4s cubic-bezier(.2,.7,.2,1),border-color .3s;will-change:transform}
+.h-scroll-card::before{content:"";position:absolute;inset:-2px;background:linear-gradient(135deg,var(--agent-color,var(--accent)) 0%,transparent 60%);opacity:0;transition:.4s;border-radius:18px;z-index:-1;filter:blur(40px)}
+.h-scroll-card:hover{transform:translateY(-8px);border-color:var(--agent-color,var(--accent-line))}
+.h-scroll-card:hover::before{opacity:.35}
+.h-scroll-card .hs-portrait{position:absolute;top:24px;right:24px;width:96px;height:96px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--agent-color,var(--accent)),0 0 36px var(--agent-glow,var(--accent-soft))}
+.h-scroll-card .hs-portrait img{width:100%;height:100%;object-fit:cover}
+.h-scroll-card .hs-num{font-family:"Geist Mono",monospace;font-size:11px;color:var(--ink-3);letter-spacing:.14em}
+.h-scroll-card .hs-name{font-family:"Instrument Serif",serif;font-size:38px;line-height:1.05;letter-spacing:-0.02em;color:var(--ink);margin-top:14px;max-width:200px}
+.h-scroll-card .hs-name em{color:var(--agent-color,var(--accent));font-style:italic;display:block}
+.h-scroll-card .hs-title{font-size:12px;color:var(--ink-3);font-family:"Geist Mono",monospace;margin-top:10px;letter-spacing:.02em}
+.h-scroll-card .hs-domain{font-size:13.5px;color:var(--ink-2);line-height:1.6;margin-top:24px}
+.h-scroll-card .hs-foot{display:flex;align-items:center;justify-content:space-between;padding-top:18px;border-top:1px dashed var(--line);margin-top:18px}
+.h-scroll-card .hs-tag{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-family:"Geist Mono",monospace;color:var(--ink-3);letter-spacing:.04em;padding:4px 10px;border-radius:99px;background:var(--bg);border:1px solid var(--line-2)}
+.h-scroll-card .hs-dot{width:6px;height:6px;border-radius:50%;background:var(--agent-color,var(--accent));box-shadow:0 0 8px var(--agent-color,var(--accent))}
+
+.h-scroll-header{position:absolute;top:80px;left:0;right:0;text-align:center;z-index:5;pointer-events:none;padding:0 32px}
+.h-scroll-header .section-tag{justify-content:center}
+.h-scroll-header h2{margin:0 auto}
+.h-scroll-counter{position:absolute;bottom:60px;left:8vw;right:8vw;display:flex;align-items:center;gap:14px;font-family:"Geist Mono",monospace;font-size:11px;color:var(--ink-3);letter-spacing:.1em;text-transform:uppercase;pointer-events:none;z-index:5}
+.h-scroll-track-line{flex:1;height:1px;background:var(--line);position:relative;overflow:hidden}
+.h-scroll-track-line::after{content:"";position:absolute;left:0;top:0;height:100%;width:var(--p,0%);background:var(--accent);box-shadow:0 0 8px var(--accent-glow);transition:none}
+
+/* WOW · CTA giant text scale */
+.cta-title{will-change:transform}
+
+/* WOW · stat 3D card */
+.stat-card-3d{perspective:1200px}
+
+/* Responsive — collapse right pane */
+@media (max-width:980px){
+  .h-scroll{height:auto;padding:80px 0}
+  .h-scroll-track{flex-direction:column;height:auto;padding:0 24px;gap:18px}
+  .h-scroll-card{flex:0 0 auto;width:100%;height:auto;min-height:420px}
+  .h-scroll-header{position:relative;top:auto;padding:0 24px 40px}
+  .h-scroll-counter{display:none}
+}
+@media (max-width:980px){
+  .diff-grid,.stats-inner{grid-template-columns:1fr 1fr}
+  .showcase-grid{grid-template-columns:1fr}
+  .showcase-left{position:static}
+  .foot-inner{grid-template-columns:1fr 1fr}
+  .section-head{flex-direction:column;align-items:flex-start;gap:20px}
+}
+@media (max-width:640px){
+  .agents-grid{grid-template-columns:1fr 1fr}
+  .diff-grid,.stats-inner,.foot-inner{grid-template-columns:1fr}
+  .nav-links{display:none}
+  .stat-num{font-size:48px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== WOW : scroll progress + section indicator ===== -->
+<div class="scroll-progress"><div class="scroll-progress-bar" id="scrollBar"></div></div>
+<nav class="section-indicator" id="secInd">
+  <a class="sec-dot" href="#hero" data-sec="hero"><span>L'intro</span></a>
+  <a class="sec-dot" href="#stats" data-sec="stats"><span>Chiffres</span></a>
+  <a class="sec-dot" href="#agents" data-sec="agents"><span>L'équipe</span></a>
+  <a class="sec-dot" href="#orchestration" data-sec="orchestration"><span>Orchestration</span></a>
+  <a class="sec-dot" href="#difference" data-sec="difference"><span>Différence</span></a>
+  <a class="sec-dot" href="#pledge" data-sec="pledge"><span>Loi 25 / 27</span></a>
+  <a class="sec-dot" href="#pricing" data-sec="pricing"><span>Tarifs</span></a>
+  <a class="sec-dot" href="#cta" data-sec="cta"><span>Lancer</span></a>
+</nav>
+
+<!-- ===== LOADER ===== -->
+<div class="loader" id="loader">
+  <div class="loader-tag">Z12 · AI CFO Suite</div>
+  <img class="loader-logo" id="loaderLogo" src="/z12-logo.png" alt="Z12 AI CFO Suite" />
+  <div class="loader-counter mono"><span id="loadPct">0</span>%</div>
+  <div class="loader-bar"><div id="loadFill" style="position:absolute;left:0;top:0;height:100%;width:0%;background:var(--accent)"></div></div>
+</div>
+
+<!-- ===== BACKGROUND CANVAS ===== -->
+<canvas id="bgCanvas"></canvas>
+
+<!-- ===== CURSOR ===== -->
+<div class="cursor" id="cursor"></div>
+
+<!-- ===== NAV ===== -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-brand" href="#">
+      <img class="nav-logo" src="/z12-logo.png" alt="Z12 AI CFO Suite" />
+    </a>
+    <div class="nav-links">
+      <a href="#agents">Équipe</a>
+      <a href="#orchestration">Orchestration</a>
+      <a href="#difference">Différence</a>
+      <a href="#pledge">Loi 25 / 27</a>
+      <a href="#pricing">Tarifs</a>
+    </div>
+    <span class="nav-lang">FR / EN</span>
+    <a class="nav-cta" href="/" id="navCtaApp">Lancer le Studio →</a>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero" id="hero">
+  <video class="hero-video" autoplay muted playsinline preload="auto" poster="/z12-banner.png" id="heroVideo">
+    <source src="/hero-video.mp4" type="video/mp4" />
+  </video>
+  <div class="hero-video-overlay"></div>
+  <div class="hero-inner">
+    <div class="eyebrow fade-in"><span class="eyebrow-dot"></span>v3.3 · 9 spécialistes virtuels · Hébergé au Québec</div>
+
+    <h1 class="hero-title">
+      <span class="title-line"><span class="title-word" data-text="L'intelligence">L'intelligence</span></span>
+      <span class="title-line"><span class="title-word accent italic-serif" data-text="artificielle">artificielle</span></span>
+      <span class="title-line"><span class="title-word" data-text="au service du CFO.">au service du CFO.</span></span>
+    </h1>
+
+    <p class="hero-sub fade-in">
+      Un orchestrateur multi-agents qui mobilise 9 spécialistes virtuels — fiscalité, audit, trésorerie, M&amp;A — pour livrer des décisions financières en secondes, pas en semaines.
+    </p>
+
+    <div class="hero-rotate fade-in">
+      <span>Anticipez ·</span>
+      <span class="hero-rotate-words">
+        <span>Analysez</span>
+        <span>Décidez</span>
+        <span>Performez</span>
+        <span>Triomphez</span>
+      </span>
+    </div>
+
+    <div class="hero-cta-row fade-in">
+      <a class="cta-primary" id="ctaMag" href="/">
+        <span>Démarrer une analyse</span>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a class="cta-secondary" href="#orchestration">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><polygon points="2,1 11,6 2,11"/></svg>
+        Voir l'orchestrateur en action
+      </a>
+      <a class="cta-secondary" href="#pledge" style="border-color:var(--accent-line);color:var(--accent)">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5l5 2v4c0 3-2.2 5.4-5 6-2.8-.6-5-3-5-6v-4z"/><path d="M5.5 8l2 2 3-3.5"/></svg>
+        Loi 25 / 27 · notre engagement
+      </a>
+    </div>
+  </div>
+
+  <div class="scroll-cue">
+    <span>Scroll</span>
+    <div class="scroll-cue-line"></div>
+  </div>
+</section>
+
+<!-- ===== STATS ===== -->
+<section class="stats" id="stats">
+  <div class="stats-inner">
+    <div class="stat">
+      <div class="stat-num"><span class="stat-count" data-to="9">0</span></div>
+      <div class="stat-label">Spécialistes virtuels</div>
+      <div class="stat-desc">CPA, CFA, CTP, DPO — équipe complète de la fiscalité au M&amp;A.</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num"><span class="stat-count" data-to="38">0</span><span class="suf">s</span></div>
+      <div class="stat-label">Délai moyen workflow</div>
+      <div class="stat-desc">D'une question complexe à une synthèse exécutive priorisée.</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num"><span class="stat-count" data-to="27">0</span></div>
+      <div class="stat-label">Modèles disponibles</div>
+      <div class="stat-desc">OpenRouter · Claude, GPT, Gemini, DeepSeek — override par agent.</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num"><span class="stat-count" data-to="99.8" data-decimals="1">0</span><span class="suf">%</span></div>
+      <div class="stat-label">Conformité Loi 25</div>
+      <div class="stat-desc">Hébergement ca-central-1 · audit trail SHA-256 · EFVP intégrée.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TRUST BAND ===== -->
+<section class="trust">
+  <div class="trust-inner">
+    <span class="trust-label">Conçu avec et pour des cabinets CPA québécois</span>
+    <div class="trust-logos">
+      <span class="trust-logo">Cabinet Belmeddah CPA</span>
+      <span class="trust-logo">Atelier Boréal inc.<span class="trust-ph">à remplacer</span></span>
+      <span class="trust-logo">Constructions Lévis<span class="trust-ph">à remplacer</span></span>
+      <span class="trust-logo">Drummondville Tech<span class="trust-ph">à remplacer</span></span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== AGENTS · CAROUSEL ===== -->
+<section class="agents" id="agents">
+  <div class="section-head">
+    <div class="section-tag">L'équipe</div>
+    <h2 class="section-title">9 expertises. <em>Une seule conversation.</em></h2>
+    <p class="section-desc">Chaque agent porte un nom, un titre, une expertise réelle. L'orchestrateur les invoque selon votre question.</p>
+  </div>
+
+  <div class="carousel" id="carousel">
+    <button class="car-arrow car-prev" id="carPrev" aria-label="Précédent">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <div class="car-stage" id="carStage">
+      <!-- cards injected via JS -->
+    </div>
+    <button class="car-arrow car-next" id="carNext" aria-label="Suivant">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+  </div>
+
+  <div class="car-info" id="carInfo">
+    <div class="car-info-name" id="carName">Sophie Mercier</div>
+    <div class="car-info-title" id="carTitle">Fiscaliste · CPA, M.Fisc.</div>
+    <div class="car-info-domain" id="carDomain"></div>
+  </div>
+
+  <div class="car-dots" id="carDots"></div>
+</section>
+
+<section style="display:none" id="hScrollLegacy"><div id="hScrollTrack"></div><span id="hScrollIdx"></span><div id="agentsGrid"></div></section>
+
+<!-- ===== PINNED SHOWCASE ===== -->
+<section class="showcase" id="orchestration">
+  <div class="section-head">
+    <div>
+      <div class="section-tag">Orchestration</div>
+      <h2 class="section-title">Du document brut à la <em>décision exécutive,</em> en trois phases.</h2>
+    </div>
+    <p class="section-desc">Pas un chatbot — un cabinet virtuel. L'orchestrateur lit votre question, planifie un workflow, et fait travailler les bons spécialistes en parallèle ou en séquence.</p>
+  </div>
+
+  <div class="showcase-wrap">
+    <div class="showcase-grid">
+      <div class="showcase-left">
+        <div class="showcase-step" data-step="1">
+          <div class="showcase-step-num">PHASE 1 · 1.4s</div>
+          <h3 class="showcase-step-title">JF Lebel <em>extrait</em> vos documents</h3>
+          <p class="showcase-step-body">PDF scanné, T4, RL-1, factures, bilans Excel. Validation arithmétique TPS/TVQ croisée, confidence scoring par champ, signalement des zones illisibles. Aucune donnée inventée.</p>
+        </div>
+        <div class="showcase-step" data-step="2">
+          <div class="showcase-step-num">PHASE 2 · 8.4s · parallèle</div>
+          <h3 class="showcase-step-title">Quatre experts <em>analysent en parallèle</em></h3>
+          <p class="showcase-step-body">Marc normalise le BAIIA, Sarah triangule la valeur (DCF + comparables + CCA), Natalie audite le BFR et les covenants, Patrick repère les subventions cumulables. Tous citent leurs sources.</p>
+        </div>
+        <div class="showcase-step" data-step="3">
+          <div class="showcase-step-num">PHASE 3 · 3.2s · synthèse</div>
+          <h3 class="showcase-step-title">Sophie <em>scelle</em> la stratégie fiscale</h3>
+          <p class="showcase-step-body">Diagnostic CDAE, structuration roulement art. 85 LIR, validation Loi 25 par Isabelle. Synthèse exécutive priorisée P1/P2/P3 — prête à présenter au client.</p>
+        </div>
+      </div>
+
+      <div class="showcase-visual" id="showcaseVisual">
+        <svg class="workflow-svg" viewBox="0 0 600 520" preserveAspectRatio="xMidYMid meet">
+          <!-- Connecting paths -->
+          <path class="wf-path" id="p1" d="M 300 90 L 300 170" />
+          <path class="wf-path" id="p2a" d="M 300 230 Q 200 270 150 320" />
+          <path class="wf-path" id="p2b" d="M 300 230 Q 250 270 250 320" />
+          <path class="wf-path" id="p2c" d="M 300 230 Q 350 270 350 320" />
+          <path class="wf-path" id="p2d" d="M 300 230 Q 400 270 450 320" />
+          <path class="wf-path" id="p3a" d="M 150 380 Q 300 420 300 440" />
+          <path class="wf-path" id="p3b" d="M 250 380 L 300 440" />
+          <path class="wf-path" id="p3c" d="M 350 380 L 300 440" />
+          <path class="wf-path" id="p3d" d="M 450 380 Q 300 420 300 440" />
+
+          <!-- User question -->
+          <g class="wf-node" id="n0" transform="translate(300, 60)">
+            <rect class="wf-node-bg" x="-90" y="-22" width="180" height="44" rx="22"/>
+            <text x="0" y="4" text-anchor="middle">Q · Évaluer Atelier Boréal</text>
+          </g>
+
+          <!-- Orchestrator -->
+          <g class="wf-node" id="n1" transform="translate(300, 200)">
+            <circle class="wf-node-bg" cx="0" cy="0" r="32"/>
+            <text x="0" y="-2" text-anchor="middle">Orch.</text>
+            <text x="0" y="10" text-anchor="middle" style="font-size:7px">plan</text>
+          </g>
+
+          <!-- Phase 2 parallel agents -->
+          <g class="wf-node" id="n-jf" transform="translate(150, 350)">
+            <circle class="wf-node-bg" cx="0" cy="0" r="26" fill="oklch(0.74 0.13 50)"/>
+            <text x="0" y="3" text-anchor="middle" style="font-weight:600;fill:#0a0a0a">JF</text>
+          </g>
+          <g class="wf-node" id="n-marc" transform="translate(250, 350)">
+            <circle class="wf-node-bg" cx="0" cy="0" r="26" fill="oklch(0.74 0.13 200)"/>
+            <text x="0" y="3" text-anchor="middle" style="font-weight:600;fill:#0a0a0a">MT</text>
+          </g>
+          <g class="wf-node" id="n-sarah" transform="translate(350, 350)">
+            <circle class="wf-node-bg" cx="0" cy="0" r="26" fill="oklch(0.74 0.13 0)"/>
+            <text x="0" y="3" text-anchor="middle" style="font-weight:600;fill:#0a0a0a">SB</text>
+          </g>
+          <g class="wf-node" id="n-natalie" transform="translate(450, 350)">
+            <circle class="wf-node-bg" cx="0" cy="0" r="26" fill="oklch(0.74 0.13 290)"/>
+            <text x="0" y="3" text-anchor="middle" style="font-weight:600;fill:#0a0a0a">NC</text>
+          </g>
+
+          <!-- Synthesis -->
+          <g class="wf-node" id="n-final" transform="translate(300, 470)">
+            <rect class="wf-node-bg" x="-110" y="-22" width="220" height="44" rx="10"/>
+            <text x="0" y="-2" text-anchor="middle" style="fill:var(--accent);font-weight:600">SYNTHÈSE EXÉCUTIVE</text>
+            <text x="0" y="12" text-anchor="middle" style="font-size:8px">EV 5,5 – 7,2 M$ · 3 risques</text>
+          </g>
+
+          <!-- floating data tokens -->
+          <g id="tokens"></g>
+        </svg>
+
+        <div style="position:absolute;top:14px;left:18px;font-family:'Geist Mono',monospace;font-size:10px;color:var(--ink-3);letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:8px">
+          <span style="width:6px;height:6px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--accent)"></span>
+          Workflow live · #4521
+        </div>
+        <div style="position:absolute;top:14px;right:18px;font-family:'Geist Mono',monospace;font-size:10px;color:var(--ink-3);letter-spacing:.1em">
+          <span id="wfTimer">00.0s</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== DIFFERENTIATORS ===== -->
+<section class="diff" id="difference">
+  <div class="section-head">
+    <div>
+      <div class="section-tag">La différence Z12</div>
+      <h2 class="section-title">Trois choses qu'un <em>chatbot générique</em> ne peut pas faire.</h2>
+    </div>
+    <p class="section-desc">Z12 n'est pas un GPT au-dessus de vos PDF. C'est une architecture pensée pour la fiscalité et l'audit canadiens.</p>
+  </div>
+
+  <div class="diff-grid">
+    <div class="diff-card">
+      <div class="diff-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/><circle cx="6" cy="6" r="1.5" fill="currentColor"/><circle cx="14" cy="12" r="1.5" fill="currentColor"/><circle cx="9" cy="18" r="1.5" fill="currentColor"/></svg></div>
+      <div>
+        <div class="diff-num">01 · RAG bilingue</div>
+        <h3 class="diff-title">Vos documents, <em>vraiment</em> lus.</h3>
+        <p class="diff-body">Pipeline Bronze → Silver → Gold → Ready. Extraction PDF, DOCX, XLSX, OCR factures. Embeddings 1024 dims sur pgvector, hébergé S3 ca-central-1.</p>
+        <div class="diff-tags">
+          <span class="diff-tag">pgvector</span>
+          <span class="diff-tag">e5-large</span>
+          <span class="diff-tag">FR + EN</span>
+          <span class="diff-tag">412 docs</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="diff-card">
+      <div class="diff-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.5 7.5L11 16M16.5 7.5L13 16M8 6h8"/></svg></div>
+      <div>
+        <div class="diff-num">02 · Orchestration adaptative</div>
+        <h3 class="diff-title">Le bon expert, <em>au bon moment.</em></h3>
+        <p class="diff-body">L'orchestrateur (Haiku) lit la question, choisit le mode — single, parallèle, séquentiel, hybride — et invoque les spécialistes (Sonnet). Citations croisées entre agents.</p>
+        <div class="diff-tags">
+          <span class="diff-tag">9 agents</span>
+          <span class="diff-tag">4 modes</span>
+          <span class="diff-tag">streaming SSE</span>
+          <span class="diff-tag">cost-aware</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="diff-card">
+      <div class="diff-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4-3 7-7 8-4-1-7-4-7-8V6z"/><path d="M9 11l2 2 4-4"/></svg></div>
+      <div>
+        <div class="diff-num">03 · Conformité Loi 25</div>
+        <h3 class="diff-title">Souverain. <em>Auditable.</em> Québécois.</h3>
+        <p class="diff-body">Hébergement ca-central-1. CPO nommé. Registre d'incidents PI-1. Journal d'accès immutable SHA-256. EFVP intégrée. Conforme PIPEDA + CASL.</p>
+        <div class="diff-tags">
+          <span class="diff-tag">Loi 25 · QC</span>
+          <span class="diff-tag">PIPEDA</span>
+          <span class="diff-tag">CASL</span>
+          <span class="diff-tag">SOC 2 ready</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PRIVACY PLEDGE ===== -->
+<section class="pledge" id="pledge">
+  <div class="pledge-bg"></div>
+  <div class="pledge-inner">
+    <div class="pledge-head">
+      <div class="section-tag">Notre engagement</div>
+      <h2 class="section-title">Vos données restent <em>chez vous.</em></h2>
+      <p class="pledge-lead">Z12 est conçu au Québec, pour le Québec. Conforme à la <strong>Loi 25</strong> (provinciale) et au <strong>Projet de loi C‑ 27</strong> (fédéral, LPVPC + LIAD) — pas par rattrapage, mais par architecture.</p>
+    </div>
+
+    <div class="pledge-grid">
+      <div class="pledge-card">
+        <div class="pledge-flag">
+          <svg viewBox="0 0 16 16" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5l5 2v4c0 3-2.2 5.4-5 6-2.8-.6-5-3-5-6v-4z"/><path d="M5.5 8l2 2 3-3.5"/></svg>
+        </div>
+        <div class="pledge-tag">L.Q. 2021, c. 25</div>
+        <h3>Loi 25</h3>
+        <p>Protection des renseignements personnels dans le secteur privé. <strong>CPO nommé</strong>, registre d'incidents <strong>PI‑1</strong>, évaluation des facteurs relatifs à la vie privée <strong>(EFVP)</strong> intégrée à chaque nouveau traitement, consentement granulaire, droit à la portabilité et à la désindexation.</p>
+        <div class="pledge-stat"><span>25 M$</span><small>plafond sanctions CAI · ou 4% du CA mondial</small></div>
+      </div>
+
+      <div class="pledge-card highlight">
+        <div class="pledge-flag">
+          <svg viewBox="0 0 16 16" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12"/></svg>
+        </div>
+        <div class="pledge-tag">C‑27 · LPVPC + LIAD</div>
+        <h3>Loi 27</h3>
+        <p>Suivi actif du Projet de loi C‑27 (Loi sur la protection de la vie privée des consommateurs et Loi sur l'intelligence artificielle et les données). <strong>Documentation des décisions automatisées</strong>, registre d'usage IA, droit à l'explication, biais et impacts évalués à chaque modèle.</p>
+        <div class="pledge-stat"><span>10 M$</span><small>plafond sanctions LIAD · ou 3% des recettes globales</small></div>
+      </div>
+
+      <div class="pledge-card">
+        <div class="pledge-flag">
+          <svg viewBox="0 0 16 16" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M5 7h6M5 9.5h4"/></svg>
+        </div>
+        <div class="pledge-tag">PIPEDA + CASL</div>
+        <h3>Cadre fédéral</h3>
+        <p>Conformité aux 10 Principes équitables de la LPRPDE, notification d'atteinte selon DORS/2018‑64, consentement exprès <strong>CASL</strong> documenté, désabonnement &lt; 10 jours. Tous les courriels marketing tracés 36 mois.</p>
+        <div class="pledge-stat"><span>SHA‑256</span><small>journal d'audit immutable · horodatage cryptographique</small></div>
+      </div>
+    </div>
+
+    <div class="pledge-commitments">
+      <div class="pc-title">Nos sept engagements concrets</div>
+      <div class="pc-grid">
+        <div class="pc-row"><span class="pc-num">01</span><div><strong>Hébergement souverain.</strong> Vos documents restent sur S3 <span class="mono">ca‑central‑1</span> (Montréal). Aucune sortie hors Canada — ni pour calcul, ni pour stockage, ni pour sauvegarde.</div></div>
+        <div class="pc-row"><span class="pc-num">02</span><div><strong>Chiffrement bout en bout.</strong> AES‑256 au repos, TLS 1.3 en transit. Clés gérées par KMS régional avec rotation automatique tous les 90 jours.</div></div>
+        <div class="pc-row"><span class="pc-num">03</span><div><strong>Pas d'entraînement sur vos données.</strong> Aucune information client n'est utilisée pour entraîner un modèle — ni le nôtre, ni celui des fournisseurs (Anthropic, OpenAI). Contrats DPA signés.</div></div>
+        <div class="pc-row"><span class="pc-num">04</span><div><strong>Minimisation par défaut.</strong> L'orchestrateur n'envoie aux agents que les segments strictement nécessaires — jamais le document entier. Pseudonymisation des identifiants.</div></div>
+        <div class="pc-row"><span class="pc-num">05</span><div><strong>Traçabilité totale.</strong> Chaque accès à un renseignement personnel est journalisé (SHA‑256), horodaté et associé à un agent. Export du journal sur demande.</div></div>
+        <div class="pc-row"><span class="pc-num">06</span><div><strong>Droit d'effacement honoré en 30 jours.</strong> Suppression réelle (pas seulement masquage) y compris dans les sauvegardes — conforme à l'art. 28.1 Loi 25.</div></div>
+        <div class="pc-row"><span class="pc-num">07</span><div><strong>Décisions IA explicables.</strong> Pour toute analyse, l'agent cite ses sources, ses calculs et son raisonnement. Conforme à l'art. 12.1 Loi 25 et anticipation LIAD.</div></div>
+      </div>
+    </div>
+
+    <div class="pledge-sign">
+      <div class="pledge-sig-text">
+        <p>«&nbsp;La confidentialité n'est pas une fonctionnalité que nous avons ajoutée. C'est l'architecture même du système. Si demain une réglementation devient plus stricte, nous y sommes déjà.&nbsp;»</p>
+        <div class="pledge-sig-name">
+          <span class="serif">Belmeddah Zakaria</span>
+          <span class="pledge-sig-role">CPA · Fondateur · CPO désigné</span>
+        </div>
+      </div>
+      <a class="pledge-doc" href="#">
+        <div class="pledge-doc-ic">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h6l3 3v9H4z"/><path d="M10 2v3h3M6 9h4M6 11.5h3"/></svg>
+        </div>
+        <div>
+          <div class="pledge-doc-t">Politique de confidentialité + EFVP</div>
+          <div class="pledge-doc-s">PDF · 24 pages · v3.2 · mai 2026</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="how" id="how">
+  <div class="section-head">
+    <div class="section-tag">Simple comme bonjour</div>
+    <h2 class="section-title">Trois gestes. <em>Une décision.</em></h2>
+    <p class="section-desc">Pas besoin d'être technicien. Déposez, demandez, décidez.</p>
+  </div>
+  <div class="how-grid">
+    <div class="how-step">
+      <div class="how-step-n">1</div>
+      <h4>Déposez vos documents</h4>
+      <p>États financiers, T4, factures, contrats — PDF, Excel ou scans. Tout reste chiffré, au Québec.</p>
+      <svg class="how-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </div>
+    <div class="how-step">
+      <div class="how-step-n">2</div>
+      <h4>Posez votre question</h4>
+      <p>En français ou en anglais, en langage courant. L'orchestrateur mobilise les bons spécialistes.</p>
+      <svg class="how-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </div>
+    <div class="how-step">
+      <div class="how-step-n">3</div>
+      <h4>Recevez la synthèse</h4>
+      <p>Une réponse sourcée, chiffrée, priorisée P1/P2/P3 — prête à présenter à votre client.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PRICING ===== -->
+<section class="pricing" id="pricing">
+  <div class="section-head">
+    <div class="section-tag">Tarifs</div>
+    <h2 class="section-title">Un cabinet virtuel, <em>au prix d'un logiciel.</em></h2>
+    <p class="section-desc">Sans engagement. Essai 14 jours, aucune carte requise. Tarifs à valider.</p>
+  </div>
+  <div class="price-grid">
+    <div class="price-card">
+      <div class="price-name">Essai</div>
+      <div class="price-amt"><span class="cur">$</span>0<span class="per">/ 14 jours</span></div>
+      <div class="price-tagline">Pour découvrir l'orchestrateur sur vos propres dossiers.</div>
+      <div class="price-feats">
+        <div class="price-feat"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7.5"/></svg>3 spécialistes au choix</div>
+        <div class="price-feat"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7.5"/></svg>50 documents indexés</div>
+        <div class="price-feat"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7.5"/></svg>Hébergement Québec</div>
+      </div>
+      <a class="price-cta" href="#cta">Commencer gratuitement</a>
+    </div>
+
+    <div class="price-card featured">
+      <div class="price-badge">Le plus choisi</div>
+      <div class="price-name">Cabinet</div>
+      <div class="price-amt"><span class="cur">$</span>349<span class="per">/ mois</span></div>
+      <div class="price-tagline">Pour un cabinet CPA ou un CFO qui veut toute l'équipe.</div>
+      <div class="price-feats">
+        <div class="price-feat"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7.5"/></svg><strong>Les 9 spécialistes</strong> + orchestrateur</div>
+        <div class="price-feat"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7.5"/></svg>Documents illimités · RAG dédié</div>
+        <div class="price-feat"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7.5"/></svg>Veille & subventions temps réel</div>
+        <div class="price-feat"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7.5"/></svg>Journal d'audit Loi 25 / 27</div>
+      </div>
+      <a class="price-cta primary" href="#cta">Démarrer mon essai</a>
+    </div>
+
+    <div class="price-card">
+      <div class="price-name">Entreprise</div>
+      <div class="price-amt" style="font-size:38px;margin-top:18px">Sur mesure</div>
+      <div class="price-tagline">Pour les groupes multi-entités et les firmes établies.</div>
+      <div class="price-feats">
+        <div class="price-feat"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7.5"/></svg>SSO · rôles · multi-cabinets</div>
+        <div class="price-feat"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7.5"/></svg>Prompts d'agents personnalisés</div>
+        <div class="price-feat"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7.5"/></svg>DPA dédié · SLA · accompagnement</div>
+      </div>
+      <a class="price-cta" href="#cta">Parler à l'équipe</a>
+    </div>
+  </div>
+  <div class="price-note">Tarifs indicatifs · à valider avant publication</div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section class="faq" id="faq">
+  <div class="section-head">
+    <div class="section-tag">Questions fréquentes</div>
+    <h2 class="section-title">Ce que <em>tout le monde</em> nous demande.</h2>
+  </div>
+  <div class="faq-grid" id="faqGrid">
+    <div class="faq-item">
+      <button class="faq-q">Mes données sont-elles vraiment privées ?<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 4v10M4 9h10"/></svg></button>
+      <div class="faq-a"><div class="faq-a-inner">Oui. Tous vos documents sont chiffrés (AES-256) et hébergés exclusivement sur des serveurs canadiens (S3 ca-central-1, Montréal). Aucune donnée ne quitte le Canada, et rien n'est utilisé pour entraîner les modèles — ni les nôtres, ni ceux des fournisseurs. Chaque accès est journalisé (SHA-256), conforme Loi 25 et anticipant la Loi 27 (C-27).</div></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">Est-ce que Z12 remplace mon comptable ou mon CPA ?<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 4v10M4 9h10"/></svg></button>
+      <div class="faq-a"><div class="faq-a-inner">Non — Z12 amplifie votre expertise, il ne la remplace pas. C'est un assistant qui prépare, calcule, repère et synthétise en secondes ce qui prendrait des heures. La décision finale et la signature professionnelle restent toujours entre vos mains.</div></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">Et si l'IA se trompe dans un calcul ou une référence ?<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 4v10M4 9h10"/></svg></button>
+      <div class="faq-a"><div class="faq-a-inner">Chaque agent cite ses sources (article de loi, formulaire CRA/RQ, page du document) et montre ses calculs. Vous pouvez vérifier chaque affirmation. L'agent d'extraction effectue des validations arithmétiques croisées (TPS/TVQ) et signale toute zone illisible plutôt que d'inventer une donnée.</div></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">Faut-il être technicien pour l'utiliser ?<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 4v10M4 9h10"/></svg></button>
+      <div class="faq-a"><div class="faq-a-inner">Aucunement. Vous déposez un document et vous posez votre question en français courant. L'orchestrateur s'occupe de mobiliser les bons spécialistes et de coordonner leur travail. C'est aussi simple qu'une conversation.</div></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">Quels modèles d'IA sont utilisés ?<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 4v10M4 9h10"/></svg></button>
+      <div class="faq-a"><div class="faq-a-inner">Z12 s'appuie sur les meilleurs modèles via OpenRouter — Claude, GPT, Gemini, DeepSeek et d'autres (27 au total). Chaque agent peut être assigné au modèle le mieux adapté à sa tâche, et vous gardez le contrôle de ce choix.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== MARQUEE ===== -->
+<section class="marquee" aria-hidden="true">
+  <div class="marquee-track">
+    <span><span class="hi">Anticipez</span> <span class="dot">✦</span> <span class="hi">Analysez</span> <span class="dot">✦</span> <span class="hi">Décidez</span> <span class="dot">✦</span> <span class="hi">Performez</span> <span class="dot">✦</span> <span class="italic-serif">Anticipate</span> <span class="dot">✦</span> <span class="italic-serif">Analyze</span> <span class="dot">✦</span> <span class="italic-serif">Decide</span> <span class="dot">✦</span> <span class="italic-serif">Perform</span> <span class="dot">✦</span></span>
+    <span><span class="hi">Anticipez</span> <span class="dot">✦</span> <span class="hi">Analysez</span> <span class="dot">✦</span> <span class="hi">Décidez</span> <span class="dot">✦</span> <span class="hi">Performez</span> <span class="dot">✦</span> <span class="italic-serif">Anticipate</span> <span class="dot">✦</span> <span class="italic-serif">Analyze</span> <span class="dot">✦</span> <span class="italic-serif">Decide</span> <span class="dot">✦</span> <span class="italic-serif">Perform</span> <span class="dot">✦</span></span>
+  </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<section class="cta" id="cta">
+  <div class="cta-glow"></div>
+  <div class="cta-inner">
+    <h2 class="cta-title">
+      <span class="title-line"><span class="title-word" data-text="Votre prochaine">Votre prochaine</span></span>
+      <span class="title-line"><span class="title-word italic-serif" data-text="décision financière">décision financière</span></span>
+      <span class="title-line"><span class="title-word accent italic-serif" data-text="commence ici.">commence ici.</span></span>
+    </h2>
+    <p class="cta-sub">14 jours d'essai. Aucune carte de crédit. Vos documents restent chez vous — chiffrés, au Québec.</p>
+    <div class="cta-row">
+      <a class="cta-primary" href="/"><span>Démarrer mon essai gratuit</span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+      <a class="cta-secondary" href="https://github.com/zakibelm/Z12-AI-CFO-Suite" target="_blank" rel="noopener">Code source · GitHub ↗</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="foot-inner">
+    <div>
+      <div class="foot-brand"><img src="/z12-logo.png" alt="Z12 AI CFO Suite" style="width:220px;height:auto;margin-bottom:6px;filter:brightness(1.45) contrast(1.3) saturate(1.3) drop-shadow(0 0 20px rgba(120,220,160,.35))"/></div>
+      <p class="foot-tagline">L'intelligence artificielle au service de vos décisions financières. Hébergé au Québec, conforme Loi 25.</p>
+    </div>
+    <div class="foot-col">
+      <h4>Produit</h4>
+      <a href="/">Studio</a>
+      <a href="/#orchestration">Orchestration</a>
+      <a href="/#agents">L'équipe CPA</a>
+      <a href="https://github.com/zakibelm/Z12-AI-CFO-Suite" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+    <div class="foot-col">
+      <h4>Cabinet</h4>
+      <a href="#">À propos</a>
+      <a href="#">Cas clients</a>
+      <a href="#">Tarifs</a>
+      <a href="#">Sécurité</a>
+    </div>
+    <div class="foot-col">
+      <h4>Légal</h4>
+      <a href="#">Conformité Loi 25</a>
+      <a href="#">Politique vie privée</a>
+      <a href="#">CGU</a>
+      <a href="#">Statut</a>
+    </div>
+  </div>
+  <div class="foot-bot">
+    <span>© 2026 Cabinet Belmeddah CPA · Drummondville, QC</span>
+    <span>v3.3 · ca-central-1 · <a href="https://github.com/zakibelm/Z12-AI-CFO-Suite" target="_blank" rel="noopener" style="color:var(--accent)">Open Source</a></span>
+  </div>
+</footer>
+
+<script>
+/* ========================================================
+   AGENT DATA + GRID INJECTION
+======================================================== */
+const AGENTS = [
+  { id:"sophie",  s:"SM", name:"Sophie Mercier",      title:"Fiscaliste · CPA, M.Fisc.", domain:"T1/T2 · TPS/TVQ · RS&DE · Planification successorale · CRA & Revenu Québec.", color:"oklch(0.74 0.18 152)" },
+  { id:"alex",    s:"AB", name:"Alexandre Bouchard",  title:"Auditeur senior · CPA-CA",  domain:"NCA 200-810 · IFRS · ASPE · Contrôles internes · Matérialité.",            color:"oklch(0.74 0.16 232)" },
+  { id:"natalie", s:"NC", name:"Natalie Chen",        title:"Trésorerie · CTP",          domain:"Rolling forecast 13 sem. · BFR · DSO/DPO · Covenants bancaires.",          color:"oklch(0.74 0.16 290)" },
+  { id:"isabelle",s:"IR", name:"Isabelle Roy",        title:"Conformité · LL.M., DPO",   domain:"Loi 25 · CASL · PIPEDA · EFVP · Registre incidents CAI.",                  color:"oklch(0.78 0.15 78)"  },
+  { id:"marc",    s:"MT", name:"Marc Tremblay",       title:"Analyse financière · CFA",  domain:"Ratios · BAIIA normalisé · Benchmarks SCIAN · Tableau de bord CFO.",       color:"oklch(0.74 0.14 200)" },
+  { id:"sarah",   s:"SB", name:"Sarah Blackwell",     title:"M&A · CFA, MBA",            domain:"DCF · LBO · TRI/VAN/MOIC · QoE · Due diligence financière.",               color:"oklch(0.72 0.18 0)"   },
+  { id:"jf",      s:"JF", name:"Jean-François Lebel", title:"Extraction documentaire",   domain:"OCR factures · T4/RL-1 · Validation arithmétique · Confidence scoring.",   color:"oklch(0.74 0.16 50)"  },
+  { id:"emilie",  s:"EC", name:"Émilie Côté",         title:"Veille réglementaire 🌐",   domain:"ARC · IFRS · CAI · CPA Canada · Banque du Canada · Temps réel.",          color:"oklch(0.74 0.14 175)" },
+  { id:"patrick", s:"PG", name:"Patrick Gagnon",      title:"Subventions publiques 🌐",  domain:"RS&DE · IRAP · Investissement Québec · CDAE · BDC · Accélérateurs.",       color:"oklch(0.74 0.16 320)" },
+];
+const grid = document.getElementById('agentsGrid');
+
+/* ===== 3D Coverflow Carousel ===== */
+const carStage = document.getElementById('carStage');
+const carName = document.getElementById('carName');
+const carTitle = document.getElementById('carTitle');
+const carDomain = document.getElementById('carDomain');
+const carDots = document.getElementById('carDots');
+let carIndex = 0, carTimer = null;
+
+AGENTS.forEach((a, i) => {
+  const card = document.createElement('div');
+  card.className = 'car-card';
+  card.style.setProperty('--agent-color', a.color);
+  card.style.setProperty('--agent-glow', a.color.replace(')', ' / .45)'));
+  card.innerHTML = `<img src="/team-member-${i+1}.jpg" alt="${a.name}" loading="lazy" onerror="this.style.background='${a.color}';this.style.display='block'"/>`;
+  card.addEventListener('click', () => { goTo(i); });
+  carStage.appendChild(card);
+
+  const dot = document.createElement('button');
+  dot.className = 'car-dot';
+  dot.setAttribute('aria-label', a.name);
+  dot.addEventListener('click', () => { goTo(i); });
+  carDots.appendChild(dot);
+});
+const carCards = [...carStage.children];
+const carDotEls = [...carDots.children];
+
+function renderCarousel() {
+  const n = AGENTS.length;
+  carCards.forEach((card, i) => {
+    let off = i - carIndex;
+    if (off > n / 2) off -= n;
+    if (off < -n / 2) off += n;
+    card.className = 'car-card';
+    if (off === 0) card.classList.add('pos-0');
+    else if (off === 1) card.classList.add('pos-1');
+    else if (off === -1) card.classList.add('pos--1');
+    else if (off === 2) card.classList.add('pos-2');
+    else if (off === -2) card.classList.add('pos--2');
+    else card.classList.add('pos-hidden');
+  });
+  carDotEls.forEach((d, i) => d.classList.toggle('on', i === carIndex));
+
+  const a = AGENTS[carIndex];
+  const web = a.title.includes('🌐');
+  carName.textContent = a.name;
+  carName.style.color = 'var(--ink)';
+  carTitle.textContent = a.title.replace(' 🌐', '');
+  carTitle.style.color = a.color;
+  carDomain.textContent = a.domain;
+  carStage.style.setProperty('--agent-color', a.color);
+}
+
+function goTo(i) {
+  carIndex = (i + AGENTS.length) % AGENTS.length;
+  renderCarousel();
+  resetCarTimer();
+}
+function carNext() { goTo(carIndex + 1); }
+function carPrev() { goTo(carIndex - 1); }
+function resetCarTimer() {
+  clearInterval(carTimer);
+  carTimer = setInterval(carNext, 3200);
+}
+
+document.getElementById('carNext').onclick = carNext;
+document.getElementById('carPrev').onclick = carPrev;
+
+// Pause on hover
+document.getElementById('carousel').addEventListener('mouseenter', () => clearInterval(carTimer));
+document.getElementById('carousel').addEventListener('mouseleave', resetCarTimer);
+
+// Keyboard
+window.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') carNext();
+  if (e.key === 'ArrowLeft') carPrev();
+});
+
+renderCarousel();
+resetCarTimer();
+
+/* ===== FAQ accordion ===== */
+document.querySelectorAll('.faq-item .faq-q').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.closest('.faq-item');
+    const ans = item.querySelector('.faq-a');
+    const isOpen = item.classList.contains('open');
+    // close all
+    document.querySelectorAll('.faq-item').forEach(it => {
+      it.classList.remove('open');
+      it.querySelector('.faq-a').style.maxHeight = null;
+    });
+    if (!isOpen) {
+      item.classList.add('open');
+      ans.style.maxHeight = ans.scrollHeight + 'px';
+    }
+  });
+});
+
+/* Horizontal scroll cards (WOW) */
+const hTrack = document.getElementById('hScrollTrack');
+AGENTS.forEach((a, i) => {
+  const card = document.createElement('div');
+  card.className = 'h-scroll-card';
+  card.style.setProperty('--agent-color', a.color);
+  card.style.setProperty('--agent-glow', a.color.replace(')',' / .45)'));
+  const num = String(i + 1).padStart(2, '0');
+  const web = a.title.includes('🌐');
+  const titleClean = a.title.replace(' 🌐','');
+  const [first, ...rest] = a.name.split(' ');
+  card.innerHTML = `
+    <div class="hs-portrait"><img src="/team-member-${i+1}.jpg" alt="${a.name}" onerror="this.parentNode.style.background='${a.color}'"/></div>
+    <div>
+      <div class="hs-num">/ ${num} — AGENT</div>
+      <div class="hs-name">${first} <em>${rest.join(' ')}</em></div>
+      <div class="hs-title">${titleClean}</div>
+    </div>
+    <div>
+      <div class="hs-domain">${a.domain}</div>
+      <div class="hs-foot">
+        <span class="hs-tag"><span class="hs-dot"></span> ${web ? 'sonnet-4-5 + web' : 'sonnet-4-5'}</span>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--agent-color)"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </div>
+    </div>
+  `;
+  hTrack.appendChild(card);
+});
+
+/* ========================================================
+   LOADER
+======================================================== */
+const loadPct = document.getElementById('loadPct');
+const loadFill = document.getElementById('loadFill');
+const loader = document.getElementById('loader');
+
+(function runLoader(){
+  let p = 0;
+  const tick = () => {
+    p += Math.random() * 14 + 4;
+    if (p > 100) p = 100;
+    loadPct.textContent = Math.floor(p);
+    loadFill.style.width = p + '%';
+    if (p < 100) setTimeout(tick, 70);
+    else setTimeout(exitLoader, 320);
+  };
+  tick();
+})();
+
+function exitLoader(){
+  gsap.registerPlugin(ScrollTrigger);
+
+  const tl = gsap.timeline();
+  tl.to('#loaderLogo', { scale: 1.15, opacity: 0, duration: 0.7, ease: 'expo.in' })
+    .to('#loader .loader-bar, #loader .loader-counter, #loader .loader-tag', { opacity: 0, duration: 0.4 }, '-=0.5')
+    .to('#loader', { yPercent: -100, duration: 0.9, ease: 'expo.inOut', onComplete: () => loader.remove() }, '-=0.2')
+    .add(introAnim, '-=0.5');
+}
+
+/* ========================================================
+   HERO INTRO ANIMATION
+======================================================== */
+function splitWords(){
+  document.querySelectorAll('.title-word').forEach(w => {
+    const text = w.dataset.text || w.textContent;
+    w.innerHTML = '';
+    [...text].forEach((ch, i) => {
+      const span = document.createElement('span');
+      span.className = 'title-char';
+      span.textContent = ch === ' ' ? '\u00A0' : ch;
+      span.style.display = 'inline-block';
+      w.appendChild(span);
+    });
+  });
+}
+splitWords();
+
+function introAnim(){
+  const tl = gsap.timeline();
+  tl.from('.nav-inner', { y: -60, opacity: 0, duration: 0.8, ease: 'expo.out' })
+    .from('.hero .title-char', {
+      yPercent: 110, rotate: 6,
+      stagger: { each: 0.018, from: 'start' },
+      duration: 1.1,
+      ease: 'expo.out'
+    }, '-=0.5')
+    .from('.fade-in', { y: 24, opacity: 0, stagger: 0.08, duration: 0.7, ease: 'expo.out' }, '-=0.7')
+    .from('#bannerFrame', { y: 80, opacity: 0, scale: 0.96, duration: 1.3, ease: 'expo.out' }, '-=0.6')
+    .from('.scroll-cue', { opacity: 0, duration: 0.5 }, '-=0.3');
+
+  startBgCanvas();
+  startHeroVideoFreeze();
+  startRotator();
+  startStatCounters();
+  startMagneticCTA();
+  startMarqueeReact();
+  startShowcase();
+  startCursor();
+  scrollReveals();
+  wowEffects();
+}
+
+/* ========================================================
+   WORD ROTATOR
+======================================================== */
+function startRotator(){
+  const items = document.querySelectorAll('.hero-rotate-words span');
+  let i = 0;
+  gsap.set(items, { yPercent: 100 });
+  gsap.set(items[0], { yPercent: 0 });
+  setInterval(() => {
+    const cur = items[i]; const next = items[(i + 1) % items.length];
+    gsap.to(cur, { yPercent: -110, duration: 0.6, ease: 'expo.in' });
+    gsap.fromTo(next, { yPercent: 100 }, { yPercent: 0, duration: 0.7, ease: 'expo.out' });
+    i = (i + 1) % items.length;
+  }, 2200);
+}
+
+/* ========================================================
+   STAT COUNTERS
+======================================================== */
+function startStatCounters(){
+  document.querySelectorAll('.stat-count').forEach(el => {
+    const to = parseFloat(el.dataset.to);
+    const dec = parseInt(el.dataset.decimals || '0');
+    const obj = { v: 0 };
+    ScrollTrigger.create({
+      trigger: el,
+      start: 'top 85%',
+      once: true,
+      onEnter: () => {
+        gsap.to(obj, {
+          v: to, duration: 1.6, ease: 'expo.out',
+          onUpdate: () => { el.textContent = obj.v.toFixed(dec); }
+        });
+      }
+    });
+  });
+}
+
+/* ========================================================
+   HERO VIDEO — play once, freeze on last frame
+======================================================== */
+function startHeroVideoFreeze(){
+  const v = document.getElementById('heroVideo');
+  if (!v) return;
+  v.addEventListener('ended', () => {
+    // Freeze on the final frame; do not loop. Replays only on page refresh.
+    v.pause();
+    try { v.currentTime = Math.max(0, v.duration - 0.05); } catch(e){}
+  });
+}
+
+/* ========================================================
+   WATERMARK PARALLAX + MOUSE TILT
+======================================================== */
+function startWatermarkParallax(){
+  const wm = document.querySelector('.hero-watermark');
+  if (!wm) return;
+  gsap.fromTo(wm, { opacity: 0, scale: 0.85 }, { opacity: 0.08, scale: 1, duration: 1.8, ease: 'expo.out', delay: 0.3 });
+  let tx = 0, ty = 0, cx = 0, cy = 0, scrollY = 0;
+  window.addEventListener('mousemove', e => {
+    tx = (e.clientX / window.innerWidth - 0.5) * 18;
+    ty = (e.clientY / window.innerHeight - 0.5) * 12;
+  });
+  window.addEventListener('scroll', () => { scrollY = window.scrollY * 0.15; }, { passive: true });
+  gsap.ticker.add(() => {
+    cx += (tx - cx) * 0.05; cy += (ty - cy) * 0.05;
+    wm.style.transform = `translate(${cx}px, calc(-50% + ${cy - scrollY}px)) rotate(-6deg)`;
+  });
+}
+
+/* ========================================================
+   BANNER PARALLAX
+======================================================== */
+function startBannerParallax(){
+  const frame = document.getElementById('bannerFrame');
+  if (!frame) return;
+  gsap.to(frame, {
+    yPercent: -8, ease: 'none',
+    scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
+  });
+}
+
+/* ========================================================
+   MAGNETIC CTA
+======================================================== */
+function startMagneticCTA(){
+  document.querySelectorAll('.cta-primary').forEach(btn => {
+    btn.addEventListener('mousemove', e => {
+      const r = btn.getBoundingClientRect();
+      const mx = e.clientX - r.left, my = e.clientY - r.top;
+      btn.style.setProperty('--mx', (mx/r.width*100)+'%');
+      btn.style.setProperty('--my', (my/r.height*100)+'%');
+      gsap.to(btn, { x: (mx - r.width/2) * 0.15, y: (my - r.height/2) * 0.25, duration: 0.4, ease: 'power3.out' });
+    });
+    btn.addEventListener('mouseleave', () => {
+      gsap.to(btn, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1,0.4)' });
+    });
+  });
+}
+
+/* ========================================================
+   CUSTOM CURSOR
+======================================================== */
+function startCursor(){
+  const cur = document.getElementById('cursor');
+  let mx = 0, my = 0, cx = 0, cy = 0;
+  window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  gsap.ticker.add(() => {
+    cx += (mx - cx) * 0.18;
+    cy += (my - cy) * 0.18;
+    cur.style.transform = `translate(${cx}px, ${cy}px) translate(-50%,-50%)`;
+  });
+  document.querySelectorAll('a, button, .car-card').forEach(el => {
+    el.addEventListener('mouseenter', () => cur.classList.add('lg'));
+    el.addEventListener('mouseleave', () => cur.classList.remove('lg'));
+  });
+}
+
+/* ========================================================
+   GENERIC REVEALS
+======================================================== */
+function scrollReveals(){
+  gsap.utils.toArray('.section-head').forEach(head => {
+    gsap.from(head.querySelectorAll('.section-tag, h2, .section-desc'), {
+      scrollTrigger: { trigger: head, start: 'top 90%', once: true },
+      y: 20, stagger: 0.06, duration: 0.7, ease: 'expo.out', clearProps: 'all'
+    });
+  });
+  gsap.from('.carousel, .car-info, .car-dots', {
+    scrollTrigger: { trigger: '.carousel', start: 'top 90%', once: true },
+    y: 24, opacity: 0, stagger: 0.1, duration: 0.8, ease: 'expo.out', clearProps: 'all'
+  });
+  gsap.from('.diff-card', {
+    scrollTrigger: { trigger: '.diff-grid', start: 'top 92%', once: true },
+    y: 20, stagger: 0.08, duration: 0.7, ease: 'expo.out', clearProps: 'all'
+  });
+  gsap.from('.how-step', {
+    scrollTrigger: { trigger: '.how-grid', start: 'top 90%', once: true },
+    y: 24, opacity: 0, stagger: 0.1, duration: 0.7, ease: 'expo.out', clearProps: 'all'
+  });
+  gsap.from('.price-card', {
+    scrollTrigger: { trigger: '.price-grid', start: 'top 88%', once: true },
+    y: 30, opacity: 0, stagger: 0.1, duration: 0.8, ease: 'expo.out', clearProps: 'all'
+  });
+  gsap.from('.faq-item', {
+    scrollTrigger: { trigger: '.faq-grid', start: 'top 90%', once: true },
+    y: 16, opacity: 0, stagger: 0.06, duration: 0.6, ease: 'expo.out', clearProps: 'all'
+  });
+  gsap.from('.trust-logo', {
+    scrollTrigger: { trigger: '.trust', start: 'top 92%', once: true },
+    y: 12, opacity: 0, stagger: 0.08, duration: 0.6, ease: 'expo.out', clearProps: 'all'
+  });
+  gsap.from('.stat', {
+    scrollTrigger: { trigger: '.stats', start: 'top 92%', once: true },
+    y: 16, stagger: 0.06, duration: 0.6, ease: 'expo.out', clearProps: 'all'
+  });
+  gsap.from('.pledge-card', {
+    scrollTrigger: { trigger: '.pledge-grid', start: 'top 92%', once: true },
+    y: 20, stagger: 0.08, duration: 0.7, ease: 'expo.out', clearProps: 'all'
+  });
+  gsap.from('.pc-row', {
+    scrollTrigger: { trigger: '.pledge-commitments', start: 'top 92%', once: true },
+    y: 12, stagger: 0.03, duration: 0.5, ease: 'expo.out', clearProps: 'all'
+  });
+  gsap.from('.cta-title .title-char', {
+    scrollTrigger: { trigger: '.cta', start: 'top 80%', once: true },
+    yPercent: 110, stagger: 0.012, duration: 0.8, ease: 'expo.out', clearProps: 'all'
+  });
+}
+
+/* ========================================================
+   SHOWCASE — pinned workflow
+======================================================== */
+function startShowcase(){
+  const steps = gsap.utils.toArray('.showcase-step');
+  const nodes = {
+    n0:    document.getElementById('n0'),
+    n1:    document.getElementById('n1'),
+    jf:    document.getElementById('n-jf'),
+    marc:  document.getElementById('n-marc'),
+    sarah: document.getElementById('n-sarah'),
+    natalie:document.getElementById('n-natalie'),
+    final: document.getElementById('n-final'),
+  };
+  const paths = ['p1','p2a','p2b','p2c','p2d','p3a','p3b','p3c','p3d'].map(id => document.getElementById(id));
+  const timer = document.getElementById('wfTimer');
+
+  // Initial state — only Q lit
+  Object.values(nodes).forEach(n => n.classList.remove('active'));
+  nodes.n0.classList.add('active');
+
+  steps.forEach((step, i) => {
+    ScrollTrigger.create({
+      trigger: step,
+      start: 'top 65%',
+      end: 'bottom 35%',
+      onEnter: () => activatePhase(i + 1),
+      onEnterBack: () => activatePhase(i + 1),
+    });
+  });
+
+  function activatePhase(phase){
+    // Reset
+    Object.values(nodes).forEach(n => n.classList.remove('active'));
+    paths.forEach(p => { p.classList.remove('lit'); gsap.set(p, { strokeDashoffset: 1000 }); });
+    nodes.n0.classList.add('active');
+
+    if (phase >= 1) {
+      gsap.to(paths[0], { strokeDashoffset: 0, duration: 0.6, ease: 'expo.out', onStart:()=>paths[0].classList.add('lit') });
+      gsap.delayedCall(0.4, () => nodes.n1.classList.add('active'));
+      gsap.delayedCall(0.7, () => { nodes.jf.classList.add('active'); paths[1].classList.add('lit'); gsap.to(paths[1], { strokeDashoffset: 0, duration: 0.6, ease: 'expo.out' }); });
+      animateTimer(1.4);
+    }
+    if (phase >= 2) {
+      ['marc','sarah','natalie'].forEach((id, k) => {
+        gsap.delayedCall(0.2 + k * 0.18, () => {
+          nodes[id].classList.add('active');
+          const p = paths[2 + k]; p.classList.add('lit');
+          gsap.to(p, { strokeDashoffset: 0, duration: 0.6, ease: 'expo.out' });
+        });
+      });
+      animateTimer(8.4);
+    }
+    if (phase >= 3) {
+      gsap.delayedCall(0.3, () => {
+        ['p3a','p3b','p3c','p3d'].forEach((id, k) => {
+          const p = document.getElementById(id);
+          p.classList.add('lit');
+          gsap.to(p, { strokeDashoffset: 0, duration: 0.6, ease: 'expo.out', delay: k * 0.08 });
+        });
+      });
+      gsap.delayedCall(0.9, () => nodes.final.classList.add('active'));
+      animateTimer(38.0);
+    }
+  }
+
+  function animateTimer(to){
+    const obj = { v: parseFloat(timer.textContent) || 0 };
+    gsap.to(obj, { v: to, duration: 1.6, ease: 'power2.out', onUpdate: () => { timer.textContent = obj.v.toFixed(1) + 's'; } });
+  }
+
+  activatePhase(1);
+}
+
+/* ========================================================
+   BACKGROUND CANVAS — drifting nodes
+======================================================== */
+function startBgCanvas(){
+  const c = document.getElementById('bgCanvas');
+  const ctx = c.getContext('2d');
+  let W, H, dots;
+  function resize(){
+    W = c.width = window.innerWidth * devicePixelRatio;
+    H = c.height = window.innerHeight * devicePixelRatio;
+    c.style.width = window.innerWidth + 'px';
+    c.style.height = window.innerHeight + 'px';
+    const count = Math.min(80, Math.floor(window.innerWidth / 18));
+    dots = Array.from({length: count}, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.18 * devicePixelRatio,
+      vy: (Math.random() - 0.5) * 0.18 * devicePixelRatio,
+      r: (Math.random() * 1.4 + 0.4) * devicePixelRatio,
+      hot: Math.random() > 0.88
+    }));
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let mx = 0, my = 0;
+  window.addEventListener('mousemove', e => { mx = e.clientX * devicePixelRatio; my = e.clientY * devicePixelRatio; });
+
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    for (const d of dots) {
+      d.x += d.vx; d.y += d.vy;
+      if (d.x < 0 || d.x > W) d.vx *= -1;
+      if (d.y < 0 || d.y > H) d.vy *= -1;
+      // mouse attraction
+      const dx = d.x - mx, dy = d.y - my, dist = Math.hypot(dx, dy);
+      if (dist < 140 * devicePixelRatio) {
+        d.x += dx / dist * 0.5; d.y += dy / dist * 0.5;
+      }
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+      ctx.fillStyle = d.hot ? 'rgba(120,220,160,0.85)' : 'rgba(180,175,160,0.35)';
+      if (d.hot) ctx.shadowColor = 'rgba(120,220,160,0.7)', ctx.shadowBlur = 10 * devicePixelRatio;
+      else ctx.shadowBlur = 0;
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    // connect close dots
+    for (let i = 0; i < dots.length; i++) {
+      for (let j = i + 1; j < dots.length; j++) {
+        const a = dots[i], b = dots[j];
+        const dx = a.x - b.x, dy = a.y - b.y, d = Math.hypot(dx, dy);
+        if (d < 100 * devicePixelRatio) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(120,220,160,${(1 - d / (100*devicePixelRatio)) * 0.12})`;
+          ctx.lineWidth = 0.5 * devicePixelRatio;
+          ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+  tick();
+}
+
+/* ========================================================
+   MARQUEE — pause on hover, accelerate on scroll
+======================================================== */
+function startMarqueeReact(){
+  const track = document.querySelector('.marquee-track');
+  if (!track) return;
+  let speed = 1;
+  ScrollTrigger.create({
+    trigger: '.marquee',
+    start: 'top bottom', end: 'bottom top',
+    onUpdate: self => {
+      speed = 1 + Math.abs(self.getVelocity()) / 4000;
+      track.style.animationDuration = (40 / Math.min(speed, 3)) + 's';
+    }
+  });
+}
+
+/* ========================================================
+   ✨ WOW EFFECTS — restrained, tasteful scroll reveals
+======================================================== */
+function wowEffects(){
+  /* 1. Scroll progress bar */
+  const bar = document.getElementById('scrollBar');
+  if (bar) ScrollTrigger.create({
+    start: 0, end: 'max',
+    onUpdate: self => { bar.style.width = (self.progress * 100) + '%'; }
+  });
+
+  /* 2. Section indicator active state */
+  const dots = document.querySelectorAll('.sec-dot');
+  ['hero','stats','agents','orchestration','difference','pledge','pricing','cta'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    ScrollTrigger.create({
+      trigger: el, start: 'top 50%', end: 'bottom 50%',
+      onToggle: self => {
+        if (self.isActive) dots.forEach(d => d.classList.toggle('on', d.dataset.sec === id));
+      }
+    });
+  });
+
+  /* 3. Hero — subtle parallax + scale on background video */
+  gsap.to('.hero-video', {
+    scale: 1.12, yPercent: 8, ease: 'none',
+    scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: 1 }
+  });
+  gsap.to('.hero-inner', {
+    y: -40, opacity: 0.2, ease: 'none',
+    scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom 40%', scrub: 1 }
+  });
+  gsap.to('.scroll-cue', {
+    opacity: 0,
+    scrollTrigger: { trigger: '.hero', start: 'top top', end: '+=200', scrub: true }
+  });
+
+  /* 4. CTA — subtle scale + glow on reveal (title chars handled by scrollReveals) */
+  gsap.to('.cta-glow', {
+    scale: 1.15,
+    scrollTrigger: { trigger: '.cta', start: 'top bottom', end: 'bottom top', scrub: 1.5 }
+  });
+
+  /* 5. (marquee handled by startMarqueeReact) */
+
+  /* 6. Hero watermark fades on scroll out */
+  setTimeout(() => ScrollTrigger.refresh(), 800);
+  window.addEventListener('load', () => ScrollTrigger.refresh());
+}
+
+</script>
+</body>
+</html>

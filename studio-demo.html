@@ -1,0 +1,1467 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Z12 — Orchestration Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0E0D0B;
+  --surface:#16140F;
+  --surface-2:#1C1A14;
+  --line:#26231C;
+  --line-2:#33301F;
+  --ink:#F5F2E8;
+  --ink-2:#B8B2A0;
+  --ink-3:#7A7567;
+  --ink-4:#4A4639;
+  --accent: oklch(0.74 0.13 152);
+  --accent-soft: oklch(0.74 0.13 152 / .14);
+  --accent-line: oklch(0.74 0.13 152 / .35);
+  --gold: oklch(0.78 0.13 78);
+  --gold-soft: oklch(0.78 0.13 78 / .14);
+  --warn: oklch(0.72 0.13 40);
+  --warn-soft: oklch(0.72 0.13 40 / .14);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 0 rgba(255,255,255,.02) inset, 0 12px 40px rgba(0,0,0,.4);
+}
+.theme-light{
+  --bg:#F4F1EA;
+  --surface:#FBF9F4;
+  --surface-2:#FFFFFF;
+  --line:#E5E0D2;
+  --line-2:#D4CDBB;
+  --ink:#191712;
+  --ink-2:#5C5648;
+  --ink-3:#86806F;
+  --ink-4:#B5AE9C;
+  --accent: oklch(0.55 0.13 152);
+  --accent-soft: oklch(0.55 0.13 152 / .12);
+  --accent-line: oklch(0.55 0.13 152 / .35);
+  --gold: oklch(0.62 0.13 78);
+  --gold-soft: oklch(0.62 0.13 78 / .14);
+  --warn: oklch(0.58 0.16 40);
+  --warn-soft: oklch(0.58 0.16 40 / .14);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Geist",ui-sans-serif,system-ui,sans-serif;font-feature-settings:"ss01","cv11";font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer;padding:0}
+input,textarea{font-family:inherit;color:inherit;background:none;border:none;outline:none}
+.serif{font-family:"Instrument Serif",ui-serif,Georgia,serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:"Geist Mono",ui-monospace,monospace;font-feature-settings:"ss02";letter-spacing:-0.01em}
+
+/* Layout */
+.app{display:grid;grid-template-columns:248px 1fr 380px;height:100vh;overflow:hidden}
+.app.compact{grid-template-columns:64px 1fr 380px}
+.app.no-right{grid-template-columns:248px 1fr}
+
+/* ===== Sidebar — Roster ===== */
+.roster{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.brand{display:flex;align-items:center;gap:10px;padding:18px 18px 14px;border-bottom:1px solid var(--line)}
+.brand-mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),oklch(0.62 0.13 175));display:grid;place-items:center;color:#0a0a0a;font-weight:700;font-size:13px;letter-spacing:-0.04em}
+.brand-name{font-weight:600;letter-spacing:-0.02em;font-size:14px}
+.brand-sub{font-size:11px;color:var(--ink-3);letter-spacing:0.02em;text-transform:uppercase;margin-top:2px}
+.app.compact .brand-name,.app.compact .brand-sub{display:none}
+
+.nav-section{padding:14px 12px 6px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3)}
+.app.compact .nav-section{display:none}
+.nav-list{display:flex;flex-direction:column;gap:1px;padding:0 8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;color:var(--ink-2);font-size:13px;cursor:pointer;transition:.12s}
+.nav-item:hover{background:var(--surface-2);color:var(--ink)}
+.nav-item.active{background:var(--surface-2);color:var(--ink)}
+.nav-icon{width:14px;height:14px;flex:0 0 14px}
+
+.app.compact .nav-item span:not(.nav-icon-w){display:none}
+.app.compact .nav-item{justify-content:center;padding:9px 0}
+
+.roster-scroll{flex:1;overflow-y:auto;padding:6px 8px 16px}
+.roster-scroll::-webkit-scrollbar{width:6px}
+.roster-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+
+.agent-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;position:relative;transition:.12s}
+.agent-row:hover{background:var(--surface-2)}
+.agent-row.active{background:var(--surface-2)}
+.agent-row.busy::before{content:"";position:absolute;left:-8px;top:50%;width:3px;height:18px;border-radius:2px;background:var(--accent);transform:translateY(-50%);box-shadow:0 0 16px var(--accent)}
+.app.compact .agent-row{justify-content:center;padding:6px 0}
+.app.compact .agent-row .agent-meta{display:none}
+
+.avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600;letter-spacing:0;flex:0 0 30px;position:relative;color:#0a0a0a}
+.avatar.busy{box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--accent),0 0 24px var(--accent-soft)}
+.avatar.done{box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--accent-line)}
+.avatar-status{position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--surface);background:var(--ink-4)}
+.avatar-status.busy{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.avatar-status.done{background:var(--accent-line)}
+.avatar-status.web{background:var(--gold);box-shadow:0 0 6px var(--gold)}
+
+.agent-meta{flex:1;min-width:0}
+.agent-name{font-size:12.5px;font-weight:500;letter-spacing:-0.01em;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.agent-title{font-size:10.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+
+.roster-foot{padding:12px 14px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.app.compact .roster-foot .user-meta{display:none}
+.user-dot{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#3a3528,#1a1812);display:grid;place-items:center;color:var(--ink);font-size:11px;font-weight:600;border:1px solid var(--line-2)}
+.user-meta{flex:1;min-width:0}
+.user-name{font-size:12px;color:var(--ink);font-weight:500}
+.user-org{font-size:10.5px;color:var(--ink-3)}
+
+/* ===== Center — Studio ===== */
+.studio{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.studio-head{display:flex;align-items:center;justify-content:space-between;padding:12px 22px;border-bottom:1px solid var(--line);min-height:54px;gap:14px}
+.studio-head-l{display:flex;align-items:center;gap:14px;min-width:0}
+.icon-btn{width:32px;height:32px;border-radius:6px;display:grid;place-items:center;color:var(--ink-2);transition:.12s}
+.icon-btn:hover{background:var(--surface-2);color:var(--ink)}
+.thread-title{font-size:14px;font-weight:500;letter-spacing:-0.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thread-meta{font-size:11px;color:var(--ink-3);margin-top:1px;font-family:"Geist Mono",monospace;letter-spacing:0}
+.studio-head-r{display:flex;align-items:center;gap:6px}
+.lang-toggle{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:2px;font-size:11px}
+.lang-toggle button{padding:4px 10px;border-radius:4px;color:var(--ink-3);font-weight:500}
+.lang-toggle button.on{background:var(--surface-2);color:var(--ink);box-shadow:0 1px 0 var(--line-2) inset}
+
+/* Conversation */
+.thread{flex:1;overflow-y:auto;padding:30px 0 200px;scroll-behavior:smooth}
+.thread::-webkit-scrollbar{width:8px}
+.thread::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+.thread-inner{max-width:780px;margin:0 auto;padding:0 30px}
+
+.msg{margin-bottom:32px}
+.msg-user{display:flex;justify-content:flex-end}
+.msg-user-bubble{background:var(--surface-2);border:1px solid var(--line);border-radius:14px 14px 4px 14px;padding:12px 16px;max-width:560px;font-size:13.5px;color:var(--ink);line-height:1.55}
+
+/* Orchestrator card */
+.orch-card{background:linear-gradient(180deg,var(--surface) 0%,var(--surface-2) 100%);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.orch-head{display:flex;align-items:center;gap:12px;padding:14px 16px 12px;border-bottom:1px dashed var(--line)}
+.orch-mark{width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,var(--accent),oklch(0.62 0.13 175));display:grid;place-items:center;color:#0a0a0a;font-weight:700;font-size:11px}
+.orch-title{font-size:12px;letter-spacing:-0.01em;color:var(--ink);font-weight:500}
+.orch-sub{font-size:10.5px;color:var(--ink-3);font-family:"Geist Mono",monospace;margin-top:1px}
+.orch-pill{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:99px;font-size:10.5px;font-family:"Geist Mono",monospace;letter-spacing:.02em;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-line)}
+
+/* Workflow plan visual */
+.plan{padding:18px 18px 6px}
+.plan-rows{display:flex;flex-direction:column;gap:12px}
+.plan-row{display:flex;align-items:stretch;gap:10px}
+.plan-step{font-family:"Geist Mono",monospace;font-size:10px;color:var(--ink-3);width:48px;flex:0 0 48px;padding-top:6px;letter-spacing:.05em}
+.plan-cells{flex:1;display:flex;gap:8px;flex-wrap:wrap}
+.plan-cell{display:flex;align-items:center;gap:8px;padding:7px 11px 7px 7px;border:1px solid var(--line);border-radius:99px;background:var(--bg);transition:.2s}
+.plan-cell.busy{border-color:var(--accent-line);background:var(--accent-soft)}
+.plan-cell.done{border-color:var(--line-2);opacity:.85}
+.plan-cell .avatar{width:20px;height:20px;font-size:9px;flex:0 0 20px}
+.plan-cell .avatar.busy{box-shadow:0 0 0 1.5px var(--bg),0 0 0 2.5px var(--accent),0 0 14px var(--accent-soft)}
+.plan-cell-name{font-size:11.5px;color:var(--ink-2);font-weight:500}
+.plan-cell.busy .plan-cell-name{color:var(--ink)}
+.plan-cell-task{font-size:10.5px;color:var(--ink-3);font-family:"Geist Mono",monospace;margin-left:2px}
+
+.plan-conn{display:flex;align-items:center;justify-content:center;color:var(--ink-4);font-size:11px;padding:0 4px}
+
+/* Reply blocks */
+.agent-reply{margin-top:14px;padding:14px 18px 16px;border-top:1px solid var(--line)}
+.agent-reply-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.agent-reply-head .avatar{width:24px;height:24px;font-size:10px;flex:0 0 24px}
+.agent-reply-name{font-size:12.5px;font-weight:500;color:var(--ink)}
+.agent-reply-role{font-size:10.5px;color:var(--ink-3);font-family:"Geist Mono",monospace}
+.agent-reply-time{margin-left:auto;font-size:10.5px;color:var(--ink-3);font-family:"Geist Mono",monospace}
+
+.agent-content{font-size:13px;line-height:1.6;color:var(--ink-2)}
+.agent-content strong{color:var(--ink);font-weight:600}
+.agent-content h4{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin:14px 0 6px;font-weight:500}
+.agent-content ul{margin:6px 0;padding-left:18px}
+.agent-content li{margin:3px 0}
+
+/* Data table */
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:10px 0 4px}
+.kpi-cell{background:var(--surface-2);padding:11px 13px}
+.kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-family:"Geist Mono",monospace}
+.kpi-val{font-size:18px;font-weight:500;letter-spacing:-0.02em;color:var(--ink);margin-top:4px;font-family:"Instrument Serif",serif;line-height:1.1}
+.kpi-delta{font-size:10.5px;color:var(--accent);font-family:"Geist Mono",monospace;margin-top:2px}
+.kpi-delta.neg{color:var(--warn)}
+.kpi-delta.neutral{color:var(--ink-3)}
+
+/* Citation chips */
+.cites{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.cite{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line);font-size:10.5px;color:var(--ink-2);font-family:"Geist Mono",monospace;cursor:pointer;transition:.12s}
+.cite:hover{border-color:var(--accent-line);color:var(--ink)}
+.cite-num{color:var(--accent);font-weight:500}
+
+/* Synthesis card */
+.synth{margin:18px 0 0;background:var(--surface-2);border:1px solid var(--line-2);border-radius:10px;padding:16px 18px}
+.synth-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.synth-mark{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+.synth-title{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);font-weight:500}
+.synth-body{font-size:13.5px;line-height:1.6;color:var(--ink)}
+.synth-body em{font-style:normal;color:var(--accent)}
+
+.actions-list{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.action-item{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:var(--bg);border:1px solid var(--line);border-radius:8px;font-size:12.5px}
+.action-prio{font-family:"Geist Mono",monospace;font-size:10px;padding:2px 6px;border-radius:4px;letter-spacing:.05em;flex:0 0 auto;margin-top:1px}
+.action-prio.p1{background:var(--warn-soft);color:var(--warn)}
+.action-prio.p2{background:var(--gold-soft);color:var(--gold)}
+.action-prio.p3{background:var(--accent-soft);color:var(--accent)}
+.action-text{flex:1;color:var(--ink-2);line-height:1.5}
+.action-text strong{color:var(--ink)}
+.action-owner{font-family:"Geist Mono",monospace;font-size:10px;color:var(--ink-3);white-space:nowrap}
+
+/* Composer */
+.composer-wrap{position:absolute;left:248px;right:380px;bottom:0;padding:0 30px 22px;background:linear-gradient(180deg,transparent 0%,var(--bg) 28%);pointer-events:none}
+.app.compact .composer-wrap{left:64px}
+.app.no-right .composer-wrap{right:0}
+.composer{max-width:780px;margin:0 auto;background:var(--surface);border:1px solid var(--line-2);border-radius:14px;padding:12px 14px 10px;pointer-events:auto;box-shadow:0 8px 32px rgba(0,0,0,.35)}
+.composer:focus-within{border-color:var(--accent-line);box-shadow:0 8px 32px rgba(0,0,0,.4),0 0 0 3px var(--accent-soft)}
+.composer-input{width:100%;background:transparent;color:var(--ink);font-size:13.5px;line-height:1.55;resize:none;min-height:22px;max-height:140px;font-family:inherit;border:none;padding:4px 0}
+.composer-input::placeholder{color:var(--ink-3)}
+.composer-tools{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+.tool-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;font-size:11px;color:var(--ink-3);border:1px solid transparent;cursor:pointer;transition:.12s}
+.tool-chip:hover{background:var(--surface-2);color:var(--ink-2)}
+.tool-chip.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-line)}
+.send-btn{margin-left:auto;background:var(--ink);color:var(--bg);padding:7px 14px;border-radius:99px;font-weight:500;font-size:12px;display:inline-flex;align-items:center;gap:6px;letter-spacing:-0.01em}
+.send-btn:hover{background:var(--accent);color:#0a0a0a}
+.send-btn:disabled{opacity:.4;cursor:not-allowed;background:var(--ink-4);color:var(--ink-3)}
+
+/* Quick prompts */
+.quick-prompts{max-width:780px;margin:0 auto 8px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:auto}
+.qp{padding:5px 11px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);font-size:11.5px;cursor:pointer;transition:.12s}
+.qp:hover{background:var(--surface-2);color:var(--ink);border-color:var(--line-2)}
+
+/* ===== Right pane — Context ===== */
+.context{background:var(--surface);border-left:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.ctx-tabs{display:flex;border-bottom:1px solid var(--line);padding:0 14px}
+.ctx-tab{padding:14px 12px;font-size:12px;color:var(--ink-3);position:relative;cursor:pointer;font-weight:500;letter-spacing:-0.01em}
+.ctx-tab.on{color:var(--ink)}
+.ctx-tab.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:var(--accent)}
+.ctx-tab .ct-count{display:inline-block;margin-left:6px;font-size:10px;color:var(--ink-3);font-family:"Geist Mono",monospace}
+
+.ctx-scroll{flex:1;overflow-y:auto;padding:14px}
+.ctx-scroll::-webkit-scrollbar{width:6px}
+.ctx-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+
+.ctx-section{margin-bottom:18px}
+.ctx-section-title{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px;font-weight:500}
+
+/* Workflow timeline */
+.timeline{position:relative;padding-left:18px}
+.timeline::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:1px;background:var(--line-2)}
+.tl-item{position:relative;padding:6px 0;font-size:11.5px}
+.tl-item::before{content:"";position:absolute;left:-18px;top:11px;width:11px;height:11px;border-radius:50%;background:var(--surface);border:2px solid var(--ink-4)}
+.tl-item.done::before{border-color:var(--accent);background:var(--accent)}
+.tl-item.busy::before{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px var(--accent-soft);animation:pulse 1.6s infinite}
+.tl-item.pending::before{border-color:var(--ink-4)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px var(--accent-soft)}50%{box-shadow:0 0 0 6px var(--accent-soft)}}
+.tl-name{color:var(--ink);font-weight:500;font-size:12px}
+.tl-task{color:var(--ink-3);font-size:11px;margin-top:1px}
+.tl-time{font-family:"Geist Mono",monospace;font-size:10px;color:var(--ink-3);margin-top:2px;letter-spacing:.02em}
+.tl-item.busy .tl-name::after{content:"●";color:var(--accent);margin-left:6px;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.3}}
+
+/* Documents */
+.doc-row{display:flex;gap:10px;align-items:center;padding:8px;border-radius:6px;cursor:pointer;transition:.1s}
+.doc-row:hover{background:var(--surface-2)}
+.doc-icon{width:28px;height:32px;border-radius:4px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;font-size:11px;color:var(--ink-3);font-family:"Geist Mono",monospace;flex:0 0 28px}
+.doc-meta{flex:1;min-width:0}
+.doc-name{font-size:12px;color:var(--ink);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-info{font-size:10.5px;color:var(--ink-3);font-family:"Geist Mono",monospace;margin-top:1px}
+.doc-status{font-size:9.5px;padding:2px 6px;border-radius:4px;font-family:"Geist Mono",monospace;letter-spacing:.04em}
+.doc-status.indexed{background:var(--accent-soft);color:var(--accent)}
+
+/* Cost meter */
+.meter{padding:14px;background:var(--bg);border:1px solid var(--line);border-radius:8px}
+.meter-row{display:flex;align-items:baseline;justify-content:space-between;font-size:11px;color:var(--ink-3);margin-bottom:6px;font-family:"Geist Mono",monospace}
+.meter-row strong{color:var(--ink);font-weight:500;font-family:"Geist",sans-serif;font-size:13px}
+.meter-bar{height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden;margin-top:10px}
+.meter-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:2px;transition:.5s}
+.meter-foot{display:flex;justify-content:space-between;font-family:"Geist Mono",monospace;font-size:10px;color:var(--ink-3);margin-top:6px}
+
+/* Empty/loading shimmer in agent body */
+.shimmer{height:10px;border-radius:3px;background:linear-gradient(90deg,var(--surface),var(--surface-2),var(--surface));background-size:200% 100%;animation:shimmer 1.4s infinite;margin:6px 0}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.shimmer.s60{width:60%}
+.shimmer.s40{width:40%}
+
+/* Stream cursor */
+.cursor{display:inline-block;width:6px;height:14px;background:var(--accent);vertical-align:-2px;margin-left:2px;animation:blink 1s infinite}
+
+/* SVG inline icons */
+.i{width:14px;height:14px;stroke:currentColor;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+/* ===== Page (non-studio views) ===== */
+.page{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;padding:24px 36px 18px;border-bottom:1px solid var(--line);gap:20px}
+.page-title{font-family:"Instrument Serif",serif;font-size:32px;line-height:1;letter-spacing:-0.02em;color:var(--ink)}
+.page-sub{font-size:12.5px;color:var(--ink-3);margin-top:6px;font-family:"Geist Mono",monospace}
+.page-body{flex:1;overflow-y:auto;padding:28px 36px 60px}
+.page-body::-webkit-scrollbar{width:8px}
+.page-body::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+.page-actions{display:flex;gap:8px}
+.btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:500;border:1px solid var(--line-2);color:var(--ink-2);background:var(--surface);transition:.12s}
+.btn:hover{color:var(--ink);border-color:var(--ink-3)}
+.btn-primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn-primary:hover{background:var(--accent);color:#0a0a0a;border-color:var(--accent)}
+
+/* Dashboard */
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden}
+.tile-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-family:"Geist Mono",monospace}
+.tile-val{font-family:"Instrument Serif",serif;font-size:42px;line-height:1.05;letter-spacing:-0.02em;color:var(--ink);margin-top:10px}
+.tile-foot{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:11px;color:var(--ink-3);font-family:"Geist Mono",monospace}
+.tile-spark{position:absolute;right:16px;bottom:16px;opacity:.65}
+.tile-delta{display:inline-flex;align-items:center;gap:3px;color:var(--accent)}
+.tile-delta.neg{color:var(--warn)}
+
+.col-2{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-bottom:24px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.panel-head{padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.panel-title{font-size:13px;font-weight:500;letter-spacing:-0.01em;color:var(--ink)}
+.panel-body{padding:8px 0}
+
+/* Calendar list */
+.cal-row{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line);transition:.1s}
+.cal-row:last-child{border-bottom:none}
+.cal-row:hover{background:var(--surface-2)}
+.cal-date{font-family:"Instrument Serif",serif;font-size:24px;line-height:1;letter-spacing:-0.02em;color:var(--ink);width:54px;flex:0 0 54px;text-align:center}
+.cal-date small{display:block;font-family:"Geist Mono",monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:3px}
+.cal-meta{flex:1;min-width:0}
+.cal-name{font-size:12.5px;color:var(--ink);font-weight:500}
+.cal-info{font-size:11px;color:var(--ink-3);margin-top:1px}
+.cal-tag{font-size:10px;padding:3px 7px;border-radius:99px;font-family:"Geist Mono",monospace;letter-spacing:.04em;border:1px solid var(--line-2);color:var(--ink-3)}
+.cal-tag.urgent{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+
+/* Conversation list */
+.conv-row{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--line);cursor:pointer;transition:.1s}
+.conv-row:last-child{border-bottom:none}
+.conv-row:hover{background:var(--surface-2)}
+.conv-text{flex:1;min-width:0}
+.conv-title{font-size:12.5px;color:var(--ink);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-info{font-size:10.5px;color:var(--ink-3);margin-top:1px;font-family:"Geist Mono",monospace}
+.conv-stack{display:flex;margin-left:8px}
+.conv-stack .avatar{margin-left:-6px;border:2px solid var(--surface)}
+
+/* Activity bars */
+.act-list{padding:6px 20px 16px;display:flex;flex-direction:column;gap:8px}
+.act-row{display:flex;align-items:center;gap:12px;font-size:11.5px}
+.act-name{width:100px;color:var(--ink);font-weight:500}
+.act-bar{flex:1;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.act-fill{height:100%;border-radius:3px}
+.act-num{font-family:"Geist Mono",monospace;font-size:10.5px;color:var(--ink-3);width:36px;text-align:right}
+
+/* Documents page */
+.search-bar{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:var(--ink-3);margin-bottom:14px}
+.search-bar input{flex:1;font-size:13px;color:var(--ink)}
+.tab-pills{display:flex;gap:6px;margin-bottom:18px}
+.pill{padding:7px 14px;border-radius:99px;font-size:12px;color:var(--ink-3);background:var(--surface);border:1px solid var(--line);cursor:pointer;transition:.12s}
+.pill.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pill .pill-count{margin-left:6px;font-family:"Geist Mono",monospace;font-size:10px;opacity:.7}
+
+.doc-table{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.doc-th, .doc-tr{display:grid;grid-template-columns:36px 1.6fr 1fr 90px 80px 90px 110px 30px;gap:14px;align-items:center;padding:11px 18px;border-bottom:1px solid var(--line)}
+.doc-th{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-family:"Geist Mono",monospace;background:var(--surface-2)}
+.doc-tr:last-child{border-bottom:none}
+.doc-tr:hover{background:var(--surface-2)}
+.doc-fname{font-size:12.5px;color:var(--ink);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-fagent{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-2)}
+.doc-cell{font-size:11px;color:var(--ink-3);font-family:"Geist Mono",monospace}
+.lang-flag{font-family:"Geist Mono",monospace;font-size:10px;padding:2px 6px;border-radius:4px;background:var(--bg);border:1px solid var(--line);color:var(--ink-3)}
+
+/* Pipeline */
+.pipe-flow{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:24px;position:relative}
+.pipe-stage{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;position:relative;z-index:1}
+.pipe-stage + .pipe-stage{margin-left:-1px;border-left:1px dashed var(--line-2)}
+.pipe-stage:first-child{border-radius:12px 0 0 12px}
+.pipe-stage:last-child{border-radius:0 12px 12px 0}
+.pipe-stage:not(:first-child):not(:last-child){border-radius:0}
+.pipe-stage-tag{font-family:"Geist Mono",monospace;font-size:10px;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase}
+.pipe-stage-name{font-size:15px;color:var(--ink);margin-top:6px;font-weight:500;letter-spacing:-0.01em}
+.pipe-stage-tech{font-size:11px;color:var(--ink-3);margin-top:4px;font-family:"Geist Mono",monospace}
+.pipe-metrics{display:flex;gap:16px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+.pipe-metric small{display:block;font-size:9.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;font-family:"Geist Mono",monospace}
+.pipe-metric strong{display:block;font-size:18px;font-weight:500;color:var(--ink);margin-top:4px;font-family:"Instrument Serif",serif;letter-spacing:-0.01em;line-height:1}
+.pipe-arrow{position:absolute;top:50%;transform:translateY(-50%);right:-9px;width:18px;height:18px;background:var(--bg);border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;color:var(--accent);z-index:2;font-size:10px}
+
+/* Governance */
+.gov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.gov-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.gov-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.gov-name{font-size:14px;color:var(--ink);font-weight:500;letter-spacing:-0.01em}
+.gov-status{font-size:10px;padding:3px 8px;border-radius:99px;font-family:"Geist Mono",monospace;letter-spacing:.04em}
+.gov-status.ok{background:var(--accent-soft);color:var(--accent)}
+.gov-status.warn{background:var(--warn-soft);color:var(--warn)}
+.gov-progress{height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden;margin-bottom:12px}
+.gov-progress > div{height:100%;background:var(--accent);border-radius:2px}
+.gov-list{display:flex;flex-direction:column;gap:8px;font-size:11.5px}
+.gov-item{display:flex;align-items:flex-start;gap:8px;color:var(--ink-2)}
+.gov-check{flex:0 0 14px;width:14px;height:14px;border-radius:50%;display:grid;place-items:center;font-size:9px;margin-top:2px}
+.gov-check.ok{background:var(--accent-soft);color:var(--accent)}
+.gov-check.warn{background:var(--warn-soft);color:var(--warn)}
+.gov-check.todo{background:var(--surface-2);color:var(--ink-3);border:1px solid var(--line-2)}
+
+/* Team */
+.team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.team-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:10px;transition:.12s}
+.team-card:hover{border-color:var(--line-2)}
+.team-head{display:flex;align-items:center;gap:12px}
+.team-name{font-size:14px;font-weight:500;color:var(--ink);letter-spacing:-0.01em}
+.team-role{font-size:11px;color:var(--ink-3);margin-top:1px}
+.team-domain{font-size:11.5px;color:var(--ink-2);line-height:1.5;border-top:1px dashed var(--line);padding-top:10px}
+.team-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:8px;border-top:1px dashed var(--line)}
+.team-model{font-size:10.5px;color:var(--ink-3);font-family:"Geist Mono",monospace}
+.team-edit{font-size:11px;color:var(--accent)}
+
+/* Settings */
+.set-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px}
+.set-h{font-size:13px;color:var(--ink);font-weight:500;letter-spacing:-0.01em;margin-bottom:4px}
+.set-sub{font-size:11.5px;color:var(--ink-3);margin-bottom:14px}
+.set-input{width:100%;background:var(--bg);border:1px solid var(--line-2);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--ink);font-family:"Geist Mono",monospace}
+.set-input:focus{border-color:var(--accent-line);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.set-row{display:grid;grid-template-columns:200px 1fr 110px;gap:14px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line)}
+.set-row:last-child{border-bottom:none}
+.set-row .agent-name{font-size:12px}
+.set-select{background:var(--bg);border:1px solid var(--line-2);border-radius:6px;padding:6px 10px;font-size:11.5px;color:var(--ink-2);font-family:"Geist Mono",monospace;cursor:pointer}
+
+/* Responsive — collapse right pane */
+@media (max-width: 1180px){
+  .app{grid-template-columns:248px 1fr}
+  .composer-wrap{right:0}
+  .context{display:none}
+}
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<script type="text/babel" data-presets="env,react">
+const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+/* ─── Data: 9 specialists ────────────────────────────────────────────────── */
+const AGENTS = [
+  { id:"sophie",    name:"Sophie Mercier",      short:"SM", color:"oklch(0.74 0.13 152)", role:{fr:"Fiscaliste · CPA, M.Fisc.", en:"Tax Specialist · CPA, M.Tax."},      domain:{fr:"T1/T2 · TPS/TVQ · RS&DE", en:"T1/T2 · GST/QST · SR&ED"} },
+  { id:"alex",      name:"Alexandre Bouchard",  short:"AB", color:"oklch(0.74 0.13 232)", role:{fr:"Auditeur senior · CPA-CA",   en:"Senior Auditor · CPA-CA"},          domain:{fr:"NCA · IFRS · ASPE",       en:"CAS · IFRS · ASPE"} },
+  { id:"natalie",   name:"Natalie Chen",        short:"NC", color:"oklch(0.74 0.13 290)", role:{fr:"Directrice trésorerie · CTP",en:"Treasury Director · CTP"},          domain:{fr:"BFR · DSO/DPO · Forecast",en:"NWC · DSO/DPO · Forecast"} },
+  { id:"isabelle",  name:"Isabelle Roy",        short:"IR", color:"oklch(0.78 0.13 78)",  role:{fr:"Conformité · LL.M., DPO",   en:"Compliance · LL.M., DPO"},          domain:{fr:"Loi 25 · CASL · PIPEDA",  en:"Law 25 · CASL · PIPEDA"} },
+  { id:"marc",      name:"Marc Tremblay",       short:"MT", color:"oklch(0.74 0.13 200)", role:{fr:"Analyste financier · CFA",  en:"Financial Analyst · CFA"},          domain:{fr:"Ratios · BAIIA · Évaluation", en:"Ratios · EBITDA · Valuation"} },
+  { id:"sarah",     name:"Sarah Blackwell",     short:"SB", color:"oklch(0.74 0.13 0)",   role:{fr:"M&A · CFA, MBA",            en:"M&A · CFA, MBA"},                   domain:{fr:"DCF · LBO · QoE",         en:"DCF · LBO · QoE"} },
+  { id:"jf",        name:"Jean-François Lebel", short:"JF", color:"oklch(0.74 0.13 50)",  role:{fr:"Extraction documentaire",   en:"Document Extraction"},              domain:{fr:"OCR · T4/RL-1 · Factures",en:"OCR · T4/RL-1 · Invoices"} },
+  { id:"emilie",    name:"Émilie Côté",         short:"EC", color:"oklch(0.74 0.13 175)", role:{fr:"Veille réglementaire",      en:"Regulatory Watch"},                 domain:{fr:"ARC · IFRS · CAI",        en:"CRA · IFRS · CAI"}, web:true },
+  { id:"patrick",   name:"Patrick Gagnon",      short:"PG", color:"oklch(0.74 0.13 320)", role:{fr:"Subventions publiques",     en:"Public Grants"},                    domain:{fr:"SR&DE · IRAP · IQ",       en:"SR&ED · IRAP · IQ"}, web:true },
+];
+const A = Object.fromEntries(AGENTS.map(a => [a.id, a]));
+
+/* ─── i18n ──────────────────────────────────────────────────────────────── */
+const T = {
+  fr: {
+    nav_studio:"Studio", nav_dashboard:"Tableau de bord", nav_docs:"Documents", nav_pipeline:"Pipeline RAG", nav_governance:"Gouvernance", nav_agents:"Équipe", nav_settings:"Paramètres",
+    sec_workspace:"Espace de travail", sec_team:"Équipe CPA virtuelle", sec_busy:"En cours",
+    thread_title:"Évaluation acquisition — Atelier Boréal inc.", thread_meta:"Workflow #4521 · Démarré il y a 23s",
+    placeholder:"Posez une question, déposez un document, ou lancez une analyse…",
+    quick:["Diagnostic financier complet","Subventions disponibles 2026","Revue conformité Loi 25","Vérifier admissibilité RS&DE"],
+    web_on:"Recherche web", rag_on:"RAG documents",
+    send:"Envoyer", attach:"Joindre",
+    user_msg:"Voici les états financiers d'Atelier Boréal inc. (PME manufacturière, Drummondville). Mon client veut acquérir 100% — état des résultats 3 ans + bilan + dette nette. Évaluez la cible et identifiez les risques.",
+    orch_title:"Orchestrateur · plan d'exécution", orch_sub:"hybrid · 3 phases · 5 agents",
+    plan_pill:"PARALLEL → SEQUENTIAL",
+    phase1:"PHASE 1", phase2:"PHASE 2", phase3:"PHASE 3",
+    sources:"Sources", workflow:"Workflow", artifacts:"Artefacts", cost:"Coût session",
+    docs_title:"Documents indexés", agents_active:"agents actifs",
+    synth_title:"Synthèse exécutive · Orchestrateur",
+    synth_body:`Atelier Boréal présente un BAIIA normalisé de <em>1,82 M$</em> (vs déclaré 2,14 M$) — la rémunération du dirigeant est sous-évaluée de 240 K$ et un loyer apparenté est non market. Multiple sectoriel suggère une fourchette <em>5,5–7,2 M$</em>. Trois risques rouges : DSO 78 jours (>benchmark 52), covenant D/BAIIA à 3,1× (limite 3,5×), et CDAE non réclamé depuis 2 ans (~340 K$ récupérables).`,
+    actions_title:"Actions recommandées",
+    actions:[
+      { p:"P1", text:"Demander 5 ans QoE détaillé + état des stocks vieillis avant lettre d'intention", own:"Sarah · Marc"},
+      { p:"P1", text:"Lancer revue CDAE rétroactive 2024-2025 avec Sophie — récupération estimée 340 K$", own:"Sophie"},
+      { p:"P2", text:"Modéliser earn-out 2 tranches (BAIIA + DSO ≤ 65j) pour neutraliser risque BFR", own:"Sarah"},
+      { p:"P3", text:"Vérifier exposition Loi 25 (données employés + clients du fichier RH)", own:"Isabelle"},
+    ],
+    sarah_role:"Investissement & M&A",
+    marc_role:"Analyse financière",
+    sophie_role:"Fiscalité",
+    natalie_role:"Trésorerie",
+    patrick_role:"Subventions",
+    cost_label:"Coût session",
+    tokens:"jetons", est:"estimé",
+  },
+  en: {
+    nav_studio:"Studio", nav_dashboard:"Dashboard", nav_docs:"Documents", nav_pipeline:"RAG Pipeline", nav_governance:"Governance", nav_agents:"Team", nav_settings:"Settings",
+    sec_workspace:"Workspace", sec_team:"Virtual CPA Team", sec_busy:"Working",
+    thread_title:"Acquisition assessment — Atelier Boréal inc.", thread_meta:"Workflow #4521 · Started 23s ago",
+    placeholder:"Ask a question, drop a document, or run an analysis…",
+    quick:["Full financial diagnostic","Available grants 2026","Law 25 compliance review","Check SR&ED eligibility"],
+    web_on:"Web search", rag_on:"RAG documents",
+    send:"Send", attach:"Attach",
+    user_msg:"Here are the financials for Atelier Boréal inc. (manufacturing SME, Drummondville). My client wants to acquire 100% — 3-year P&L + balance sheet + net debt. Value the target and surface the risks.",
+    orch_title:"Orchestrator · execution plan", orch_sub:"hybrid · 3 phases · 5 agents",
+    plan_pill:"PARALLEL → SEQUENTIAL",
+    phase1:"PHASE 1", phase2:"PHASE 2", phase3:"PHASE 3",
+    sources:"Sources", workflow:"Workflow", artifacts:"Artifacts", cost:"Session cost",
+    docs_title:"Indexed documents", agents_active:"agents working",
+    synth_title:"Executive synthesis · Orchestrator",
+    synth_body:`Atelier Boréal shows a normalized EBITDA of <em>$1.82M</em> (vs reported $2.14M) — owner compensation under-stated by $240K and a related-party lease is non-market. Sector multiples suggest a <em>$5.5–7.2M</em> range. Three red flags: DSO 78 days (vs benchmark 52), D/EBITDA covenant at 3.1× (limit 3.5×), and unclaimed CDAE credits for 2 years (~$340K recoverable).`,
+    actions_title:"Recommended actions",
+    actions:[
+      { p:"P1", text:"Request a full 5-yr QoE + aged inventory before LOI", own:"Sarah · Marc"},
+      { p:"P1", text:"Initiate retroactive CDAE review 2024-2025 with Sophie — est. $340K recovery", own:"Sophie"},
+      { p:"P2", text:"Model 2-tranche earn-out (EBITDA + DSO ≤ 65d) to neutralize NWC risk", own:"Sarah"},
+      { p:"P3", text:"Assess Law 25 exposure (employee + customer data in HR file)", own:"Isabelle"},
+    ],
+    sarah_role:"Investment & M&A",
+    marc_role:"Financial analysis",
+    sophie_role:"Taxation",
+    natalie_role:"Treasury",
+    patrick_role:"Grants",
+    cost_label:"Session cost",
+    tokens:"tokens", est:"est.",
+  }
+};
+
+/* ─── Workflow definition for the demo ──────────────────────────────────── */
+const WORKFLOW = [
+  { id:"jf-extract",  agent:"jf",      phase:1, task:{fr:"Extraire P&L · 3 ans", en:"Extract P&L · 3yr"}, dur:1400 },
+  { id:"jf-balance",  agent:"jf",      phase:1, task:{fr:"Bilan + dette nette", en:"Balance + net debt"}, dur:1200 },
+  { id:"marc-norm",   agent:"marc",    phase:2, task:{fr:"BAIIA normalisé", en:"Normalize EBITDA"}, dur:2200 },
+  { id:"marc-ratios", agent:"marc",    phase:2, task:{fr:"Ratios + benchmark sectoriel", en:"Ratios + sector benchmark"}, dur:1800 },
+  { id:"sarah-dcf",   agent:"sarah",   phase:2, task:{fr:"Modèle DCF + comparables", en:"DCF + comparables"}, dur:2400 },
+  { id:"natalie-bfr", agent:"natalie", phase:2, task:{fr:"Audit BFR + covenants", en:"NWC + covenant audit"}, dur:1600 },
+  { id:"sophie-tax",  agent:"sophie",  phase:3, task:{fr:"Diagnostic fiscal + CDAE", en:"Tax diagnostic + CDAE"}, dur:1800 },
+  { id:"patrick-grant",agent:"patrick",phase:3, task:{fr:"Subventions cumulables", en:"Stackable grants"}, dur:1400 },
+];
+
+/* ─── Inline icons ──────────────────────────────────────────────────────── */
+const Ic = {
+  studio:    <svg viewBox="0 0 16 16" className="i"><path d="M2 4h12M2 8h12M2 12h7"/></svg>,
+  dashboard: <svg viewBox="0 0 16 16" className="i"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>,
+  docs:      <svg viewBox="0 0 16 16" className="i"><path d="M4 2h6l3 3v9H4z"/><path d="M10 2v3h3"/></svg>,
+  pipeline:  <svg viewBox="0 0 16 16" className="i"><circle cx="3" cy="8" r="2"/><circle cx="13" cy="8" r="2"/><path d="M5 8h6"/></svg>,
+  shield:    <svg viewBox="0 0 16 16" className="i"><path d="M8 2l5 2v4c0 3-2 5.5-5 6-3-.5-5-3-5-6V4z"/></svg>,
+  team:      <svg viewBox="0 0 16 16" className="i"><circle cx="6" cy="6" r="2.5"/><circle cx="11.5" cy="7" r="2"/><path d="M2 14c0-2 2-3.5 4-3.5s4 1.5 4 3.5M9 13c0-1.6 1.5-2.5 3-2.5s3 .9 3 2.5"/></svg>,
+  settings:  <svg viewBox="0 0 16 16" className="i"><circle cx="8" cy="8" r="2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M3 13l1.5-1.5M11.5 4.5L13 3"/></svg>,
+  attach:    <svg viewBox="0 0 16 16" className="i"><path d="M11 5l-5 5a2 2 0 002.8 2.8l5.5-5.5a3.5 3.5 0 00-5-5L3.5 7.5"/></svg>,
+  send:      <svg viewBox="0 0 16 16" className="i"><path d="M2 8l12-5-5 12-2-5z"/></svg>,
+  globe:     <svg viewBox="0 0 16 16" className="i"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12"/></svg>,
+  search:    <svg viewBox="0 0 16 16" className="i"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>,
+  panel:     <svg viewBox="0 0 16 16" className="i"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M10 3v10"/></svg>,
+  menu:      <svg viewBox="0 0 16 16" className="i"><path d="M2 4h12M2 8h12M2 12h12"/></svg>,
+};
+
+/* ─── Components ────────────────────────────────────────────────────────── */
+function Avatar({ agent, size=30, status }) {
+  return (
+    <div className={"avatar " + (status==="busy"?"busy":status==="done"?"done":"")}
+         style={{width:size,height:size,fontSize:size*0.36,background:agent.color,flex:`0 0 ${size}px`}}>
+      {agent.short}
+      {status && <span className={"avatar-status " + status}/>}
+    </div>
+  );
+}
+
+function Roster({ lang, busyIds, doneIds, activeNav, setNav, compact, t }) {
+  return (
+    <aside className="roster">
+      <div className="brand">
+        <div className="brand-mark">Z</div>
+        <div style={{minWidth:0}}>
+          <div className="brand-name">Z12 CFO Suite</div>
+          <div className="brand-sub">ZAKI OS · v3.3</div>
+        </div>
+        {!compact && <a href="/landing.html" title="Retour à l'accueil" style={{marginLeft:'auto',fontSize:'10px',color:'var(--ink-3)',fontFamily:'"Geist Mono",monospace',textDecoration:'none',padding:'3px 7px',borderRadius:'4px',border:'1px solid var(--line)',letterSpacing:'.06em',display:'flex',alignItems:'center',gap:'4px'}} onMouseOver={e=>e.currentTarget.style.color='var(--accent)'} onMouseOut={e=>e.currentTarget.style.color='var(--ink-3)'}>&#8592; Site</a>}
+      </div>
+
+      {!compact && <div className="nav-section">{t.sec_workspace}</div>}
+      <div className="nav-list">
+        {[
+          ["studio",t.nav_studio,Ic.studio],
+          ["dashboard",t.nav_dashboard,Ic.dashboard],
+          ["docs",t.nav_docs,Ic.docs],
+          ["pipeline",t.nav_pipeline,Ic.pipeline],
+          ["governance",t.nav_governance,Ic.shield],
+          ["team",t.nav_agents,Ic.team || Ic.user || Ic.studio],
+          ["settings",t.nav_settings,Ic.settings || Ic.gear || Ic.studio],
+        ].map(([id,label,icon])=>(
+          <div key={id} className={"nav-item " + (activeNav===id?"active":"")} onClick={()=>setNav(id)}>
+            <span className="nav-icon-w">{icon}</span><span>{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {!compact && <div className="nav-section" style={{marginTop:6}}>{t.sec_team}</div>}
+      <div className="roster-scroll">
+        {AGENTS.map(a => {
+          const status = busyIds.has(a.id) ? "busy" : doneIds.has(a.id) ? "done" : a.web ? "web" : null;
+          return (
+            <div key={a.id} className={"agent-row " + (busyIds.has(a.id)?"busy":"")} title={a.name}>
+              <Avatar agent={a} size={30} status={status} />
+              <div className="agent-meta">
+                <div className="agent-name">{a.name}</div>
+                <div className="agent-title">{a.role[lang]}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="roster-foot">
+        <div className="user-dot">ZB</div>
+        <div className="user-meta">
+          <div className="user-name">Zaki Belmokhtar</div>
+          <div className="user-org">Cabinet Belmokhtar CPA</div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function PlanCell({ agent, task, status }) {
+  return (
+    <div className={"plan-cell " + (status||"")}>
+      <Avatar agent={agent} size={20} status={status==="busy"?"busy":null}/>
+      <span className="plan-cell-name">{agent.short==="JF"?"JF Lebel":agent.name.split(" ")[0]}</span>
+      <span className="plan-cell-task">— {task}</span>
+    </div>
+  );
+}
+
+function PhasePlan({ lang, t, phaseStatus, taskStatus }) {
+  const ph = (n) => WORKFLOW.filter(w=>w.phase===n);
+  const phaseLabel = ["",t.phase1,t.phase2,t.phase3];
+  return (
+    <div className="plan">
+      <div className="plan-rows">
+        {[1,2,3].map(n => (
+          <div className="plan-row" key={n}>
+            <div className="plan-step">{phaseLabel[n]}</div>
+            <div className="plan-cells">
+              {ph(n).map(w => (
+                <PlanCell key={w.id} agent={A[w.agent]} task={w.task[lang]} status={taskStatus[w.id]}/>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StreamingText({ text, speed=8, onDone }) {
+  const [out, setOut] = useState("");
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    let i = 0;
+    setOut(""); setDone(false);
+    const id = setInterval(() => {
+      i += speed;
+      if (i >= text.length) {
+        setOut(text);
+        setDone(true);
+        clearInterval(id);
+        onDone && onDone();
+      } else setOut(text.slice(0, i));
+    }, 28);
+    return () => clearInterval(id);
+  }, [text]);
+  return <span dangerouslySetInnerHTML={{__html: out + (done?"":"<span class='cursor'></span>")}}/>;
+}
+
+function AgentReplyMarc({ lang, t, time }) {
+  return (
+    <div className="agent-reply">
+      <div className="agent-reply-head">
+        <Avatar agent={A.marc} size={24}/>
+        <div>
+          <div className="agent-reply-name">Marc Tremblay</div>
+        </div>
+        <span className="agent-reply-role">· {t.marc_role}</span>
+        <span className="agent-reply-time">{time}s</span>
+      </div>
+      <div className="agent-content">
+        <p>{lang==="fr"
+          ? <>BAIIA déclaré <strong>2,14 M$</strong> normalisé à <strong>1,82 M$</strong> après ajustements (rémunération sous-évaluée +240 K$ vs marché, loyer apparenté +85 K$, gain non récurrent vente équipement -190 K$).</>
+          : <>Reported EBITDA <strong>$2.14M</strong> normalizes to <strong>$1.82M</strong> after adjustments (under-stated owner comp +$240K vs market, related-party lease +$85K, non-recurring equipment sale gain -$190K).</>}
+        </p>
+        <div className="kpi-grid">
+          <div className="kpi-cell">
+            <div className="kpi-label">BAIIA norm.</div>
+            <div className="kpi-val">1,82 M$</div>
+            <div className="kpi-delta neg">−15% {lang==="fr"?"vs déclaré":"vs reported"}</div>
+          </div>
+          <div className="kpi-cell">
+            <div className="kpi-label">{lang==="fr"?"Marge brute":"Gross margin"}</div>
+            <div className="kpi-val">31,4%</div>
+            <div className="kpi-delta">+2,1 {lang==="fr"?"pts vs SCIAN 333":"pts vs NAICS 333"}</div>
+          </div>
+          <div className="kpi-cell">
+            <div className="kpi-label">{lang==="fr"?"Croissance CA 3 ans":"3yr revenue CAGR"}</div>
+            <div className="kpi-val">8,7%</div>
+            <div className="kpi-delta neutral">{lang==="fr"?"sectoriel 7,2%":"sector 7.2%"}</div>
+          </div>
+        </div>
+        <div className="cites">
+          <span className="cite"><span className="cite-num">01</span>États fin. 2023-2025.pdf · p.4</span>
+          <span className="cite"><span className="cite-num">02</span>Stat-Can SCIAN 333</span>
+          <span className="cite"><span className="cite-num">03</span>BDC Industrie · Manuf. QC</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AgentReplySarah({ lang, t, time }) {
+  return (
+    <div className="agent-reply">
+      <div className="agent-reply-head">
+        <Avatar agent={A.sarah} size={24}/>
+        <div>
+          <div className="agent-reply-name">Sarah Blackwell</div>
+        </div>
+        <span className="agent-reply-role">· {t.sarah_role}</span>
+        <span className="agent-reply-time">{time}s</span>
+      </div>
+      <div className="agent-content">
+        <p>{lang==="fr"
+          ? <>Sur la base du BAIIA normalisé Marc, j'applique trois méthodes. La fourchette converge à <strong>5,5 – 7,2 M$</strong> (EV) avec dette nette à déduire de 1,1 M$.</>
+          : <>Using Marc's normalized EBITDA, three methods converge on <strong>$5.5 – $7.2M</strong> (EV) with $1.1M net debt to deduct.</>}
+        </p>
+        <h4>{lang==="fr"?"Triangulation":"Triangulation"}</h4>
+        <div className="kpi-grid">
+          <div className="kpi-cell">
+            <div className="kpi-label">EV/BAIIA · 4,5×</div>
+            <div className="kpi-val">8,2 M$</div>
+            <div className="kpi-delta neutral">{lang==="fr"?"haut · acheteur stratégique":"high · strategic buyer"}</div>
+          </div>
+          <div className="kpi-cell">
+            <div className="kpi-label">DCF · WACC 11,4%</div>
+            <div className="kpi-val">6,1 M$</div>
+            <div className="kpi-delta neutral">{lang==="fr"?"base · projections 5 ans":"base · 5-yr projections"}</div>
+          </div>
+          <div className="kpi-cell">
+            <div className="kpi-label">CCA · décote 25%</div>
+            <div className="kpi-val">5,5 M$</div>
+            <div className="kpi-delta neutral">{lang==="fr"?"plancher · illiquidité PME":"floor · SME illiquidity"}</div>
+          </div>
+        </div>
+        <p style={{marginTop:10,fontSize:12.5}}>
+          {lang==="fr"
+            ? <>⚠ Risque : sensibilité forte au DSO. Une remontée à <strong>52 jours</strong> (benchmark) libère <strong>~430 K$</strong> de BFR — recommander earn-out indexé.</>
+            : <>⚠ Risk: high DSO sensitivity. Bringing it back to <strong>52 days</strong> (benchmark) frees <strong>~$430K</strong> of NWC — recommend indexed earn-out.</>}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function AgentReplySophie({ lang, t, time }) {
+  return (
+    <div className="agent-reply">
+      <div className="agent-reply-head">
+        <Avatar agent={A.sophie} size={24}/>
+        <div>
+          <div className="agent-reply-name">Sophie Mercier</div>
+        </div>
+        <span className="agent-reply-role">· {t.sophie_role}</span>
+        <span className="agent-reply-time">{time}s</span>
+      </div>
+      <div className="agent-content">
+        <p>{lang==="fr"
+          ? <>L'entreprise a engagé <strong>1,42 M$</strong> en salaires R&D admissibles sur 2024-2025 mais n'a réclamé ni le crédit <strong>CDAE (30%)</strong>, ni le crédit RS&DE provincial (CO-1029.8.36.01). <strong>~340 K$</strong> récupérables — délai de prescription Revenu Québec 3 ans.</>
+          : <>The target booked <strong>$1.42M</strong> in eligible R&D salaries over 2024-2025 but claimed neither the <strong>CDAE (30%)</strong> nor the provincial SR&ED credit (CO-1029.8.36.01). <strong>~$340K</strong> recoverable — Revenu Québec 3-yr statute.</>}
+        </p>
+        <ul>
+          <li>{lang==="fr"?"Pré-acquisition : exiger remboursement crédits comme condition de clôture":"Pre-close: require credit refund as closing condition"}</li>
+          <li>{lang==="fr"?"Structure : SPCC + holding pour DGC future (815 K$ par actionnaire)":"Structure: CCPC + holdco for future LCGE ($815K per shareholder)"}</li>
+          <li>{lang==="fr"?"Roulement art. 85 LIR — éviter disposition réputée":"Section 85 ITA rollover — avoid deemed disposition"}</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Page views ────────────────────────────────────────────────────────── */
+const PageHead = ({title, sub, actions}) => (
+  <header className="page-head">
+    <div><div className="page-title">{title}</div><div className="page-sub">{sub}</div></div>
+    <div className="page-actions">{actions}</div>
+  </header>
+);
+
+const Spark = ({color="var(--accent)"}) => (
+  <svg className="tile-spark" width="80" height="32" viewBox="0 0 80 32"><polyline fill="none" stroke={color} strokeWidth="1.5" points="0,24 12,20 24,22 36,14 48,16 60,8 72,10 80,4"/></svg>
+);
+
+function DashboardView({lang, t}) {
+  const fr = lang === "fr";
+  return (
+    <main className="page" data-screen-label="Dashboard">
+      <PageHead title={fr?"Tableau de bord":"Dashboard"} sub={fr?"Aperçu — Cabinet Belmokhtar CPA · 14 mai 2026":"Overview — Belmokhtar CPA · May 14, 2026"}
+        actions={<><button className="btn">{fr?"Exporter":"Export"}</button><button className="btn btn-primary">+ {fr?"Nouvelle analyse":"New analysis"}</button></>}/>
+      <div className="page-body">
+        <div className="dash-grid">
+          <div className="tile"><div className="tile-label">{fr?"Conversations":"Conversations"}</div><div className="tile-val">147</div><div className="tile-foot"><span className="tile-delta">↑ 23%</span><span>· {fr?"30 derniers jours":"last 30 days"}</span></div><Spark/></div>
+          <div className="tile"><div className="tile-label">{fr?"Documents indexés":"Indexed documents"}</div><div className="tile-val">412</div><div className="tile-foot"><span className="tile-delta">↑ 8</span><span>· {fr?"cette semaine":"this week"}</span></div><Spark color="var(--gold)"/></div>
+          <div className="tile"><div className="tile-label">{fr?"Workflows · mai":"Workflows · May"}</div><div className="tile-val">52</div><div className="tile-foot"><span style={{color:"var(--ink-3)"}}>{fr?"38 hybrid · 14 single":"38 hybrid · 14 single"}</span></div><Spark/></div>
+          <div className="tile"><div className="tile-label">{fr?"Coût · mai":"Cost · May"}</div><div className="tile-val">38,40 $</div><div className="tile-foot"><span className="tile-delta neg">↑ 12%</span><span>· vs avril</span></div><Spark color="var(--warn)"/></div>
+        </div>
+
+        <div className="col-2">
+          <div className="panel">
+            <div className="panel-head"><div className="panel-title">{fr?"Calendrier fiscal — prochaines échéances":"Tax calendar — upcoming deadlines"}</div><span className="cal-tag">5</span></div>
+            <div className="panel-body">
+              {[
+                {d:"31",m:fr?"MAI":"MAY",name:fr?"Acompte trimestriel T2 — SPCC":"Quarterly T2 instalment — CCPC",info:fr?"Trois clients concernés · 14 jours":"3 clients · 14 days",t:"urgent",tag:"T2"},
+                {d:"15",m:"JUN",name:fr?"Remise TPS/TVQ — déclarants mensuels":"GST/QST remittance — monthly filers",info:fr?"7 clients · 29 jours":"7 clients · 29 days",t:"",tag:"TPS"},
+                {d:"30",m:"JUN",name:fr?"T2 — fin d'exercice 31 décembre":"T2 — Dec 31 year-end",info:fr?"2 clients · 44 jours":"2 clients · 44 days",t:"",tag:"T2"},
+                {d:"31",m:fr?"JUL":"JUL",name:fr?"RS&DE T661 — délai 18 mois":"SR&ED T661 — 18-month deadline",info:fr?"1 client · 75 jours · ~85 K$":"1 client · 75 days · ~$85K",t:"",tag:"R&D"},
+                {d:"15",m:fr?"AOÛ":"AUG",name:fr?"Acompte T1 personnel":"Personal T1 instalment",info:fr?"4 clients · 90 jours":"4 clients · 90 days",t:"",tag:"T1"},
+              ].map((r,i)=>(
+                <div className="cal-row" key={i}>
+                  <div className="cal-date">{r.d}<small>{r.m}</small></div>
+                  <div className="cal-meta"><div className="cal-name">{r.name}</div><div className="cal-info">{r.info}</div></div>
+                  <span className={"cal-tag " + r.t}>{r.tag}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel-head"><div className="panel-title">{fr?"Activité agents · 30 j":"Agent activity · 30d"}</div></div>
+            <div className="act-list">
+              {[
+                ["sophie",84],["marc",72],["sarah",58],["natalie",46],
+                ["alex",38],["isabelle",32],["patrick",28],["emilie",22],["jf",18],
+              ].map(([id,n])=>{
+                const a = AGENTS.find(x=>x.id===id);
+                return (
+                  <div className="act-row" key={id}>
+                    <span className="act-name">{a.name.split(" ")[0]}</span>
+                    <div className="act-bar"><div className="act-fill" style={{width:n+"%",background:a.color}}/></div>
+                    <span className="act-num">{n}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panel-head"><div className="panel-title">{fr?"Conversations récentes":"Recent conversations"}</div><button className="btn">{fr?"Tout voir":"See all"}</button></div>
+          <div className="panel-body">
+            {[
+              {title:fr?"Évaluation acquisition — Atelier Boréal inc.":"Acquisition assessment — Atelier Boréal inc.", info:"#4521 · hybrid · 5 agents · 38s", agents:["jf","marc","sarah","sophie","natalie"]},
+              {title:fr?"Subventions IA — startup techno Drummondville":"AI grants — Drummondville tech startup", info:"#4520 · sequential · 3 agents · 12s", agents:["emilie","patrick","sophie"]},
+              {title:fr?"Diagnostic Loi 25 — application RH":"Law 25 review — HR application", info:"#4519 · single · 1 agent · 6s", agents:["isabelle"]},
+              {title:fr?"Audit ASPE 2025 — Constructions Lévis ltée":"ASPE 2025 audit — Constructions Lévis ltd", info:"#4518 · parallel · 2 agents · 18s", agents:["alex","marc"]},
+              {title:fr?"Rolling forecast 13 sem. — distribution Québec":"13-wk rolling forecast — Quebec distribution", info:"#4517 · single · 1 agent · 8s", agents:["natalie"]},
+            ].map((c,i)=>(
+              <div className="conv-row" key={i}>
+                <div className="conv-text"><div className="conv-title">{c.title}</div><div className="conv-info">{c.info}</div></div>
+                <div className="conv-stack">{c.agents.map(id=><Avatar key={id} agent={A[id]} size={22}/>)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function DocumentsView({lang, t}) {
+  const fr = lang === "fr";
+  const [tab, setTab] = useState("knowledge");
+  const knowledge = [
+    {ext:"PDF",name:"Guide_RSDE_T661_RC4088_2025.pdf",agent:"sophie",size:"4,2 Mo",chunks:124,ln:"FR"},
+    {ext:"PDF",name:"Manuel_NCA_CPA_Canada_v2025.pdf",agent:"alex",size:"18,4 Mo",chunks:892,ln:"FR"},
+    {ext:"PDF",name:"Loi_25_LQ_2021_c25_consolidee.pdf",agent:"isabelle",size:"2,1 Mo",chunks:56,ln:"FR"},
+    {ext:"PDF",name:"CDAE_Programme_Investissement_Quebec.pdf",agent:"patrick",size:"880 Ko",chunks:38,ln:"FR"},
+    {ext:"PDF",name:"IFRS-15-Revenue-Standards-2025.pdf",agent:"alex",size:"5,6 Mo",chunks:218,ln:"EN"},
+    {ext:"DOCX",name:"Bulletin_IMP-2025-04_RQ.docx",agent:"sophie",size:"320 Ko",chunks:14,ln:"FR"},
+  ];
+  const client = [
+    {ext:"PDF",name:"EtatsFin_Boreal_2023-2025.pdf",agent:"marc",size:"2,4 Mo",chunks:38,ln:"FR"},
+    {ext:"XLSX",name:"Bilan_Boreal_2025.xlsx",agent:"marc",size:"184 Ko",chunks:12,ln:"FR"},
+    {ext:"PDF",name:"T2_Levis_Constructions_2024.pdf",agent:"sophie",size:"680 Ko",chunks:24,ln:"FR"},
+    {ext:"PDF",name:"Contrat_emploi_developpeur_v3.pdf",agent:"isabelle",size:"412 Ko",chunks:18,ln:"FR"},
+    {ext:"XLSX",name:"Cashflow_Forecast_Q3_Q4.xlsx",agent:"natalie",size:"96 Ko",chunks:9,ln:"FR"},
+    {ext:"PDF",name:"Term_Sheet_Acquisition_Boreal.pdf",agent:"sarah",size:"540 Ko",chunks:16,ln:"EN"},
+    {ext:"PDF",name:"Releve1_Equipe_Tech_2024.pdf",agent:"jf",size:"1,1 Mo",chunks:8,ln:"FR"},
+  ];
+  const rows = tab === "knowledge" ? knowledge : client;
+  return (
+    <main className="page" data-screen-label="Documents">
+      <PageHead title="Documents" sub={fr?"Sources métier (RAG) + documents clients · pgvector 1024 dims":"Knowledge + client documents · pgvector 1024 dims"}
+        actions={<><button className="btn">{fr?"Importer dossier":"Import folder"}</button><button className="btn btn-primary">+ {fr?"Téléverser":"Upload"}</button></>}/>
+      <div className="page-body">
+        <div className="search-bar"><svg className="i" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><input placeholder={fr?"Rechercher dans 412 documents… (texte, agent, fichier)":"Search 412 documents… (text, agent, filename)"}/></div>
+        <div className="tab-pills">
+          <button className={"pill " + (tab==="knowledge"?"on":"")} onClick={()=>setTab("knowledge")}>{fr?"Sources métier":"Knowledge"}<span className="pill-count">{knowledge.length}</span></button>
+          <button className={"pill " + (tab==="client"?"on":"")} onClick={()=>setTab("client")}>{fr?"Documents clients":"Client docs"}<span className="pill-count">{client.length}</span></button>
+        </div>
+        <div className="doc-table">
+          <div className="doc-th"><span></span><span>{fr?"Nom du fichier":"Filename"}</span><span>{fr?"Agent":"Agent"}</span><span>{fr?"Taille":"Size"}</span><span>Chunks</span><span>{fr?"Langue":"Lang"}</span><span>{fr?"Statut":"Status"}</span><span></span></div>
+          {rows.map((r,i)=>{
+            const ag = A[r.agent];
+            return (
+              <div className="doc-tr" key={i}>
+                <div className="doc-icon">{r.ext}</div>
+                <div className="doc-fname">{r.name}</div>
+                <div className="doc-fagent"><Avatar agent={ag} size={18}/>{ag.name.split(" ")[0]}</div>
+                <div className="doc-cell">{r.size}</div>
+                <div className="doc-cell">{r.chunks}</div>
+                <div><span className="lang-flag">{r.ln}</span></div>
+                <div><span className="doc-status indexed">INDEXÉ</span></div>
+                <div className="doc-cell">⋯</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function PipelineView({lang, t}) {
+  const fr = lang === "fr";
+  const stages = [
+    {tag:"BRONZE", name:fr?"Ingestion":"Ingestion", tech:"FastAPI · S3 ca-central-1", m:[["latence","1,2 s"],["sla","99,8%"],["files","412"]]},
+    {tag:"SILVER", name:fr?"Traitement":"Processing", tech:"PyPDF2 · python-docx · NLP", m:[["latence","3,8 s"],["sla","99,5%"],["chunks","8 412"]]},
+    {tag:"GOLD",   name:"Embedding",                tech:"HF e5-large · 1024d",       m:[["latence","2,1 s"],["sla","99,9%"],["vectors","8 412"]]},
+    {tag:"READY",  name:fr?"Requête":"Query",       tech:"pgvector · cosine",         m:[["latence","0,4 s"],["sla","100%"],["queries","2,1k"]]},
+  ];
+  return (
+    <main className="page" data-screen-label="RAG Pipeline">
+      <PageHead title={fr?"Pipeline RAG":"RAG Pipeline"} sub={fr?"Bronze → Silver → Gold → Ready · Loi 25 conforme":"Bronze → Silver → Gold → Ready · Law 25 compliant"}
+        actions={<button className="btn">{fr?"Voir logs":"View logs"}</button>}/>
+      <div className="page-body">
+        <div className="pipe-flow">
+          {stages.map((s,i)=>(
+            <div className="pipe-stage" key={s.tag}>
+              <div className="pipe-stage-tag">{s.tag}</div>
+              <div className="pipe-stage-name">{s.name}</div>
+              <div className="pipe-stage-tech">{s.tech}</div>
+              <div className="pipe-metrics">{s.m.map(([k,v])=>(<div className="pipe-metric" key={k}><small>{k}</small><strong>{v}</strong></div>))}</div>
+              {i<3 && <div className="pipe-arrow">→</div>}
+            </div>
+          ))}
+        </div>
+
+        <div className="col-2">
+          <div className="panel">
+            <div className="panel-head"><div className="panel-title">{fr?"Throughput · 24 h":"Throughput · 24h"}</div><span className="cal-tag">{fr?"temps réel":"live"}</span></div>
+            <div style={{padding:"18px 20px"}}>
+              <svg viewBox="0 0 320 120" width="100%" height="120" style={{display:"block"}}>
+                <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--accent)" stopOpacity="0.3"/><stop offset="1" stopColor="var(--accent)" stopOpacity="0"/></linearGradient></defs>
+                <polyline fill="none" stroke="var(--accent)" strokeWidth="2" points="0,90 24,84 48,72 72,76 96,60 120,68 144,46 168,54 192,38 216,44 240,28 264,32 288,20 320,26"/>
+                <polygon fill="url(#g1)" points="0,90 24,84 48,72 72,76 96,60 120,68 144,46 168,54 192,38 216,44 240,28 264,32 288,20 320,26 320,120 0,120"/>
+              </svg>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var(--ink-3)",fontFamily:"Geist Mono",marginTop:6}}>
+                <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>NOW</span>
+              </div>
+            </div>
+          </div>
+          <div className="panel">
+            <div className="panel-head"><div className="panel-title">{fr?"Recherches RAG récentes":"Recent RAG searches"}</div></div>
+            <div className="panel-body">
+              {[
+                ["BAIIA normalisé secteur 333","8 chunks · 0.84 cos","Marc"],
+                ["RS&DE admissibilité salaires R&D","12 chunks · 0.78 cos","Sophie"],
+                ["IFRS 16 contrats location","6 chunks · 0.81 cos","Alex"],
+                ["DSO benchmark distribution QC","4 chunks · 0.72 cos","Natalie"],
+              ].map((r,i)=>(
+                <div className="conv-row" key={i}>
+                  <div className="conv-text"><div className="conv-title mono" style={{fontSize:11.5}}>{r[0]}</div><div className="conv-info">{r[1]}</div></div>
+                  <span className="cal-tag">{r[2]}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function GovernanceView({lang, t}) {
+  const fr = lang === "fr";
+  const cards = [
+    {name:"Loi 25", sub:"L.Q. 2021, c.25 · QC", st:"ok", stl:fr?"Conforme":"Compliant", pct:92, items:[
+      ["ok",fr?"CPO nommé · Zaki Belmokhtar":"CPO appointed · Zaki Belmokhtar"],
+      ["ok",fr?"Hébergement S3 ca-central-1":"S3 ca-central-1 hosting"],
+      ["ok",fr?"Registre incidents (PI-1)":"Incident register (PI-1)"],
+      ["warn",fr?"EFVP à compléter — collecte RP":"DPIA to complete — PI collection"],
+      ["ok",fr?"Audit trail immutable":"Immutable audit trail"],
+    ]},
+    {name:"PIPEDA", sub:"L.C. 2000, c.5 · Federal", st:"ok", stl:fr?"Conforme":"Compliant", pct:88, items:[
+      ["ok",fr?"10 principes équitables documentés":"10 Fair Information Principles"],
+      ["ok",fr?"Notification atteintes DORS/2018-64":"Breach notification SOR/2018-64"],
+      ["ok","Privacy by Design"],
+      ["todo",fr?"Suivi Projet C-27":"Bill C-27 monitoring"],
+    ]},
+    {name:"CASL", sub:"L.C. 2010, c.23 · CRTC", st:"warn", stl:fr?"Action requise":"Action needed", pct:74, items:[
+      ["ok",fr?"Double opt-in courriel":"Double opt-in email"],
+      ["ok",fr?"Désabonnement < 10 j":"Unsubscribe < 10 days"],
+      ["warn",fr?"Logs consentement à archiver 36 mois":"Consent logs — 36mo retention"],
+      ["todo",fr?"Revue templates marketing 2026":"2026 marketing template review"],
+    ]},
+  ];
+  return (
+    <main className="page" data-screen-label="Governance">
+      <PageHead title={fr?"Gouvernance & conformité":"Governance & compliance"} sub={fr?"Cadres canadiens · suivi par Isabelle Roy · LL.M., DPO":"Canadian frameworks · monitored by Isabelle Roy · LL.M., DPO"}
+        actions={<><button className="btn">{fr?"Exporter rapport":"Export report"}</button><button className="btn btn-primary">{fr?"Lancer EFVP":"Start DPIA"}</button></>}/>
+      <div className="page-body">
+        <div className="gov-grid">
+          {cards.map(c=>(
+            <div className="gov-card" key={c.name}>
+              <div className="gov-head">
+                <div><div className="gov-name">{c.name}</div><div className="page-sub" style={{marginTop:2}}>{c.sub}</div></div>
+                <span className={"gov-status " + c.st}>{c.stl}</span>
+              </div>
+              <div className="gov-progress"><div style={{width:c.pct+"%",background:c.st==="ok"?"var(--accent)":"var(--warn)"}}/></div>
+              <div style={{fontSize:10.5,color:"var(--ink-3)",fontFamily:"Geist Mono",marginBottom:10}}>{c.pct}% · {c.items.filter(i=>i[0]==="ok").length}/{c.items.length} {fr?"contrôles":"controls"}</div>
+              <div className="gov-list">
+                {c.items.map((i,k)=>(
+                  <div className="gov-item" key={k}>
+                    <span className={"gov-check " + i[0]}>{i[0]==="ok"?"✓":i[0]==="warn"?"!":"·"}</span>
+                    <span>{i[1]}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="panel">
+          <div className="panel-head"><div className="panel-title">{fr?"Journal d'audit · accès données personnelles":"Audit log · personal data access"}</div><span className="cal-tag">{fr?"30 jours":"30 days"}</span></div>
+          <div className="panel-body">
+            {[
+              {who:"isabelle",a:"Read",res:"Releve1_Equipe_Tech_2024.pdf",t:"il y a 12 min"},
+              {who:"sophie",a:"Read",res:"T2_Levis_Constructions_2024.pdf",t:"il y a 38 min"},
+              {who:"sarah",a:"Query",res:"vector://acquisition-due-diligence",t:"il y a 2 h"},
+              {who:"jf",a:"Extract",res:"Bilan_Boreal_2025.xlsx",t:"il y a 4 h"},
+            ].map((r,i)=>(
+              <div className="conv-row" key={i}>
+                <Avatar agent={A[r.who]} size={22}/>
+                <div className="conv-text">
+                  <div className="conv-title"><span className="mono" style={{color:"var(--ink-3)",marginRight:8}}>{r.a.toUpperCase()}</span>{r.res}</div>
+                  <div className="conv-info">{A[r.who].name} · {r.t}</div>
+                </div>
+                <span className="cal-tag">SHA-256 ✓</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function TeamView({lang, t}) {
+  const fr = lang === "fr";
+  return (
+    <main className="page" data-screen-label="Team">
+      <PageHead title={fr?"Équipe CPA virtuelle":"Virtual CPA Team"} sub={fr?"9 spécialistes · prompts éditables · Claude Sonnet 4.5":"9 specialists · editable prompts · Claude Sonnet 4.5"}
+        actions={<button className="btn">{fr?"Diagramme d'équipe":"Team diagram"}</button>}/>
+      <div className="page-body">
+        <div className="team-grid">
+          {AGENTS.map(a=>(
+            <div className="team-card" key={a.id}>
+              <div className="team-head">
+                <Avatar agent={a} size={40}/>
+                <div><div className="team-name">{a.name}</div><div className="team-role">{a.role[lang]}</div></div>
+              </div>
+              <div className="team-domain">{a.domain[lang]}</div>
+              <div className="team-foot">
+                <span className="team-model">{a.web?"sonnet-4-5 + 🌐":"sonnet-4-5"}</span>
+                <button className="team-edit">{fr?"Éditer prompt →":"Edit prompt →"}</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function SettingsView({lang, t}) {
+  const fr = lang === "fr";
+  return (
+    <main className="page" data-screen-label="Settings">
+      <PageHead title={fr?"Paramètres":"Settings"} sub={fr?"OpenRouter · 27 modèles · 9 fournisseurs":"OpenRouter · 27 models · 9 providers"}/>
+      <div className="page-body" style={{maxWidth:880}}>
+        <div className="set-card">
+          <div className="set-h">{fr?"Clé API OpenRouter":"OpenRouter API key"}</div>
+          <div className="set-sub">{fr?"Stockée dans z12-openrouter-key. Chiffrement WebCrypto recommandé.":"Stored in z12-openrouter-key. WebCrypto encryption recommended."}</div>
+          <input className="set-input" defaultValue="sk-or-v1-••••••••••••••••••••••••••••••••a3f7" type="password"/>
+          <div style={{display:"flex",gap:8,marginTop:12}}>
+            <button className="btn btn-primary">{fr?"Tester connexion":"Test connection"}</button>
+            <button className="btn">{fr?"Régénérer":"Regenerate"}</button>
+          </div>
+        </div>
+
+        <div className="set-card">
+          <div className="set-h">{fr?"Modèle assigné par agent":"Model assigned per agent"}</div>
+          <div className="set-sub">{fr?"Claude Sonnet 4.5 par défaut. Override individuel ci-dessous.":"Claude Sonnet 4.5 default. Override per agent below."}</div>
+          {AGENTS.map(a=>(
+            <div className="set-row" key={a.id}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}><Avatar agent={a} size={26}/><div className="agent-name">{a.name}</div></div>
+              <select className="set-select" defaultValue="anthropic/claude-sonnet-4-5">
+                <option value="anthropic/claude-sonnet-4-5">anthropic/claude-sonnet-4-5</option>
+                <option value="anthropic/claude-3.5-sonnet">anthropic/claude-3.5-sonnet</option>
+                <option value="openai/gpt-4o">openai/gpt-4o</option>
+                <option value="google/gemini-2.5-pro-preview">google/gemini-2.5-pro</option>
+                <option value="deepseek/deepseek-r1">deepseek/deepseek-r1</option>
+              </select>
+              <button className="btn">{fr?"Prompt":"Prompt"} →</button>
+            </div>
+          ))}
+        </div>
+
+        <div className="set-card">
+          <div className="set-h">{fr?"Préférences":"Preferences"}</div>
+          <div className="set-row"><div>{fr?"Langue par défaut":"Default language"}</div><div className="set-select" style={{display:"inline-block"}}>Français (Canada)</div><div></div></div>
+          <div className="set-row"><div>{fr?"Région données":"Data region"}</div><div className="set-select" style={{display:"inline-block"}}>S3 ca-central-1</div><div></div></div>
+          <div className="set-row"><div>{fr?"Modèle de l'orchestrateur":"Orchestrator model"}</div><div className="set-select" style={{display:"inline-block"}}>anthropic/claude-haiku-4-5</div><div></div></div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+/* ─── Main App ──────────────────────────────────────────────────────────── */
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "lang":"fr",
+  "theme":"dark",
+  "density":"comfortable",
+  "showRight":true,
+  "speed":1
+}/*EDITMODE-END*/;
+
+function App() {
+  const [tweaks, setTweak] = window.useTweaks ? window.useTweaks(TWEAK_DEFAULTS) : [TWEAK_DEFAULTS, ()=>{}];
+  const lang = tweaks.lang;
+  const t = T[lang];
+
+  const [nav, setNav] = useState("studio");
+  const [ctxTab, setCtxTab] = useState("workflow");
+  const [composerVal, setComposerVal] = useState("");
+  const [webOn, setWebOn] = useState(false);
+  const [ragOn, setRagOn] = useState(true);
+
+  // Workflow state machine
+  const [taskStatus, setTaskStatus] = useState({}); // id -> "busy" | "done"
+  const [revealMarc, setRevealMarc] = useState(false);
+  const [revealSarah, setRevealSarah] = useState(false);
+  const [revealSophie, setRevealSophie] = useState(false);
+  const [revealSynth, setRevealSynth] = useState(false);
+  const [elapsed, setElapsed] = useState(23);
+  const [running, setRunning] = useState(true);
+
+  // Auto-run the demo workflow
+  useEffect(() => {
+    if (!running) return;
+    const speedMul = 1 / (tweaks.speed || 1);
+    let cancelled = false;
+    const setS = (id, s) => setTaskStatus(prev => ({...prev, [id]: s}));
+
+    const run = async () => {
+      const phases = [[1,800],[2,400],[3,400]];
+      for (const [phase, gap] of phases) {
+        const tasks = WORKFLOW.filter(w=>w.phase===phase);
+        // start all in this phase
+        tasks.forEach(w => setS(w.id, "busy"));
+        await new Promise(r => setTimeout(r, gap*speedMul));
+        // mark each done sequentially within phase
+        for (const w of tasks) {
+          await new Promise(r => setTimeout(r, w.dur*speedMul));
+          if (cancelled) return;
+          setS(w.id, "done");
+          if (w.id === "marc-ratios") setRevealMarc(true);
+          if (w.id === "sarah-dcf")   setRevealSarah(true);
+          if (w.id === "sophie-tax")  setRevealSophie(true);
+        }
+      }
+      if (!cancelled) setRevealSynth(true);
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [tweaks.speed, running]);
+
+  // Elapsed timer
+  useEffect(() => {
+    if (revealSynth) return;
+    const id = setInterval(() => setElapsed(e => e + 1), 1000);
+    return () => clearInterval(id);
+  }, [revealSynth]);
+
+  // Compute busy/done sets for sidebar
+  const { busyIds, doneIds } = useMemo(() => {
+    const b = new Set(), d = new Set();
+    for (const w of WORKFLOW) {
+      const s = taskStatus[w.id];
+      if (s === "busy") b.add(w.agent);
+      if (s === "done" && !b.has(w.agent)) d.add(w.agent);
+    }
+    return { busyIds: b, doneIds: d };
+  }, [taskStatus]);
+
+  // Phase status for plan card
+  const phaseStatus = useMemo(() => {
+    const ps = {};
+    for (let p = 1; p <= 3; p++) {
+      const tasks = WORKFLOW.filter(w => w.phase === p);
+      const sts = tasks.map(w => taskStatus[w.id]);
+      if (sts.every(s => s === "done")) ps[p] = "done";
+      else if (sts.some(s => s === "busy" || s === "done")) ps[p] = "busy";
+      else ps[p] = "pending";
+    }
+    return ps;
+  }, [taskStatus]);
+
+  const compact = tweaks.density === "dense";
+  const showRight = tweaks.showRight !== false && nav === "studio";
+
+  // Apply theme class
+  useEffect(() => {
+    document.body.className = tweaks.theme === "light" ? "theme-light" : "";
+  }, [tweaks.theme]);
+
+  const restart = () => {
+    setTaskStatus({});
+    setRevealMarc(false); setRevealSarah(false); setRevealSophie(false); setRevealSynth(false);
+    setElapsed(0);
+    setRunning(false);
+    setTimeout(() => setRunning(true), 50);
+  };
+
+  return (
+    <>
+    <div className={"app " + (compact?"compact ":"") + (showRight?"":"no-right")}>
+      <Roster lang={lang} busyIds={busyIds} doneIds={doneIds} activeNav={nav} setNav={setNav} compact={compact} t={t}/>
+
+      {nav === "dashboard" ? <DashboardView lang={lang} t={t}/> : nav === "docs" ? <DocumentsView lang={lang} t={t}/> : nav === "pipeline" ? <PipelineView lang={lang} t={t}/> : nav === "governance" ? <GovernanceView lang={lang} t={t}/> : nav === "team" ? <TeamView lang={lang} t={t}/> : nav === "settings" ? <SettingsView lang={lang} t={t}/> : (
+      <main className="studio" data-screen-label="Orchestration Studio">
+        <header className="studio-head">
+          <div className="studio-head-l">
+            <button className="icon-btn" title="Menu" onClick={()=>setTweak("density", compact?"comfortable":"dense")}>{Ic.menu}</button>
+            <div style={{minWidth:0}}>
+              <div className="thread-title">{t.thread_title}</div>
+              <div className="thread-meta">{t.thread_meta.replace("23s", elapsed+"s")}</div>
+            </div>
+          </div>
+          <div className="studio-head-r">
+            <div className="lang-toggle">
+              <button className={lang==="fr"?"on":""} onClick={()=>setTweak("lang","fr")}>FR</button>
+              <button className={lang==="en"?"on":""} onClick={()=>setTweak("lang","en")}>EN</button>
+            </div>
+            <button className="icon-btn" title="Search">{Ic.search}</button>
+            <button className="icon-btn" title="Restart demo" onClick={restart}>
+              <svg viewBox="0 0 16 16" className="i"><path d="M14 8a6 6 0 11-1.8-4.3M14 2v4h-4"/></svg>
+            </button>
+            <button className="icon-btn" title="Toggle right pane" onClick={()=>setTweak("showRight", !showRight)}>{Ic.panel}</button>
+          </div>
+        </header>
+
+        <div className="thread">
+          <div className="thread-inner">
+            {/* User message */}
+            <div className="msg msg-user">
+              <div className="msg-user-bubble">
+                {t.user_msg}
+                <div style={{marginTop:8,display:"flex",gap:6,flexWrap:"wrap"}}>
+                  <span className="cite"><span className="cite-num">📎</span>EtatsFin_Boreal_2023-2025.pdf · 2,4 Mo</span>
+                  <span className="cite"><span className="cite-num">📎</span>Bilan_Boreal_2025.xlsx · 184 Ko</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Orchestrator card */}
+            <div className="msg">
+              <div className="orch-card">
+                <div className="orch-head">
+                  <div className="orch-mark">⌬</div>
+                  <div style={{minWidth:0}}>
+                    <div className="orch-title">{t.orch_title}</div>
+                    <div className="orch-sub">{t.orch_sub}</div>
+                  </div>
+                  <div className="orch-pill">⚡ {t.plan_pill}</div>
+                </div>
+                <PhasePlan lang={lang} t={t} phaseStatus={phaseStatus} taskStatus={taskStatus}/>
+
+                {revealMarc  && <AgentReplyMarc   lang={lang} t={t} time={Math.min(8, elapsed)}/>}
+                {revealSarah && <AgentReplySarah  lang={lang} t={t} time={Math.min(14, elapsed)}/>}
+                {revealSophie&& <AgentReplySophie lang={lang} t={t} time={Math.min(22, elapsed)}/>}
+
+                {revealSynth && (
+                  <div style={{padding:"4px 18px 18px"}}>
+                    <div className="synth">
+                      <div className="synth-head">
+                        <span className="synth-mark"></span>
+                        <span className="synth-title">{t.synth_title}</span>
+                      </div>
+                      <div className="synth-body">
+                        <StreamingText text={t.synth_body} speed={6}/>
+                      </div>
+                      <div className="actions-list">
+                        <div className="ctx-section-title" style={{marginTop:14,marginBottom:0}}>{t.actions_title}</div>
+                        {t.actions.map((a,i) => (
+                          <div className="action-item" key={i}>
+                            <span className={"action-prio p"+a.p[1]}>{a.p}</span>
+                            <span className="action-text">{a.text}</span>
+                            <span className="action-owner">{a.own}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Composer */}
+        <div className="composer-wrap">
+          <div className="quick-prompts">
+            {t.quick.map((q,i)=>(<button key={i} className="qp" onClick={()=>setComposerVal(q)}>{q}</button>))}
+          </div>
+          <div className="composer">
+            <textarea
+              className="composer-input"
+              placeholder={t.placeholder}
+              value={composerVal}
+              onChange={e=>setComposerVal(e.target.value)}
+              rows={1}
+              onInput={e => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 140) + "px"; }}
+            />
+            <div className="composer-tools">
+              <button className="tool-chip" title={t.attach}>{Ic.attach}<span>{t.attach}</span></button>
+              <button className={"tool-chip " + (ragOn?"on":"")} onClick={()=>setRagOn(v=>!v)}>{Ic.docs}<span>{t.rag_on}</span></button>
+              <button className={"tool-chip " + (webOn?"on":"")} onClick={()=>setWebOn(v=>!v)}>{Ic.globe}<span>{t.web_on}</span></button>
+              <button className="send-btn" disabled={!composerVal.trim()}>{t.send} {Ic.send}</button>
+            </div>
+          </div>
+        </div>
+      </main>
+      )}
+
+      {showRight && (
+      <aside className="context">
+        <div className="ctx-tabs">
+          {["workflow","sources","cost"].map(k => (
+            <div key={k} className={"ctx-tab " + (ctxTab===k?"on":"")} onClick={()=>setCtxTab(k)}>
+              {k==="workflow"?t.workflow:k==="sources"?t.sources:t.cost}
+              {k==="workflow" && <span className="ct-count">{busyIds.size + doneIds.size}/5</span>}
+              {k==="sources"  && <span className="ct-count">2</span>}
+            </div>
+          ))}
+        </div>
+
+        <div className="ctx-scroll">
+          {ctxTab==="workflow" && (
+            <>
+              <div className="ctx-section">
+                <div className="ctx-section-title">{busyIds.size} {t.agents_active}</div>
+                <div className="timeline">
+                  {WORKFLOW.map(w => {
+                    const s = taskStatus[w.id] || "pending";
+                    return (
+                      <div className={"tl-item " + s} key={w.id}>
+                        <div className="tl-name">{A[w.agent].name.split(" ")[0]} {A[w.agent].name.split(" ").slice(-1)[0][0]}.</div>
+                        <div className="tl-task">{w.task[lang]}</div>
+                        <div className="tl-time">{s==="done"?"✓ "+(w.dur/1000).toFixed(1)+"s": s==="busy"?"running…":"queued"}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+
+          {ctxTab==="sources" && (
+            <div className="ctx-section">
+              <div className="ctx-section-title">{t.docs_title}</div>
+              <div style={{display:"flex",flexDirection:"column",gap:2}}>
+                <div className="doc-row">
+                  <div className="doc-icon">PDF</div>
+                  <div className="doc-meta">
+                    <div className="doc-name">EtatsFin_Boreal_2023-2025.pdf</div>
+                    <div className="doc-info">2,4 Mo · 38 chunks · FR</div>
+                  </div>
+                  <div className="doc-status indexed">INDEXÉ</div>
+                </div>
+                <div className="doc-row">
+                  <div className="doc-icon">XLS</div>
+                  <div className="doc-meta">
+                    <div className="doc-name">Bilan_Boreal_2025.xlsx</div>
+                    <div className="doc-info">184 Ko · 12 chunks · FR</div>
+                  </div>
+                  <div className="doc-status indexed">INDEXÉ</div>
+                </div>
+                <div className="doc-row">
+                  <div className="doc-icon">PDF</div>
+                  <div className="doc-meta">
+                    <div className="doc-name">Guide_RSDE_RQ_2025.pdf</div>
+                    <div className="doc-info">{lang==="fr"?"Source métier · 124 chunks":"Knowledge · 124 chunks"}</div>
+                  </div>
+                  <div className="doc-status indexed">INDEXÉ</div>
+                </div>
+                <div className="doc-row">
+                  <div className="doc-icon">PDF</div>
+                  <div className="doc-meta">
+                    <div className="doc-name">CDAE_Programme_IQ.pdf</div>
+                    <div className="doc-info">{lang==="fr"?"Source métier · 56 chunks":"Knowledge · 56 chunks"}</div>
+                  </div>
+                  <div className="doc-status indexed">INDEXÉ</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {ctxTab==="cost" && (
+            <>
+              <div className="meter">
+                <div className="meter-row"><span>Claude Sonnet 4.5</span><strong>0,184 $</strong></div>
+                <div className="meter-row"><span>Embeddings · e5-large</span><strong>0,012 $</strong></div>
+                <div className="meter-row"><span>Web search · 4 calls</span><strong>0,040 $</strong></div>
+                <div className="meter-bar"><div className="meter-fill" style={{width:"38%"}}/></div>
+                <div className="meter-foot"><span>0,236 $ / 0,60 $ {t.est}</span><span>~94 K {t.tokens}</span></div>
+              </div>
+              <div style={{marginTop:18}}>
+                <div className="ctx-section-title">{lang==="fr"?"Modèles utilisés":"Models used"}</div>
+                <div style={{display:"flex",flexDirection:"column",gap:6,fontSize:11.5,color:"var(--ink-2)"}}>
+                  <div style={{display:"flex",justifyContent:"space-between"}}><span>Marc · Sarah · Sophie</span><span className="mono" style={{color:"var(--ink-3)"}}>sonnet-4-5</span></div>
+                  <div style={{display:"flex",justifyContent:"space-between"}}><span>JF Lebel</span><span className="mono" style={{color:"var(--ink-3)"}}>sonnet-4-5</span></div>
+                  <div style={{display:"flex",justifyContent:"space-between"}}><span>Patrick</span><span className="mono" style={{color:"var(--ink-3)"}}>sonnet-4-5 + web</span></div>
+                  <div style={{display:"flex",justifyContent:"space-between"}}><span>{lang==="fr"?"Orchestrateur":"Orchestrator"}</span><span className="mono" style={{color:"var(--ink-3)"}}>haiku-4-5</span></div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </aside>
+      )}
+    </div>
+
+    {/* Tweaks */}
+    {window.TweaksPanel && (
+      <window.TweaksPanel title="Tweaks">
+        <window.TweakSection title={lang==="fr"?"Apparence":"Appearance"}>
+          <window.TweakRadio label={lang==="fr"?"Thème":"Theme"} value={tweaks.theme} options={[{value:"dark",label:"Studio"},{value:"light",label:"Bureau"}]} onChange={v=>setTweak("theme",v)}/>
+          <window.TweakRadio label={lang==="fr"?"Langue":"Language"} value={tweaks.lang} options={[{value:"fr",label:"Français"},{value:"en",label:"English"}]} onChange={v=>setTweak("lang",v)}/>
+          <window.TweakRadio label={lang==="fr"?"Densité":"Density"} value={tweaks.density} options={[{value:"comfortable",label:lang==="fr"?"Confortable":"Comfortable"},{value:"dense",label:lang==="fr"?"Compact":"Compact"}]} onChange={v=>setTweak("density",v)}/>
+          <window.TweakToggle label={lang==="fr"?"Volet contexte":"Context pane"} value={tweaks.showRight} onChange={v=>setTweak("showRight",v)}/>
+        </window.TweakSection>
+        <window.TweakSection title={lang==="fr"?"Démo":"Demo"}>
+          <window.TweakSlider label={lang==="fr"?"Vitesse workflow":"Workflow speed"} min={0.3} max={3} step={0.1} value={tweaks.speed} onChange={v=>setTweak("speed",v)} format={v=>v.toFixed(1)+"×"}/>
+          <window.TweakButton label={lang==="fr"?"Rejouer":"Replay"} onClick={restart}/>
+        </window.TweakSection>
+      </window.TweaksPanel>
+    )}
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App/>);
+</script>
+</body>
+</html>
